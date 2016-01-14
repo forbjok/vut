@@ -1,0 +1,9 @@
+{
+  "name": "vut",
+  "description": "Versioning using templates",
+  "copyright": "Copyright © 2016 Kjartan F. Kvamme",
+  "authors": ["Kjartan F. Kvamme"],
+  "dependencies": {
+  },
+  "stringImportPaths": ["."]
+}
