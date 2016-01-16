@@ -14,13 +14,14 @@ class SetCommand : ICommand {
     enum VersionPart {
         major,
         minor,
-        patch
+        patch,
+        prerelease,
     }
 
     int Execute(string[] args) {
         if (args.length == 0) {
             writeln("No version part specified.");
-            writeln("Usage: vut bump <major|minor|patch>");
+            writeln("Usage: vut bump <major|minor|patch|prerelease>");
             return 1;
         }
 
@@ -41,6 +42,9 @@ class SetCommand : ICommand {
                     break;
                 case VersionPart.patch:
                     newVersion = semanticVersion.bumpPatch();
+                    break;
+                case VersionPart.prerelease:
+                    newVersion = semanticVersion.bumpPrerelease();
                     break;
                 default:
                     writefln("Invalid version part '%s'.", args[0]);

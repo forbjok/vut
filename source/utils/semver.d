@@ -113,8 +113,22 @@ SemanticVersion bumpPatch(SemanticVersion semanticVersion) {
     return new SemanticVersion(semanticVersion.major, semanticVersion.minor, semanticVersion.patch + 1);
 }
 
+SemanticVersion bumpPrerelease(SemanticVersion semanticVersion) {
+    auto splitPrerelease = regex(r"([\w]*)(\d+)");
+
+    auto m = semanticVersion.prerelease.matchFirst(splitPrerelease);
+    if (m.empty)
+        throw new Exception(format("No bumpable number found in prerelease '%s'", semanticVersion.prerelease));
+
+    auto prereleaseNumber = m[2].to!int;
+
+    return new SemanticVersion(semanticVersion.major, semanticVersion.minor, semanticVersion.patch, m[1] ~ (prereleaseNumber + 1).to!string);
+}
+
+
 unittest {
     assert(new SemanticVersion(1,2,3).bumpMajor().toString() == "2.0.0");
     assert(new SemanticVersion(1,2,3).bumpMinor().toString() == "1.3.0");
     assert(new SemanticVersion(1,2,3).bumpPatch().toString() == "1.2.4");
+    assert(new SemanticVersion(1, 2, 3, "beta1").bumpPrerelease().toString() == "1.2.3-beta2");
 }
