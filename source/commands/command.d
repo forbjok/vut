@@ -1,13 +1,20 @@
+import core.exception;
+
 interface ICommand {
     int Execute(string[] args);
 }
 
-ICommand[string] commands;
+private ICommand[string] commands;
 
 void registerCommand(string command, ICommand implementation) {
     commands[command] = implementation;
 }
 
 ICommand getCommand(string command) {
-    return commands[command];
+    try {
+        return commands[command];
+    }
+    catch(RangeError) {
+        return null;
+    }
 }

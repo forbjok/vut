@@ -1,7 +1,9 @@
 import std.stdio;
 import std.format;
+import std.file;
 
 import commands;
+import filelocator;
 
 int main(string[] args)
 {
@@ -15,7 +17,10 @@ int main(string[] args)
 	auto command = args[1];
 
 	auto commandImplementation = getCommand(command);
-	commandImplementation.Execute(args[2..$]);
+	if (commandImplementation is null) {
+		writefln("Unknown command '%s'.", command);
+		return 1;
+	}
 
-	return 0;
+	return commandImplementation.Execute(args[2..$]);
 }
