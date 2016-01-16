@@ -12,8 +12,7 @@ class InitCommand : ICommand {
     int Execute(string[] args) {
         writeln("Init!");
 
-        auto fileLocator = new ReverseFileLocator();
-        auto configFile = fileLocator.LocateFile(getcwd(), "VERSION");
+        auto configFile = locateFileInPathOrParent(getcwd(), "VERSION");
 
         if (configFile == null) {
             writeln("No version file found.");

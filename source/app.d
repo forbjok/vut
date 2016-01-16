@@ -16,5 +16,6 @@ int main(string[] args)
 
 	auto commandImplementation = getCommand(command);
 	commandImplementation.Execute(args[2..$]);
+
 	return 0;
 }
