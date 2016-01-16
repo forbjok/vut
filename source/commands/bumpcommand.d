@@ -16,6 +16,7 @@ class SetCommand : ICommand {
         minor,
         patch,
         prerelease,
+        build,
     }
 
     int Execute(string[] args) {
@@ -45,6 +46,9 @@ class SetCommand : ICommand {
                     break;
                 case VersionPart.prerelease:
                     newVersion = semanticVersion.bumpPrerelease();
+                    break;
+                case VersionPart.build:
+                    newVersion = semanticVersion.bumpBuild();
                     break;
                 default:
                     writefln("Invalid version part '%s'.", args[0]);

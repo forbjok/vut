@@ -125,10 +125,22 @@ SemanticVersion bumpPrerelease(SemanticVersion semanticVersion) {
     return new SemanticVersion(semanticVersion.major, semanticVersion.minor, semanticVersion.patch, m[1] ~ (prereleaseNumber + 1).to!string);
 }
 
+SemanticVersion bumpBuild(SemanticVersion semanticVersion) {
+    auto splitBuild = regex(r"([\w]*)(\d+)");
+
+    auto m = semanticVersion.build.matchFirst(splitBuild);
+    if (m.empty)
+        throw new Exception(format("No bumpable number found in build '%s'", semanticVersion.build));
+
+    auto buildNumber = m[2].to!int;
+
+    return new SemanticVersion(semanticVersion.major, semanticVersion.minor, semanticVersion.patch, semanticVersion.prerelease, m[1] ~ (buildNumber + 1).to!string);
+}
 
 unittest {
     assert(new SemanticVersion(1,2,3).bumpMajor().toString() == "2.0.0");
     assert(new SemanticVersion(1,2,3).bumpMinor().toString() == "1.3.0");
     assert(new SemanticVersion(1,2,3).bumpPatch().toString() == "1.2.4");
     assert(new SemanticVersion(1, 2, 3, "beta1").bumpPrerelease().toString() == "1.2.3-beta2");
+    assert(new SemanticVersion(1, 2, 3, "beta1", "build7").bumpBuild().toString() == "1.2.3-beta1+build8");
 }
