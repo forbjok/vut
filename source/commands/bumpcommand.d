@@ -3,8 +3,8 @@ import std.file;
 import std.conv;
 
 import command;
-import filelocator;
 import semver;
+import vutservice;
 
 class SetCommand : ICommand {
     static this() {
@@ -26,43 +26,38 @@ class SetCommand : ICommand {
 
         auto versionPart = args[0].to!VersionPart;
 
-        auto versionFile = locateFileInPathOrParent(getcwd(), "VERSION");
+        try {
+            auto vutService = openVutRoot(getcwd());
 
-        if (versionFile == null) {
+            auto semanticVersion = parseSemanticVersion(vutService.getVersion());
+            SemanticVersion newVersion = void;
+
+            switch(versionPart) {
+                case VersionPart.major:
+                    newVersion = semanticVersion.bumpMajor();
+                    break;
+                case VersionPart.minor:
+                    newVersion = semanticVersion.bumpMinor();
+                    break;
+                case VersionPart.patch:
+                    newVersion = semanticVersion.bumpPatch();
+                    break;
+                default:
+                    writefln("Invalid version part '%s'.", args[0]);
+                    return 1;
+            }
+
+            auto newVersionString = newVersion.toString();
+
+            vutService.setVersion(newVersionString);
+            vutService.save();
+
+            writefln("Version bumped to %s.", newVersionString);
+        }
+        catch(NoVutRootFoundException) {
             writeln("No version file found.");
             return 1;
         }
-
-        auto versionString = readText(versionFile);
-        auto semanticVersion = parseSemanticVersion(versionString);
-        if (semanticVersion is null) {
-            writefln("Invalid version in file: %s", versionString);
-            return 1;
-        }
-
-        SemanticVersion newVersion = void;
-
-        switch(versionPart) {
-            case VersionPart.major:
-                newVersion = semanticVersion.bumpMajor();
-                break;
-            case VersionPart.minor:
-                newVersion = semanticVersion.bumpMinor();
-                break;
-            case VersionPart.patch:
-                newVersion = semanticVersion.bumpPatch();
-                break;
-            default:
-                writefln("Invalid version part: %s", args[0]);
-                return 1;
-        }
-
-        auto newVersionString = newVersion.toString();
-
-        // Write new version to file
-        std.file.write(versionFile, cast(void[]) newVersionString);
-
-        writefln("Version bumped to %s.", newVersionString);
 
         return 0;
     }

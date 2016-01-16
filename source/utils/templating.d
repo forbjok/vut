@@ -1,8 +1,7 @@
-import std.stdio;
 import std.regex;
 
 string replaceTemplateVars(in string input, in string[string] variables) {
-    auto findTemplateVars = regex(r"\{\{(?:([^\|]*)\|)?(\w*)(?:\|([^\}]*))?\}\}");
+    auto findTemplateVars = regex(r"\{\{(?:([^\|\{\}]*)\|)?([\w\d]*)(?:\|([^\}]*))?\}\}");
 
     string replaceFunction(Captures!(string) m) {
         auto prefix = m[1];
@@ -21,7 +20,7 @@ string replaceTemplateVars(in string input, in string[string] variables) {
 unittest {
     immutable string[string] variables = [
         "TheVariable": "42",
-        "EmptyVariable": ""
+        "EmptyVariable": "",
     ];
 
     assert("BLAH={{TheVariable}};".replaceTemplateVars(variables) == "BLAH=42;");
@@ -33,4 +32,6 @@ unittest {
     assert("BLAH={{.|EmptyVariable|.}};".replaceTemplateVars(variables) == "BLAH=;");
     assert("BLAH={{EmptyVariable|.}};".replaceTemplateVars(variables) == "BLAH=;");
     assert("BLAH={{TheVariable}};YADA={{EmptyVariable}};".replaceTemplateVars(variables) == "BLAH=42;YADA=;");
+    assert("BLAH={{TheVariable}}.{{TheVariable}}.{{TheVariable}};".replaceTemplateVars(variables) == "BLAH=42.42.42;");
+    assert("BLAH={{TheVariable}}.{{TheVariable}}.{{TheVariable}}{{-|TheVariable}}{{+|TheVariable}};".replaceTemplateVars(variables) == "BLAH=42.42.42-42+42;");
 }

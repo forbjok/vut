@@ -1,10 +1,9 @@
 import std.stdio;
 import std.file;
-import std.path;
 
 import command;
-import filelocator;
 import semver;
+import vutservice;
 
 class InitCommand : ICommand {
     static this() {
@@ -28,17 +27,19 @@ class InitCommand : ICommand {
             semanticVersion = new SemanticVersion(0, 0, 0);
         }
 
-        auto versionFile = locateFileInPathOrParent(getcwd(), "VERSION");
-
-        if (versionFile != null) {
-            writefln("An existing version file was found at: %s", versionFile);
-            return 1;
-        }
-
         auto newVersionString = semanticVersion.toString();
 
-        // Write new version to file
-        std.file.write(buildPath(getcwd(), "VERSION"), cast(void[]) newVersionString);
+        try {
+            auto vutService = openVutRoot(getcwd());
+
+            writefln("An existing version file was found at: %s", vutService.getVersionFilePath());
+            return 1;
+        }
+        catch(NoVutRootFoundException) { }
+
+        auto vutService = new VutService(getcwd());
+        vutService.setVersion(newVersionString);
+        vutService.save();
 
         writefln("Version initialized to %s.", newVersionString);
 

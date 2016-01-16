@@ -1,7 +1,8 @@
+import std.algorithm;
 import std.file;
 import std.path;
 
-string locateFileInPathOrParent(string startPath, string filename) {
+string locateFileInPathOrParent(in string startPath, in string filename) {
     auto path = startPath.absolutePath();
     assert(path.isDir());
 
@@ -24,4 +25,11 @@ string locateFileInPathOrParent(string startPath, string filename) {
     }
 
     return null;
+}
+
+auto locateTemplates(in string startPath, in string templateExtension) {
+    auto files = dirEntries(startPath, SpanMode.breadth, false)
+        .filter!(f => f.name.endsWith(templateExtension));
+
+    return files;
 }
