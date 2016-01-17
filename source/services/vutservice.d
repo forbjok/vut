@@ -42,9 +42,7 @@ class VutService {
         this.semanticVersion = parseSemanticVersion(versionString);
     }
 
-    void processTemplates() {
-        auto templateFiles = locateTemplates(rootPath, templateExtension);
-
+    string[string] getVersionVariables() {
         string[string] variables = [
             "FullVersion": this.semanticVersion.toString(),
             "Major": this.semanticVersion.major.to!string,
@@ -53,6 +51,14 @@ class VutService {
             "Prerelease": this.semanticVersion.prerelease,
             "Build": this.semanticVersion.build,
         ];
+
+        return variables;
+    }
+
+    void processTemplates() {
+        auto templateFiles = locateTemplates(rootPath, templateExtension);
+
+        auto variables = this.getVersionVariables();
 
         foreach(string templateFile; templateFiles) {
             auto outputFile = templateFile.stripExtension();

@@ -86,9 +86,6 @@ SemanticVersion parseSemanticVersion(string versionString) {
     string prerelease = m[4];
     string build = m[5];
 
-    debug import std.stdio;
-    debug writefln("Major = %s, Minor = %s, Patch = %s, Prerelease = %s, Build = %s", major, minor, patch, prerelease, build);
-
     return new SemanticVersion(major, minor, patch, prerelease, build);
 }
 

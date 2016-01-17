@@ -20,13 +20,13 @@ class SetCommand : ICommand {
     }
 
     int Execute(string[] args) {
-        if (args.length == 0) {
+        if (args.length == 1) {
             writeln("No version part specified.");
             writeln("Usage: vut bump <major|minor|patch|prerelease>");
             return 1;
         }
 
-        auto versionPart = args[0].to!VersionPart;
+        auto versionPart = args[1];
 
         try {
             auto vutService = openVutRoot(getcwd());
@@ -34,7 +34,7 @@ class SetCommand : ICommand {
             auto semanticVersion = parseSemanticVersion(vutService.getVersion());
             SemanticVersion newVersion = void;
 
-            switch(versionPart) {
+            switch(versionPart.to!VersionPart) {
                 case VersionPart.major:
                     newVersion = semanticVersion.bumpMajor();
                     break;
@@ -51,7 +51,7 @@ class SetCommand : ICommand {
                     newVersion = semanticVersion.bumpBuild();
                     break;
                 default:
-                    writefln("Invalid version part '%s'.", args[0]);
+                    stderr.writefln("Invalid version part '%s'.", versionPart);
                     return 1;
             }
 
@@ -63,7 +63,7 @@ class SetCommand : ICommand {
             writefln("Version bumped to %s.", newVersionString);
         }
         catch(NoVutRootFoundException) {
-            writeln("No version file found.");
+            stderr.writeln("No version file found.");
             return 1;
         }
 

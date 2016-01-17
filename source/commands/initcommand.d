@@ -12,13 +12,13 @@ class InitCommand : ICommand {
 
     int Execute(string[] args) {
         SemanticVersion semanticVersion = void;
-        if (args.length > 0) {
+        if (args.length > 1) {
             // If a version was specified on the commandline, parse it
-            auto versionString = args[0];
+            auto versionString = args[1];
 
             semanticVersion = parseSemanticVersion(versionString);
             if (semanticVersion is null) {
-                writefln("Invalid version: %s", versionString);
+                stderr.writefln("Invalid version: %s", versionString);
                 return 1;
             }
         }
@@ -32,7 +32,7 @@ class InitCommand : ICommand {
         try {
             auto vutService = openVutRoot(getcwd());
 
-            writefln("An existing version file was found at: %s", vutService.getVersionFilePath());
+            stderr.writefln("An existing version file was found at: %s", vutService.getVersionFilePath());
             return 1;
         }
         catch(NoVutRootFoundException) { }

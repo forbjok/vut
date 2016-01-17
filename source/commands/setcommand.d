@@ -11,20 +11,20 @@ class SetCommand : ICommand {
     }
 
     int Execute(string[] args) {
-        if (args.length == 0) {
+        if (args.length == 1) {
             writeln("No version specified.");
-            writeln("Usage: vut set <version>");
+            writefln("Usage: vut %s <version>", args[0]);
             return 1;
         }
 
-        auto versionString = args[0];
+        auto versionString = args[1];
 
         try {
             auto vutService = openVutRoot(getcwd());
 
             auto semanticVersion = parseSemanticVersion(versionString);
             if (semanticVersion is null) {
-                writefln("Invalid version: %s", versionString);
+                stderr.writefln("Invalid version: %s", versionString);
                 return 1;
             }
 
@@ -36,7 +36,7 @@ class SetCommand : ICommand {
             writefln("Version set to %s.", newVersionString);
         }
         catch(NoVutRootFoundException) {
-            writeln("No version file found.");
+            stderr.writeln("No version file found.");
             return 1;
         }
 

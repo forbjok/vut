@@ -18,9 +18,9 @@ int main(string[] args)
 
 	auto commandImplementation = getCommand(command);
 	if (commandImplementation is null) {
-		writefln("Unknown command '%s'.", command);
+		stderr.writefln("Unknown command '%s'.", command);
 		return 1;
 	}
 
-	return commandImplementation.Execute(args[2..$]);
+	return commandImplementation.Execute(args[1..$]);
 }
