@@ -63,11 +63,6 @@ class VutService {
         foreach(string templateFile; templateFiles) {
             auto outputFile = templateFile.stripExtension();
 
-            debug import std.stdio;
-            debug auto templateFilename = templateFile.baseName();
-            debug auto outputFilename = outputFile.baseName();
-            debug writefln("%s => %s", templateFilename, outputFilename);
-
             // Read template
             auto text = readText(templateFile);
 
