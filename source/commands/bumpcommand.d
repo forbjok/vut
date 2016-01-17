@@ -22,7 +22,7 @@ class SetCommand : ICommand {
     int Execute(string[] args) {
         if (args.length == 1) {
             writeln("No version part specified.");
-            writeln("Usage: vut bump <major|minor|patch|prerelease>");
+            writefln("Usage: vut %s <major|minor|patch|prerelease|build>", args[0]);
             return 1;
         }
 
