@@ -1,5 +1,3 @@
-import core.exception;
-
 interface ICommand {
     int Execute(string[] args);
 }
@@ -11,10 +9,5 @@ void registerCommand(string command, ICommand implementation) {
 }
 
 ICommand getCommand(string command) {
-    try {
-        return commands[command];
-    }
-    catch(RangeError) {
-        return null;
-    }
+    return commands.get(command, null);
 }
