@@ -16,9 +16,13 @@ class SetCommand : ICommand {
     }
 
     int Execute(string[] args) {
+        string build;
+
         try {
             // Parse arguments
-            auto getoptResult = getopt(args);
+            auto getoptResult = getopt(args,
+                std.getopt.config.bundling,
+                "build", &build);
 
             if (getoptResult.helpWanted) {
                 // If user wants help, give it to them
@@ -32,24 +36,25 @@ class SetCommand : ICommand {
             return 1;
         }
 
-        if (args.length == 1) {
-            writeln("No version specified.");
-            writeUsage(args[0]);
-            return 1;
-        }
-
-        auto versionString = args[1];
-
         try {
             auto vutService = openVutRoot(getcwd());
 
-            auto semanticVersion = parseSemanticVersion(versionString);
-            if (semanticVersion is null) {
-                stderr.writefln("Invalid version: %s", versionString);
-                return 1;
-            }
+            string newVersionString;
+            if (build.length > 0) {
+                auto semanticVersion = vutService.getVersion().parseSemanticVersion();
+                semanticVersion.build = build;
 
-            auto newVersionString = semanticVersion.toString();
+                newVersionString = semanticVersion.toString();
+            }
+            else {
+                if (args.length == 1) {
+                    writeln("No version specified.");
+                    writeUsage(args[0]);
+                    return 1;
+                }
+
+                newVersionString = args[1];
+            }
 
             vutService.setVersion(newVersionString);
             vutService.save();
