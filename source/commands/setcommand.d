@@ -34,12 +34,11 @@ class SetCommand : ICommand {
             vutService.save();
 
             writefln("Version set to %s.", newVersionString);
+            return 0;
         }
         catch(NoVutRootFoundException) {
             stderr.writeln("No version file found.");
             return 1;
         }
-
-        return 0;
     }
 }

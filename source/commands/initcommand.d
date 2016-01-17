@@ -42,7 +42,6 @@ class InitCommand : ICommand {
         vutService.save();
 
         writefln("Version initialized to %s.", newVersionString);
-
         return 0;
     }
 }
