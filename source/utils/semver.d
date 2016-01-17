@@ -150,6 +150,33 @@ unittest {
     assertThrown!InvalidSemanticVersionException(parseSemanticVersion("invalid.version"));
 }
 
+bool splitNumberedPrerelease(in string prerelease, out string prefix, out int number) {
+    auto splitPrerelease = regex(r"([\w\-\.]*?)(\d+)");
+
+    auto m = prerelease.matchFirst(splitPrerelease);
+    if (m.empty)
+        return false;
+
+    prefix = m[1];
+    number = m[2].to!int;
+
+    return true;
+}
+
+unittest {
+    string prefix;
+    int number;
+
+    assert("beta42".splitNumberedPrerelease(prefix, number));
+    assert(prefix == "beta");
+    assert(number == 42);
+
+    assert("beta.42".splitNumberedPrerelease(prefix, number));
+    assert(prefix == "beta.");
+    assert(number == 42);
+
+    assert(!"unnumbered.beta".splitNumberedPrerelease(prefix, number));
+}
 
 SemanticVersion bumpMajor(SemanticVersion semanticVersion) {
     return new SemanticVersion(semanticVersion.major + 1, 0, 0);
@@ -164,27 +191,23 @@ SemanticVersion bumpPatch(SemanticVersion semanticVersion) {
 }
 
 SemanticVersion bumpPrerelease(SemanticVersion semanticVersion) {
-    auto splitPrerelease = regex(r"([\w\-\.]*)(\d+)");
+    string prereleasePrefix;
+    int prereleaseNumber;
 
-    auto m = semanticVersion.prerelease.matchFirst(splitPrerelease);
-    if (m.empty)
+    if (!semanticVersion.prerelease.splitNumberedPrerelease(prereleasePrefix, prereleaseNumber))
         throw new NotBumpableException(semanticVersion.prerelease);
 
-    auto prereleaseNumber = m[2].to!int;
-
-    return new SemanticVersion(semanticVersion.major, semanticVersion.minor, semanticVersion.patch, m[1] ~ (prereleaseNumber + 1).to!string);
+    return new SemanticVersion(semanticVersion.major, semanticVersion.minor, semanticVersion.patch, prereleasePrefix ~ (prereleaseNumber + 1).to!string);
 }
 
 SemanticVersion bumpBuild(SemanticVersion semanticVersion) {
-    auto splitBuild = regex(r"([\w\-\.]*)(\d+)");
+    string buildPrefix;
+    int buildNumber;
 
-    auto m = semanticVersion.build.matchFirst(splitBuild);
-    if (m.empty)
+    if (!semanticVersion.build.splitNumberedPrerelease(buildPrefix, buildNumber))
         throw new NotBumpableException(semanticVersion.build);
 
-    auto buildNumber = m[2].to!int;
-
-    return new SemanticVersion(semanticVersion.major, semanticVersion.minor, semanticVersion.patch, semanticVersion.prerelease, m[1] ~ (buildNumber + 1).to!string);
+    return new SemanticVersion(semanticVersion.major, semanticVersion.minor, semanticVersion.patch, semanticVersion.prerelease, buildPrefix ~ (buildNumber + 1).to!string);
 }
 
 unittest {
