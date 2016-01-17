@@ -17,6 +17,12 @@ private string prefixIfNotEmpty(in string s, in string prefix) {
     return prefix ~ s;
 }
 
+class InvalidSemanticVersionException : Exception {
+    this(string versionString) {
+        super("Invalid semantic version: %s.".format(versionString));
+    }
+}
+
 class InvalidPrereleaseException : Exception {
     this(string message) {
         super(message);
@@ -118,7 +124,7 @@ SemanticVersion parseSemanticVersion(string versionString) {
 
     auto m = versionString.matchFirst(parseSemVer);
     if (m.empty)
-        return null;
+        throw new InvalidSemanticVersionException(versionString);
 
     int major = m[1].to!int;
     int minor = m[2].to!int;
@@ -134,7 +140,7 @@ unittest {
     assert(parseSemanticVersion("1.2.3-beta6").toString() == "1.2.3-beta6");
     assert(parseSemanticVersion("1.2.3").toString() == "1.2.3");
     assert(parseSemanticVersion("1.2.3+build9").toString() == "1.2.3+build9");
-    assert(parseSemanticVersion("invalid.version") is null);
+    assertThrown!InvalidSemanticVersionException(parseSemanticVersion("invalid.version"));
 }
 
 
