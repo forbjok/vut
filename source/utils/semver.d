@@ -29,6 +29,12 @@ class InvalidPrereleaseException : Exception {
     }
 }
 
+class NotBumpableException : Exception {
+    this(string s) {
+        super("No bumpable number found in '%s'.".format(s));
+    }
+}
+
 class SemanticVersion {
     int major;
     int minor;
@@ -162,7 +168,7 @@ SemanticVersion bumpPrerelease(SemanticVersion semanticVersion) {
 
     auto m = semanticVersion.prerelease.matchFirst(splitPrerelease);
     if (m.empty)
-        throw new Exception(format("No bumpable number found in prerelease '%s'", semanticVersion.prerelease));
+        throw new NotBumpableException(semanticVersion.prerelease);
 
     auto prereleaseNumber = m[2].to!int;
 
@@ -174,7 +180,7 @@ SemanticVersion bumpBuild(SemanticVersion semanticVersion) {
 
     auto m = semanticVersion.build.matchFirst(splitBuild);
     if (m.empty)
-        throw new Exception(format("No bumpable number found in build '%s'", semanticVersion.build));
+        throw new NotBumpableException(semanticVersion.build);
 
     auto buildNumber = m[2].to!int;
 

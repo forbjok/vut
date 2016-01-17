@@ -92,5 +92,9 @@ class SetCommand : ICommand {
             stderr.writeln(ex.msg);
             return 1;
         }
+        catch(NotBumpableException ex) {
+            stderr.writeln(ex.msg);
+            return 1;
+        }
     }
 }
