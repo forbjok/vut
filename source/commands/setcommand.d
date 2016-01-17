@@ -70,5 +70,9 @@ class SetCommand : ICommand {
             stderr.writeln(ex.msg);
             return 1;
         }
+        catch(InvalidPrereleaseException ex) {
+            stderr.writeln(ex.msg);
+            return 1;
+        }
     }
 }
