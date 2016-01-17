@@ -16,6 +16,10 @@ class GetCommand : ICommand {
         registerCommand("get", new this());
     }
 
+    private void writeUsage(in string command) {
+        writefln("Usage: vut %s [--format=<pattern>]", command);
+    }
+
     int Execute(string[] args) {
         string format;
 
@@ -27,7 +31,7 @@ class GetCommand : ICommand {
 
             if (getoptResult.helpWanted) {
                 // If user wants help, give it to them
-                writefln("Usage: vut %s [--format=<pattern>]", args[0]);
+                writeUsage(args[0]);
                 return 1;
             }
         }

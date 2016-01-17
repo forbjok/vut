@@ -1,5 +1,6 @@
 import std.stdio;
 import std.file;
+import std.getopt;
 
 import command;
 import semver;
@@ -13,7 +14,27 @@ class GenerateCommand : ICommand {
         registerCommand("gen", instance);
     }
 
+    private void writeUsage(in string command) {
+        writefln("Usage: vut %s", command);
+    }
+
     int Execute(string[] args) {
+        try {
+            // Parse arguments
+            auto getoptResult = getopt(args);
+
+            if (getoptResult.helpWanted) {
+                // If user wants help, give it to them
+                writeUsage(args[0]);
+                return 1;
+            }
+        }
+        catch(Exception ex) {
+            // If there is an error parsing arguments, print it
+            writeln(ex.msg);
+            return 1;
+        }
+
         try {
             auto vutService = openVutRoot(getcwd());
 
