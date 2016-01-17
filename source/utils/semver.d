@@ -1,19 +1,59 @@
+import std.exception;
 import std.format;
 import std.conv;
 import std.regex;
+
+private bool isValidPrerelease(string prerelease) {
+    auto validatePrerelease = regex(r"^[\w\d\.]*$");
+
+    auto m = prerelease.matchFirst(validatePrerelease);
+    return !m.empty;
+}
+
+private string prefixIfNotEmpty(in string s, in string prefix) {
+    if (s.length == 0)
+        return s;
+
+    return prefix ~ s;
+}
+
+class InvalidPrereleaseException : Exception {
+    this(string message) {
+        super(message);
+    }
+}
 
 class SemanticVersion {
     int major;
     int minor;
     int patch;
-    string prerelease;
-    string build;
+    private string _prerelease;
+    private string _build;
 
-    private string prefixIfNotEmpty(string s, string prefix) {
-        if (s.length == 0)
-            return "";
+    @property {
+        string prerelease() {
+            return this._prerelease;
+        }
 
-        return prefix ~ s;
+        string prerelease(string value) {
+            if (!value.isValidPrerelease())
+                throw new InvalidPrereleaseException("The prerelease string '%s' contains illegal characters.".format(value));
+
+            return this._prerelease = value;
+        }
+    }
+
+    @property {
+        string build() {
+            return this._build;
+        }
+
+        string build(string value) {
+            if (!value.isValidPrerelease())
+                throw new InvalidPrereleaseException("The build string '%s' contains illegal characters.".format(value));
+
+            return this._build = value;
+        }
     }
 
     this(int major, int minor, int patch, string prerelease = "", string build = "") {
