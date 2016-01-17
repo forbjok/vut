@@ -7,10 +7,10 @@ import filelocator;
 import semver;
 import templating;
 
-class VutService {
-    immutable string versionFilename = "VERSION";
-    immutable string templateExtension = ".vutemplate";
+immutable string versionFilename = "VERSION";
+immutable string templateExtension = ".vutemplate";
 
+class VutService {
     private string rootPath;
     private SemanticVersion semanticVersion;
 
@@ -82,7 +82,7 @@ class NoVutRootFoundException : Exception {
 }
 
 VutService openVutRoot(string path) {
-    auto versionFile = locateFileInPathOrParent(path, "VERSION");
+    auto versionFile = locateFileInPathOrParent(path, versionFilename);
     if (versionFile is null) {
         throw new NoVutRootFoundException(path);
     }
