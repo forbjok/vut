@@ -4,7 +4,7 @@ import std.conv;
 import std.regex;
 
 private bool isValidPrerelease(string prerelease) {
-    auto validatePrerelease = regex(r"^[\w\d\.]*$");
+    auto validatePrerelease = regex(r"^[\w\d\-\.]*$");
 
     auto m = prerelease.matchFirst(validatePrerelease);
     return !m.empty;
@@ -76,24 +76,24 @@ class SemanticVersion {
 
     // Test: Full semantic version
     unittest {
-        auto semVer = new SemanticVersion(1, 2, 3, "beta6", "build9");
+        auto semVer = new SemanticVersion(1, 2, 3, "beta.6", "build.9");
         assert(semVer.major == 1);
         assert(semVer.minor == 2);
         assert(semVer.patch == 3);
-        assert(semVer.prerelease == "beta6");
-        assert(semVer.build == "build9");
-        assert(semVer.toString() == "1.2.3-beta6+build9");
+        assert(semVer.prerelease == "beta.6");
+        assert(semVer.build == "build.9");
+        assert(semVer.toString() == "1.2.3-beta.6+build.9");
     }
 
     // Test: Major.Minor.Patch w/ prerelease
     unittest {
-        auto semVer = new SemanticVersion(1, 2, 3, "beta6");
+        auto semVer = new SemanticVersion(1, 2, 3, "beta.6");
         assert(semVer.major == 1);
         assert(semVer.minor == 2);
         assert(semVer.patch == 3);
-        assert(semVer.prerelease == "beta6");
+        assert(semVer.prerelease == "beta.6");
         assert(semVer.build == "");
-        assert(semVer.toString() == "1.2.3-beta6");
+        assert(semVer.toString() == "1.2.3-beta.6");
     }
 
     // Test: Major.Minor.Patch only
@@ -109,18 +109,18 @@ class SemanticVersion {
 
     // Test: Major.Minor.Patch w/ build only (no prerelease)
     unittest {
-        auto semVer = new SemanticVersion(1, 2, 3, "", "build9");
+        auto semVer = new SemanticVersion(1, 2, 3, "", "build.9");
         assert(semVer.major == 1);
         assert(semVer.minor == 2);
         assert(semVer.patch == 3);
         assert(semVer.prerelease == "");
-        assert(semVer.build == "build9");
-        assert(semVer.toString() == "1.2.3+build9");
+        assert(semVer.build == "build.9");
+        assert(semVer.toString() == "1.2.3+build.9");
     }
 }
 
 SemanticVersion parseSemanticVersion(string versionString) {
-    auto parseSemVer = regex(r"^(\d+)\.(\d+)\.(\d+)(?:-([\w\d]+))?(?:\+([\w\d]+))?");
+    auto parseSemVer = regex(r"^(\d+)\.(\d+)\.(\d+)(?:-([\w\d\-\.]+))?(?:\+([\w\d\-\.]+))?");
 
     auto m = versionString.matchFirst(parseSemVer);
     if (m.empty)
@@ -136,10 +136,11 @@ SemanticVersion parseSemanticVersion(string versionString) {
 }
 
 unittest {
-    assert(parseSemanticVersion("1.2.3-beta6+build9").toString() == "1.2.3-beta6+build9");
-    assert(parseSemanticVersion("1.2.3-beta6").toString() == "1.2.3-beta6");
+    assert(parseSemanticVersion("1.2.3-beta.6+build.9").toString() == "1.2.3-beta.6+build.9");
+    assert(parseSemanticVersion("1.2.3-beta-version.6+build-metadata.9").toString() == "1.2.3-beta-version.6+build-metadata.9");
+    assert(parseSemanticVersion("1.2.3-beta.6").toString() == "1.2.3-beta.6");
     assert(parseSemanticVersion("1.2.3").toString() == "1.2.3");
-    assert(parseSemanticVersion("1.2.3+build9").toString() == "1.2.3+build9");
+    assert(parseSemanticVersion("1.2.3+build.9").toString() == "1.2.3+build.9");
     assertThrown!InvalidSemanticVersionException(parseSemanticVersion("invalid.version"));
 }
 
@@ -157,7 +158,7 @@ SemanticVersion bumpPatch(SemanticVersion semanticVersion) {
 }
 
 SemanticVersion bumpPrerelease(SemanticVersion semanticVersion) {
-    auto splitPrerelease = regex(r"([\w]*)(\d+)");
+    auto splitPrerelease = regex(r"([\w\-\.]*)(\d+)");
 
     auto m = semanticVersion.prerelease.matchFirst(splitPrerelease);
     if (m.empty)
@@ -169,7 +170,7 @@ SemanticVersion bumpPrerelease(SemanticVersion semanticVersion) {
 }
 
 SemanticVersion bumpBuild(SemanticVersion semanticVersion) {
-    auto splitBuild = regex(r"([\w]*)(\d+)");
+    auto splitBuild = regex(r"([\w\-\.]*)(\d+)");
 
     auto m = semanticVersion.build.matchFirst(splitBuild);
     if (m.empty)
@@ -184,6 +185,6 @@ unittest {
     assert(new SemanticVersion(1,2,3).bumpMajor().toString() == "2.0.0");
     assert(new SemanticVersion(1,2,3).bumpMinor().toString() == "1.3.0");
     assert(new SemanticVersion(1,2,3).bumpPatch().toString() == "1.2.4");
-    assert(new SemanticVersion(1, 2, 3, "beta1").bumpPrerelease().toString() == "1.2.3-beta2");
-    assert(new SemanticVersion(1, 2, 3, "beta1", "build7").bumpBuild().toString() == "1.2.3-beta1+build8");
+    assert(new SemanticVersion(1, 2, 3, "beta.1").bumpPrerelease().toString() == "1.2.3-beta.2");
+    assert(new SemanticVersion(1, 2, 3, "beta.1", "build.7").bumpBuild().toString() == "1.2.3-beta.1+build.8");
 }
