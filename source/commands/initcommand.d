@@ -11,23 +11,15 @@ class InitCommand : ICommand {
     }
 
     int Execute(string[] args) {
-        SemanticVersion semanticVersion = void;
+        string newVersionString;
         if (args.length > 1) {
-            // If a version was specified on the commandline, parse it
-            auto versionString = args[1];
-
-            semanticVersion = parseSemanticVersion(versionString);
-            if (semanticVersion is null) {
-                stderr.writefln("Invalid version: %s", versionString);
-                return 1;
-            }
+            // If a version was specified on the commandline, use it
+            newVersionString = args[1];
         }
         else {
             // If no version was specified, use default version
-            semanticVersion = new SemanticVersion(0, 0, 0);
+            newVersionString = "0.0.0";
         }
-
-        auto newVersionString = semanticVersion.toString();
 
         try {
             auto vutService = openVutRoot(getcwd());
@@ -37,11 +29,17 @@ class InitCommand : ICommand {
         }
         catch(NoVutRootFoundException) { }
 
-        auto vutService = new VutService(getcwd());
-        vutService.setVersion(newVersionString);
-        vutService.save();
+        try {
+            auto vutService = new VutService(getcwd());
+            vutService.setVersion(newVersionString);
+            vutService.save();
 
-        writefln("Version initialized to %s.", newVersionString);
-        return 0;
+            writefln("Version initialized to %s.", vutService.getVersion());
+            return 0;
+        }
+        catch(InvalidSemanticVersionException ex) {
+            stderr.writeln(ex.msg);
+            return 1;
+        }
     }
 }

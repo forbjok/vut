@@ -67,5 +67,9 @@ class SetCommand : ICommand {
             stderr.writeln("No version file found.");
             return 1;
         }
+        catch(InvalidSemanticVersionException ex) {
+            stderr.writeln(ex.msg);
+            return 1;
+        }
     }
 }
