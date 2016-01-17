@@ -9,6 +9,8 @@ import commands;
 
 int main(string[] args)
 {
+    bool versionWanted = false;
+
     try {
         /* Concatenate the executable path with all subsequent arguments up to
            the first one that does not start with optionChar. (normally "-")
@@ -18,7 +20,9 @@ int main(string[] args)
         auto options = chain(args.takeExactly(1), args[1..$].until!(a => !a.startsWith(optionChar))).array();
 
         // Parse arguments
-        auto getoptResult = getopt(options);
+        auto getoptResult = getopt(options,
+            std.getopt.config.bundling,
+            "version", &versionWanted);
 
         if (getoptResult.helpWanted) {
             // If user wants help, give it to them
@@ -30,6 +34,11 @@ int main(string[] args)
         // If there is an error parsing arguments, print it
         writeln(ex.msg);
         return 1;
+    }
+
+    if (versionWanted) {
+        writefln("Vut version %s", import("VERSION"));
+        return 0;
     }
 
     if (args.length == 1) {
