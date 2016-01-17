@@ -43,13 +43,27 @@ class VutService {
     }
 
     string[string] getVersionVariables() {
+        auto prerelease = this.semanticVersion.prerelease;
+        string prereleasePrefix;
+        int prereleaseNumber;
+        prerelease.splitNumberedPrerelease(prereleasePrefix, prereleaseNumber);
+
+        auto build = this.semanticVersion.build;
+        string buildPrefix;
+        int buildNumber;
+        build.splitNumberedPrerelease(buildPrefix, buildNumber);
+
         string[string] variables = [
             "FullVersion": this.semanticVersion.toString(),
             "Major": this.semanticVersion.major.to!string,
             "Minor": this.semanticVersion.minor.to!string,
             "Patch": this.semanticVersion.patch.to!string,
-            "Prerelease": this.semanticVersion.prerelease,
-            "Build": this.semanticVersion.build,
+            "Prerelease": prerelease,
+            "PrereleasePrefix": prereleasePrefix,
+            "PrereleaseNumber": prereleaseNumber.to!string,
+            "Build": build,
+            "BuildPrefix": buildPrefix,
+            "BuildNumber": buildNumber.to!string,
         ];
 
         return variables;
