@@ -2,6 +2,8 @@ import std.conv;
 import std.path;
 import std.file;
 import std.format;
+import std.stdio;
+import std.utf;
 
 import filelocator;
 import semver;
@@ -76,15 +78,22 @@ class VutService {
 
         foreach(string templateFile; templateFiles) {
             auto outputFile = templateFile.stripExtension();
+            auto templateFilename = templateFile.baseName();
 
-            // Read template
-            auto text = readText(templateFile);
+            try {
+                // Read template
+                auto text = readText(templateFile);
 
-            // Perform replacements
-            text = text.replaceTemplateVars(variables);
+                // Perform replacements
+                text = text.replaceTemplateVars(variables);
 
-            // Write output file
-            std.file.write(outputFile, cast(void[]) text);
+                // Write output file
+                std.file.write(outputFile, cast(void[]) text);
+            }
+            catch(Exception ex) {
+                stderr.writefln("%s: %s", templateFilename, ex.msg);
+                continue;
+            }
         }
     }
 }

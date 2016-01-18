@@ -1,4 +1,12 @@
+import std.exception;
+import std.format;
 import std.regex;
+
+class VariableNotFoundException : Exception {
+    this(string variableName) {
+        super("Variable not found: %s.".format(variableName));
+    }
+}
 
 string replaceTemplateVars(in string input, in string[string] variables) {
     auto findTemplateVars = regex(r"\{\{(?:([^\|\{\}]*)\|)?([\w\d]*)(?:\|([^\}]*))?\}\}");
@@ -6,7 +14,11 @@ string replaceTemplateVars(in string input, in string[string] variables) {
     string replaceFunction(Captures!(string) m) {
         auto prefix = m[1];
         auto suffix = m[3];
-        auto value = variables[m[2]];
+        auto variableName = m[2];
+        auto value = variables.get(variableName, null);
+
+        if (value is null)
+            throw new VariableNotFoundException(variableName);
 
         if (value.length == 0)
             return "";
@@ -34,4 +46,5 @@ unittest {
     assert("BLAH={{TheVariable}};YADA={{EmptyVariable}};".replaceTemplateVars(variables) == "BLAH=42;YADA=;");
     assert("BLAH={{TheVariable}}.{{TheVariable}}.{{TheVariable}};".replaceTemplateVars(variables) == "BLAH=42.42.42;");
     assert("BLAH={{TheVariable}}.{{TheVariable}}.{{TheVariable}}{{-|TheVariable}}{{+|TheVariable}};".replaceTemplateVars(variables) == "BLAH=42.42.42-42+42;");
+    assertThrown!VariableNotFoundException("BLAH={{NonExistentVariable}};".replaceTemplateVars(variables));
 }

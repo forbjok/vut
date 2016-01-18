@@ -49,10 +49,16 @@ class GetCommand : ICommand {
                 // A format argument was passed.
                 // Process the specified format string using standard
                 // template replacement and write it to stdout.
-                auto output = format.replaceTemplateVars(variables);
+                try {
+                    auto output = format.replaceTemplateVars(variables);
 
-                write(output);
-                return 0;
+                    write(output);
+                    return 0;
+                }
+                catch(VariableNotFoundException ex) {
+                    stderr.writeln(ex.msg);
+                    return 1;
+                }
             }
 
             // No special output format was specified.
