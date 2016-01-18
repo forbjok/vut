@@ -9,7 +9,7 @@ class VariableNotFoundException : Exception {
 }
 
 string replaceTemplateVars(in string input, in string[string] variables) {
-    auto findTemplateVars = regex(r"\{\{(?:([^\|\{\}]*)\|)?([\w\d]*)(?:\|([^\}]*))?\}\}");
+    auto findTemplateVars = regex(r"\{\{(?:\|([^\|]*)\|)?([\w\d]*)(?:\|([^\|]*)\|)?\}\}");
 
     string replaceFunction(Captures!(string) m) {
         auto prefix = m[1];
@@ -36,15 +36,17 @@ unittest {
     ];
 
     assert("BLAH={{TheVariable}};".replaceTemplateVars(variables) == "BLAH=42;");
-    assert("BLAH={{.|TheVariable}};".replaceTemplateVars(variables) == "BLAH=.42;");
-    assert("BLAH={{.|TheVariable|.}};".replaceTemplateVars(variables) == "BLAH=.42.;");
-    assert("BLAH={{TheVariable|.}};".replaceTemplateVars(variables) == "BLAH=42.;");
+    assert("BLAH={{|.|TheVariable}};".replaceTemplateVars(variables) == "BLAH=.42;");
+    assert("BLAH={{|.|TheVariable|.|}};".replaceTemplateVars(variables) == "BLAH=.42.;");
+    assert("BLAH={{TheVariable|.|}};".replaceTemplateVars(variables) == "BLAH=42.;");
     assert("BLAH={{EmptyVariable}};".replaceTemplateVars(variables) == "BLAH=;");
-    assert("BLAH={{.|EmptyVariable}};".replaceTemplateVars(variables) == "BLAH=;");
-    assert("BLAH={{.|EmptyVariable|.}};".replaceTemplateVars(variables) == "BLAH=;");
-    assert("BLAH={{EmptyVariable|.}};".replaceTemplateVars(variables) == "BLAH=;");
+    assert("BLAH={{|.|EmptyVariable}};".replaceTemplateVars(variables) == "BLAH=;");
+    assert("BLAH={{|.|EmptyVariable|.|}};".replaceTemplateVars(variables) == "BLAH=;");
+    assert("BLAH={{EmptyVariable|.|}};".replaceTemplateVars(variables) == "BLAH=;");
     assert("BLAH={{TheVariable}};YADA={{EmptyVariable}};".replaceTemplateVars(variables) == "BLAH=42;YADA=;");
     assert("BLAH={{TheVariable}}.{{TheVariable}}.{{TheVariable}};".replaceTemplateVars(variables) == "BLAH=42.42.42;");
-    assert("BLAH={{TheVariable}}.{{TheVariable}}.{{TheVariable}}{{-|TheVariable}}{{+|TheVariable}};".replaceTemplateVars(variables) == "BLAH=42.42.42-42+42;");
+    assert("BLAH={{TheVariable}}.{{TheVariable}}.{{TheVariable}}{{|-|TheVariable}}{{|+|TheVariable}};".replaceTemplateVars(variables) == "BLAH=42.42.42-42+42;");
     assertThrown!VariableNotFoundException("BLAH={{NonExistentVariable}};".replaceTemplateVars(variables));
+    assert("BLAH={{|prefix|TheVariable}};".replaceTemplateVars(variables) == "BLAH=prefix42;");
+    assert("BLAH={{TheVariable|suffix|}};".replaceTemplateVars(variables) == "BLAH=42suffix;");
 }
