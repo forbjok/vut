@@ -39,7 +39,7 @@ For example, if you need the version number to be directly accessible in a C# pr
 ```C#
 public static class AppVersion
 {
-	public static string Version = "{{Version}}";
+	public const string Version = "{{Version}}";
 }
 ```
 
