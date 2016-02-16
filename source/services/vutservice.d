@@ -1,3 +1,5 @@
+module services.vutservice;
+
 import std.conv;
 import std.path;
 import std.file;
@@ -5,9 +7,9 @@ import std.format;
 import std.stdio;
 import std.utf;
 
-import filelocator;
-import semver;
-import templating;
+import utils.filelocator;
+import utils.semver;
+import utils.templating;
 
 immutable string versionFilename = "VERSION";
 immutable string templateExtension = ".vutemplate";

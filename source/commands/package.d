@@ -1,3 +1,3 @@
 module commands;
 
-public import command;
+public import commands.command;

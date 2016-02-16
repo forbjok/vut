@@ -1,11 +1,13 @@
+module commands.bumpcommand;
+
 import std.stdio;
 import std.file;
 import std.conv;
 import std.getopt;
 
-import command;
-import semver;
-import vutservice;
+import commands;
+import utils.semver;
+import services.vutservice;
 
 class SetCommand : ICommand {
     static this() {

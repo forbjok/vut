@@ -1,3 +1,5 @@
+module commands.command;
+
 interface ICommand {
     int Execute(string[] args);
 }

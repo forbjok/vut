@@ -1,3 +1,5 @@
+module commands.getcommand;
+
 import std.algorithm;
 import std.stdio;
 import std.file;
@@ -6,10 +8,10 @@ import std.string;
 import std.json;
 import std.getopt;
 
-import command;
-import semver;
-import templating;
-import vutservice;
+import commands;
+import utils.semver;
+import utils.templating;
+import services.vutservice;
 
 class GetCommand : ICommand {
     static this() {

@@ -1,3 +1,5 @@
+module utils.filelocator;
+
 import std.algorithm;
 import std.file;
 import std.path;

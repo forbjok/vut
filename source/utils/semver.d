@@ -1,3 +1,5 @@
+module utils.semver;
+
 import std.exception;
 import std.format;
 import std.conv;

@@ -1,3 +1,5 @@
+module utils.templating;
+
 import std.exception;
 import std.format;
 import std.regex;

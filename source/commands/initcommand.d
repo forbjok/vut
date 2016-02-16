@@ -1,10 +1,12 @@
+module commands.initcommand;
+
 import std.stdio;
 import std.file;
 import std.getopt;
 
-import command;
-import semver;
-import vutservice;
+import commands;
+import utils.semver;
+import services.vutservice;
 
 class InitCommand : ICommand {
     static this() {
