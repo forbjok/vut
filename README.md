@@ -1,4 +1,5 @@
 # Vut
+[![Build Status](https://travis-ci.org/forbjok/vut.svg?branch=master)](https://travis-ci.org/forbjok/vut)
 
 Vut is a versioning utility.
 It lets you easily keep track of a project's version and do things like bump its individual parts, including prerelease or build strings that end in numbers.
