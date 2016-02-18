@@ -5,7 +5,7 @@
     <!-- Read this before publishing packages to chocolatey.org: https://github.com/chocolatey/chocolatey/wiki/CreatePackages -->
     <id>vut</id>
     <title>Vut</title>
-    <version>0.0.0</version>
+    <version>0.0.1</version>
     <authors>Kjartan F. Kvamme</authors>
     <owners>Kjartan F. Kvamme</owners>
     <summary>Utility for managing versioning of a project and propagating it using templates.</summary>
