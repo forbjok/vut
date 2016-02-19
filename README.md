@@ -1,6 +1,6 @@
-# Vut
-[![Build Status](https://travis-ci.org/forbjok/vut.svg?branch=master)](https://travis-ci.org/forbjok/vut)
+# Vut [![Build Status](https://travis-ci.org/forbjok/vut.svg?branch=master)](https://travis-ci.org/forbjok/vut)
 
+## Introduction
 Vut is a versioning utility.
 It lets you easily keep track of a project's version and do things like bump its individual parts, including prerelease or build strings that end in numbers.
 Its main strength, however is in the way it propagates version numbers to where they are needed - using templates.
@@ -8,6 +8,24 @@ Its main strength, however is in the way it propagates version numbers to where 
 Ideally, it would be sufficient to store the one true version number in only a single place, and every other place that requires it would just read it from that one place.
 Unfortunately, realistically that's just not doable most of the time.
 Rather than rely on inflexible and specific code for generating files containing the version in specific formats or languages, or having to write equally specific scripts, Vut allows propagation of versions by using templates.
+
+## Installing
+For Windows, there is a [Chocolatey](https://chocolatey.org/) [package](https://chocolatey.org/packages/vut) available.
+```
+C:\> choco install vut
+```
+
+For GNU/Linux and other operating systems, you will have to compile it yourself.
+
+## Compiling
+1. Download and install the lastest version of DMD (the reference D compiler) from [dlang.org](http://dlang.org/) or your distro's package manager
+2. Download and install DUB from [code.dlang.org](https://code.dlang.org/) or your distro's package manager
+3. Clone this repository and execute the following command in it:
+```
+$ dub build
+```
+
+Voila! You should now have a usable executable in the root of the repository.
 
 ## Creating a VERSION file
 In order to store the ONE TRUE VERSION, Vut uses a file called VERSION.
