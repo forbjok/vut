@@ -5,10 +5,13 @@ import std.stdio;
 import std.file;
 import std.format;
 import std.string;
-import std.json;
 import std.getopt;
 
+import jsonserialized.serialization : serializeToJSONValue;
+import stdx.data.json : toJSON;
+
 import commands;
+import utils.indentation : spacify;
 import utils.semver;
 import utils.templating;
 import services.vutservice;
@@ -74,9 +77,9 @@ class GetCommand : ICommand {
                 jsonVariables[jsonKey] = value;
             }
 
-            auto json = new JSONValue(jsonVariables);
+            auto jsonValue = jsonVariables.serializeToJSONValue();
 
-            write(json.toPrettyString());
+            write(jsonValue.toJSON().spacify());
             return 0;
         }
         catch(NoVutRootFoundException) {
