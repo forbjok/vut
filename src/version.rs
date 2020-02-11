@@ -1,7 +1,13 @@
 use std::borrow::Cow;
 use std::str::FromStr;
 
-use regex;
+use lazy_static::lazy_static;
+use regex::Regex;
+
+lazy_static! {
+    static ref REGEX_PARSE_SEMVER: Regex = Regex::new(r#"^(\d+)\.(\d+)\.(\d+)(?:-([\w\d\-\.]+))?(?:\+([\w\d\-\.]+))?"#).unwrap();
+    static ref REGEX_SPLIT_NUMBERED_PRERELEASE: Regex = regex::Regex::new(r#"([\w\-\.]*?)(\d+)"#).unwrap();
+}
 
 /// Structure representing a SemVer compliant version.
 #[derive(Clone, Debug)]
@@ -112,9 +118,7 @@ impl FromStr for Version {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parse_semver_regex = regex::Regex::new(r#"^(\d+)\.(\d+)\.(\d+)(?:-([\w\d\-\.]+))?(?:\+([\w\d\-\.]+))?"#).unwrap();
-
-        let cap = parse_semver_regex.captures(s).unwrap();
+        let cap = REGEX_PARSE_SEMVER.captures(s).unwrap();
 
         dbg!(&cap);
 
@@ -145,9 +149,7 @@ fn prefix_if_not_empty<'a>(s: &'a str, prefix: &str) -> Cow<'a, str> {
 
 /// Split a prerelease string with a number at the end into separate string prefix and number components.
 fn split_numbered_prerelease(s: &str) -> Option<(&str, u32)> {
-    let split_regex = regex::Regex::new(r#"([\w\-\.]*?)(\d+)"#).unwrap();
-
-    if let Some(cap) = split_regex.captures(s) {
+    if let Some(cap) = REGEX_SPLIT_NUMBERED_PRERELEASE.captures(s) {
 
         let prefix = cap.get(1).unwrap().as_str();
         let number = cap.get(2).unwrap().as_str().parse().unwrap();
