@@ -6,6 +6,10 @@ use structopt::StructOpt;
 
 mod command;
 mod util;
+mod template;
+mod template_processor;
+mod version;
+mod vut;
 
 use command::BumpStep;
 

@@ -1,10 +1,10 @@
 use std::env;
 use std::io::Read;
 
-use semver;
 use strum_macros::EnumString;
 
 use crate::util;
+use crate::version::Version;
 use super::{CommandError, CommandErrorKind};
 
 #[derive(Debug, EnumString)]
@@ -34,16 +34,17 @@ pub fn bump(step: BumpStep) -> Result<(), CommandError> {
         return Err(CommandError::new(CommandErrorKind::Config, "Cannot read VERSION file!"));
     };
 
-    let mut version = semver::Version::parse(&version_str).unwrap();
+    let version: Version = version_str.parse().unwrap();
 
-    match step {
-        BumpStep::Major => version.increment_major(),
-        BumpStep::Minor => version.increment_minor(),
-        BumpStep::Patch => version.increment_patch(),
-        _ => { },
+    let version = match step {
+        BumpStep::Major => version.bump_major(),
+        BumpStep::Minor => version.bump_minor(),
+        BumpStep::Patch => version.bump_patch(),
+        BumpStep::Prerelease => version.bump_prerelease(),
+        BumpStep::Build => version.bump_build(),
     };
 
-    println!("New version: {}", version);
+    println!("New version: {}", version.to_string());
 
     Ok(())
 }
