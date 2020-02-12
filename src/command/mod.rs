@@ -1,6 +1,8 @@
 use std::borrow::Cow;
 use std::io;
 
+use crate::util;
+
 mod bump;
 mod generate;
 mod get;
@@ -51,6 +53,15 @@ impl From<io::Error> for CommandError {
         CommandError {
             kind: CommandErrorKind::Other,
             description: Cow::Owned(error.to_string()),
+        }
+    }
+}
+
+impl From<util::FileError> for CommandError {
+    fn from(error: util::FileError) -> Self {
+        CommandError {
+            kind: CommandErrorKind::Other,
+            description: Cow::Owned(format!("File not found: {}", error.path.to_string_lossy())),
         }
     }
 }

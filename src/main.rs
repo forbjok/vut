@@ -11,7 +11,7 @@ mod template_processor;
 mod version;
 mod vut;
 
-use command::BumpStep;
+use vut::BumpVersion;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Vut", version = env!("CARGO_PKG_VERSION"), author = env!("CARGO_PKG_AUTHORS"))]
@@ -46,7 +46,7 @@ enum Command {
     #[structopt(name = "bump", help = "Bump version")]
     Bump {
         #[structopt(help = "Specify step")]
-        step: BumpStep,
+        step: BumpVersion,
     },
 
     #[structopt(name = "generate", help = "Generate templates")]
