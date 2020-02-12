@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+pub mod processor;
+
 #[derive(Debug)]
 pub struct TemplateInput {
     pub values: HashMap<String, String>,

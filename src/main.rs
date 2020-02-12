@@ -7,7 +7,6 @@ use structopt::StructOpt;
 mod command;
 mod util;
 mod template;
-mod template_processor;
 mod version;
 mod vut;
 
@@ -76,8 +75,8 @@ fn main() {
     let cmd_result = match opt.command {
         Command::Bump { step } => command::bump(step),
         Command::Generate => command::generate(),
-        Command::Get { format } => command::get(format),
-        Command::Init { version } => command::init(version),
+        Command::Get { format } => command::get(&format),
+        Command::Init { version } => command::init(&version),
         Command::Set { version } => command::set(version),
     };
 

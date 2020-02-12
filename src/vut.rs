@@ -1,4 +1,5 @@
 use std::env;
+use std::fs;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 
@@ -33,6 +34,15 @@ pub struct Vut {
 impl Vut {
     const VERSION_FILENAME: &'static str = "VERSION";
 
+    pub fn new(path: impl AsRef<Path>) -> Self {
+        let path = path.as_ref();
+
+        Self {
+            root_path: path.to_path_buf(),
+            version_file_path: path.join(Self::VERSION_FILENAME),
+        }
+    }
+
     pub fn from_path(path: impl AsRef<Path>) -> Result<Option<Self>, io::Error> {
         if let Some(version_file_path) = util::locate_config_file(path, Self::VERSION_FILENAME)? {
             Ok(Some(Self {
@@ -48,6 +58,10 @@ impl Vut {
         let current_dir = env::current_dir().unwrap();
 
         Self::from_path(current_dir)
+    }
+
+    pub fn exists(&self) -> bool {
+        self.version_file_path.exists()
     }
 
     pub fn get_version(&self) -> Result<Version, VutError> {
@@ -94,10 +108,12 @@ impl Vut {
         Ok(version)
     }
 
-    fn generate_vut_template_input(version: &str) -> Result<TemplateInput, String> {
+    pub fn generate_template_input(&self) -> Result<TemplateInput, VutError> {
+        let version = self.get_version()?;
+
         let mut template_input = TemplateInput::new();
 
-        template_input.values.insert("FullVersion".to_owned(), version.to_owned());
+        template_input.values.insert("FullVersion".to_owned(), version.to_string());
 
         Ok(template_input)
     }
