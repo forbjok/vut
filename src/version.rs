@@ -146,7 +146,7 @@ fn prefix_if_not_empty<'a>(s: &'a str, prefix: &str) -> Cow<'a, str> {
 }
 
 /// Split a prerelease string with a number at the end into separate string prefix and number components.
-fn split_numbered_prerelease(s: &str) -> Option<(&str, u32)> {
+pub fn split_numbered_prerelease(s: &str) -> Option<(&str, u32)> {
     if let Some(cap) = REGEX_SPLIT_NUMBERED_PRERELEASE.captures(s) {
 
         let prefix = cap.get(1).unwrap().as_str();

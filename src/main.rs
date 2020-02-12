@@ -45,7 +45,7 @@ enum Command {
     #[structopt(name = "bump", help = "Bump version")]
     Bump {
         #[structopt(help = "Specify step")]
-        step: BumpVersion,
+        bump_version: BumpVersion,
     },
 
     #[structopt(name = "generate", help = "Generate templates")]
@@ -73,11 +73,11 @@ fn main() {
 
 
     let cmd_result = match opt.command {
-        Command::Bump { step } => command::bump(step),
+        Command::Bump { bump_version } => command::bump(bump_version),
         Command::Generate => command::generate(),
         Command::Get { format } => command::get(&format),
         Command::Init { version } => command::init(&version),
-        Command::Set { version } => command::set(version),
+        Command::Set { version } => command::set(&version),
     };
 
     match cmd_result {
