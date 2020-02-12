@@ -120,8 +120,6 @@ impl FromStr for Version {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let cap = REGEX_PARSE_SEMVER.captures(s).unwrap();
 
-        dbg!(&cap);
-
         Ok(Self {
             major: (&cap[1]).parse().unwrap(),
             minor: (&cap[2]).parse().unwrap(),

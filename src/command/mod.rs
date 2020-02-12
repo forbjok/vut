@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use std::io;
 
 use crate::util;
+use crate::vut::VutError;
 
 mod bump;
 mod generate;
@@ -62,6 +63,22 @@ impl From<util::FileError> for CommandError {
         CommandError {
             kind: CommandErrorKind::Other,
             description: Cow::Owned(format!("File not found: {}", error.path.to_string_lossy())),
+        }
+    }
+}
+
+impl From<VutError> for CommandError {
+    fn from(error: VutError) -> Self {
+        let description = match error {
+            VutError::VersionFileOpen(err) => format!("Error opening version file: {}", err.to_string()),
+            VutError::VersionFileRead(err) => format!("Error reading version file: {}", err.to_string()),
+            VutError::VersionFileWrite(err) => format!("Error writing version file: {}", err.to_string()),
+            VutError::TemplateGenerate => "Error generating templates!".to_owned(),
+        };
+
+        CommandError {
+            kind: CommandErrorKind::Other,
+            description: Cow::Owned(description),
         }
     }
 }
