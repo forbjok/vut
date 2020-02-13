@@ -90,7 +90,8 @@ impl Vut {
             version_str
         };
 
-        let version = version_str.parse().unwrap();
+        let version = version_str.parse()
+            .map_err(|err| VutError::Other(Cow::Owned(err)))?;
 
         Ok(version)
     }
