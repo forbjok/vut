@@ -14,10 +14,6 @@ pub fn init(version: Option<&str>) -> Result<(), CommandError> {
 
     let vut = Vut::new(current_dir);
 
-    if vut.exists() {
-        return Err(CommandError::new(CommandErrorKind::Other, "There is already a version file in this path."));
-    }
-
     let version = match version {
         Some(v) => v.parse().map_err(|err| CommandError::new(CommandErrorKind::Other, err))?,
         None => Version::new(),
