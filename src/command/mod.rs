@@ -83,23 +83,3 @@ impl From<VutError> for CommandError {
         }
     }
 }
-
-/*
-impl From<CollectValuesError> for CommandError {
-    fn from(error: CollectValuesError) -> Self {
-        CommandError {
-            kind: CommandErrorKind::Other,
-            description: error.description,
-        }
-    }
-}
-
-impl From<RenderTemplateError> for CommandError {
-    fn from(error: RenderTemplateError) -> Self {
-        CommandError {
-            kind: CommandErrorKind::Other,
-            description: error.description,
-        }
-    }
-}
-*/

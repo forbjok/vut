@@ -19,7 +19,7 @@ pub fn init(version: Option<&str>) -> Result<(), CommandError> {
     }
 
     let version = match version {
-        Some(v) => v.parse().unwrap(),
+        Some(v) => v.parse().map_err(|err| CommandError::new(CommandErrorKind::Other, err))?,
         None => Version::new(),
     };
 

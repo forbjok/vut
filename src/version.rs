@@ -118,7 +118,8 @@ impl FromStr for Version {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let cap = REGEX_PARSE_SEMVER.captures(s).unwrap();
+        let cap = REGEX_PARSE_SEMVER.captures(s)
+            .ok_or_else(|| format!("Invalid version string: {}", s))?;
 
         Ok(Self {
             major: (&cap[1]).parse().unwrap(),
