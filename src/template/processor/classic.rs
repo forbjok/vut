@@ -1,7 +1,6 @@
 use regex;
 
-use crate::template::TemplateInput;
-use super::*;
+use crate::template::{TemplateInput, TemplateProcessor};
 
 pub struct ClassicProcessor;
 
