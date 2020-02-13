@@ -157,7 +157,7 @@ impl Vut {
         env::set_current_dir(root_path)
             .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
-        let files: Vec<PathBuf> = glob::glob("*.vutemplate")
+        let files: Vec<PathBuf> = glob::glob("**/*.vutemplate")
         .expect("No glob!")
         .filter_map(|path| path.ok())
         // Make paths absolute
