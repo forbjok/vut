@@ -21,5 +21,8 @@ pub fn init(version: Option<&str>) -> Result<(), CommandError> {
 
     vut.set_version(&version)?;
 
+    // Generate template output
+    vut.generate_output()?;
+
     Ok(())
 }

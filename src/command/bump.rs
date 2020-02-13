@@ -9,6 +9,9 @@ pub fn bump(bump_version: BumpVersion) -> Result<(), CommandError> {
 
         println!("Version bumped to {}.", new_version.to_string());
 
+        // Regenerate template output
+        vut.generate_output()?;
+
         Ok(())
     } else {
         return Err(CommandError::new(CommandErrorKind::Config, "No version file found."));
