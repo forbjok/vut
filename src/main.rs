@@ -26,31 +26,31 @@ struct Opt {
 
 #[derive(StructOpt, Debug)]
 enum Command {
-    #[structopt(name = "init", help = "Initialize version file")]
+    #[structopt(name = "init", about = "Initialize version file")]
     Init {
-        #[structopt(name = "version", help = "Specify initial version")]
+        #[structopt(name = "version", about = "Specify initial version")]
         version: Option<String>,
     },
 
-    #[structopt(name = "get", help = "Get version info")]
+    #[structopt(name = "get", help = "Get version")]
     Get {
-        #[structopt(name = "format", help = "Specify output format")]
+        #[structopt(name = "format", about = "Specify output format")]
         format: String,
     },
 
-    #[structopt(name = "set", help = "Set version info")]
+    #[structopt(name = "set", help = "Set version")]
     Set {
-        #[structopt(name = "version", help = "Specify version to set")]
+        #[structopt(name = "version", about = "Specify version to set")]
         version: String,
     },
 
-    #[structopt(name = "bump", help = "Bump version")]
+    #[structopt(name = "bump", about = "Bump version")]
     Bump {
-        #[structopt(help = "Specify step")]
+        #[structopt(help = "Version to bump (major|minor|prerelease|build)")]
         bump_version: BumpVersion,
     },
 
-    #[structopt(name = "generate", help = "Generate templates")]
+    #[structopt(name = "generate", alias = "gen", about = "Generate template output")]
     Generate,
 }
 
