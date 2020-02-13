@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::borrow::Cow;
-use std::fs;
+use std::fmt;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 
@@ -33,31 +33,29 @@ pub trait TemplateProcessor {
 }
 
 #[derive(Debug)]
-pub struct RenderTemplateError {
-    pub description: Cow<'static, str>,
+pub enum RenderTemplateError {
+    OpenTemplate(util::FileError),
+    OpenOutput(util::FileError),
+    ReadTemplate(io::Error),
+    WriteOutput(io::Error),
+    Other(Cow<'static, str>),
+}
+
+impl fmt::Display for RenderTemplateError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match &self {
+            RenderTemplateError::OpenTemplate(err) => write!(f, "Error opening template: {}", err),
+            RenderTemplateError::OpenOutput(err) => write!(f, "Error opening output: {}", err),
+            RenderTemplateError::ReadTemplate(err) => write!(f, "Error reading template: {}", err),
+            RenderTemplateError::WriteOutput(err) => write!(f, "Error writing output: {}", err),
+            RenderTemplateError::Other(err) => write!(f, "{}", err),
+        }
+    }
 }
 
 impl RenderTemplateError {
     pub fn from_string(string: impl Into<Cow<'static, str>>) -> Self {
-        RenderTemplateError {
-            description: string.into(),
-        }
-    }
-}
-
-impl From<io::Error> for RenderTemplateError {
-    fn from(error: io::Error) -> Self {
-        RenderTemplateError {
-            description: Cow::Owned(error.to_string()),
-        }
-    }
-}
-
-impl From<util::FileError> for RenderTemplateError {
-    fn from(error: util::FileError) -> Self {
-        Self {
-            description: Cow::Owned(error.to_string()),
-        }
+        RenderTemplateError::Other(string.into())
     }
 }
 
@@ -75,7 +73,7 @@ pub fn generate_template<TP: TemplateProcessor>(template_path: &Path, values: &T
     let text = {
         // Open template file.
         let mut file = util::open_file(template_path)
-            .map_err::<RenderTemplateError, _>(|err| err.into())?;
+            .map_err::<RenderTemplateError, _>(|err| RenderTemplateError::OpenTemplate(err))?;
 
         // If an encoding was specified...
         if let Some(encoding) = encoding {
@@ -84,7 +82,7 @@ pub fn generate_template<TP: TemplateProcessor>(template_path: &Path, values: &T
 
             // Read raw template data into buffer.
             file.read_to_end(&mut buffer)
-                .map_err::<RenderTemplateError, _>(|err| err.into())?;
+                .map_err::<RenderTemplateError, _>(|err| RenderTemplateError::ReadTemplate(err))?;
 
             // Decode the raw data to a string using the specified encoding.
             encoding.decode(&buffer, DecoderTrap::Strict).expect("Error decoding!")
@@ -94,7 +92,7 @@ pub fn generate_template<TP: TemplateProcessor>(template_path: &Path, values: &T
 
             // Read template data into the string, assuming it is valid UTF-8.
             file.read_to_string(&mut string)
-                .map_err::<RenderTemplateError, _>(|err| err.into())?;
+                .map_err::<RenderTemplateError, _>(|err| RenderTemplateError::ReadTemplate(err))?;
 
             string
         }
@@ -116,8 +114,8 @@ pub fn generate_template<TP: TemplateProcessor>(template_path: &Path, values: &T
     let output_file_path = template_dir.join(template_filename);
 
     // Create output file.
-    let mut output_file = fs::File::create(&output_file_path)
-        .map_err::<RenderTemplateError, _>(|err| err.into())?;
+    let mut output_file = util::create_file(&output_file_path)
+        .map_err::<RenderTemplateError, _>(|err| RenderTemplateError::OpenOutput(err))?;
 
     // If an encoding was specified...
     let output_data: Vec<u8> = if let Some(encoding) = encoding {
@@ -131,7 +129,7 @@ pub fn generate_template<TP: TemplateProcessor>(template_path: &Path, values: &T
 
     // Write data to output file
     output_file.write(&output_data)
-        .map_err::<RenderTemplateError, _>(|err| err.into())?;
+        .map_err::<RenderTemplateError, _>(|err| RenderTemplateError::WriteOutput(err))?;
 
     // Return path to output file
     Ok(output_file_path)

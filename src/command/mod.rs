@@ -73,7 +73,8 @@ impl From<VutError> for CommandError {
             VutError::VersionFileOpen(err) => format!("Error opening version file: {}", err.to_string()),
             VutError::VersionFileRead(err) => format!("Error reading version file: {}", err.to_string()),
             VutError::VersionFileWrite(err) => format!("Error writing version file: {}", err.to_string()),
-            VutError::TemplateGenerate => "Error generating templates!".to_owned(),
+            VutError::TemplateGenerate(err) => format!("Error generating templates: {}", err.to_string()),
+            VutError::Other(err) => err.to_string(),
         };
 
         CommandError {

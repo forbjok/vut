@@ -1,11 +1,13 @@
+use std::borrow::Cow;
 use std::env;
 use std::fs;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 
+use glob;
 use strum_macros::EnumString;
 
-use crate::template::TemplateInput;
+use crate::template::{self, RenderTemplateError, TemplateInput};
 use crate::util;
 use crate::version::{self, Version};
 
@@ -23,7 +25,8 @@ pub enum VutError {
     VersionFileOpen(util::FileError),
     VersionFileRead(io::Error),
     VersionFileWrite(io::Error),
-    TemplateGenerate,
+    TemplateGenerate(RenderTemplateError),
+    Other(Cow<'static, str>),
 }
 
 pub struct Vut {
@@ -131,5 +134,38 @@ impl Vut {
         template_input.values.insert("BuildNumber".to_owned(), split_build.and_then(|sp| Some(format!("{}", sp.1))).unwrap_or_else(|| "".to_owned()));
 
         Ok(template_input)
+    }
+
+    pub fn generate_output(&self) -> Result<(), VutError> {
+        let root_path = &self.root_path;
+        let template_input = self.generate_template_input()?;
+
+        // Set current path to the root path.
+        // This is currently required to ensure that relative paths in the configuration
+        // are resolved correctly.
+        env::set_current_dir(root_path)
+            .map_err(|err| VutError::Other(Cow::Owned(err.to_string())));
+
+        let files: Vec<PathBuf> = glob::glob("*.vutemplate")
+        .expect("No glob!")
+        .filter_map(|path| path.ok())
+        // Make paths absolute
+        .map(|path| util::normalize_path(&path).into_owned())
+        // Exclude paths outside the root path
+        .filter(|path| path.starts_with(&root_path))
+        .collect();
+
+        let mut processed_files: Vec<PathBuf> = Vec::new();
+        let mut generated_files: Vec<PathBuf> = Vec::new();
+
+        for file in files {
+            let generated_file = template::generate_template::<template::processor::ClassicProcessor>(&file, &template_input, None)
+                .map_err(|err| VutError::TemplateGenerate(err))?;
+
+            processed_files.push(file);
+            generated_files.push(generated_file);
+        }
+
+        Ok(())
     }
 }

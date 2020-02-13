@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 
 use crate::util;
 
+#[derive(Debug)]
 pub enum FileErrorKind {
     NotFound,
     Other(io::Error),
@@ -19,6 +20,7 @@ impl From<io::Error> for FileErrorKind {
     }
 }
 
+#[derive(Debug)]
 pub struct FileError {
     pub kind: FileErrorKind,
     pub path: PathBuf,
