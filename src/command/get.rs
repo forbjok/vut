@@ -14,7 +14,7 @@ pub fn get(format: &str) -> Result<(), CommandError> {
             _ => Err(CommandError::new(CommandErrorKind::Arguments, format!("Invalid format: {}!", format))),
         }
     } else {
-        return Err(CommandError::new(CommandErrorKind::Config, "No VERSION file found!"));
+        return Err(CommandError::new(CommandErrorKind::Config, "No version file found."));
     }
 }
 

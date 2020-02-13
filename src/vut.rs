@@ -1,6 +1,5 @@
 use std::borrow::Cow;
 use std::env;
-use std::fs;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 
@@ -65,6 +64,14 @@ impl Vut {
 
     pub fn exists(&self) -> bool {
         self.version_file_path.exists()
+    }
+
+    pub fn get_root_path(&self) -> &Path {
+        &self.root_path
+    }
+
+    pub fn get_version_file_path(&self) -> &Path {
+        &self.version_file_path
     }
 
     pub fn get_version(&self) -> Result<Version, VutError> {
@@ -144,7 +151,7 @@ impl Vut {
         // This is currently required to ensure that relative paths in the configuration
         // are resolved correctly.
         env::set_current_dir(root_path)
-            .map_err(|err| VutError::Other(Cow::Owned(err.to_string())));
+            .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
         let files: Vec<PathBuf> = glob::glob("*.vutemplate")
         .expect("No glob!")
