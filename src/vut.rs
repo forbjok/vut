@@ -45,18 +45,21 @@ impl Vut {
         }
     }
 
-    pub fn from_path(path: impl AsRef<Path>) -> Result<Option<Self>, io::Error> {
-        if let Some(version_file_path) = util::locate_config_file(path, Self::VERSION_FILENAME)? {
-            Ok(Some(Self {
-                root_path: version_file_path.parent().unwrap().to_path_buf(),
+    pub fn from_path(path: impl AsRef<Path>) -> Option<Self> {
+        if let Some(version_file_path) = util::locate_config_file(path, Self::VERSION_FILENAME) {
+            // Can this actually fail?
+            let root_path = version_file_path.parent().unwrap();
+
+            Some(Self {
+                root_path: root_path.to_path_buf(),
                 version_file_path,
-            }))
+            })
         } else {
-            Ok(None)
+            None
         }
     }
 
-    pub fn from_current_dir() -> Result<Option<Self>, io::Error> {
+    pub fn from_current_dir() -> Option<Self> {
         let current_dir = env::current_dir().unwrap();
 
         Self::from_path(current_dir)
