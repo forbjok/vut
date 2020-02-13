@@ -32,15 +32,15 @@ enum Command {
         version: Option<String>,
     },
 
-    #[structopt(name = "get", help = "Get version")]
+    #[structopt(name = "get", about = "Get version")]
     Get {
-        #[structopt(name = "format", about = "Specify output format")]
+        #[structopt(name = "format", about = "Output format (json)")]
         format: String,
     },
 
-    #[structopt(name = "set", help = "Set version")]
+    #[structopt(name = "set", about = "Set version")]
     Set {
-        #[structopt(name = "version", about = "Specify version to set")]
+        #[structopt(name = "version", about = "Version to set")]
         version: String,
     },
 
