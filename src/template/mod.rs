@@ -102,8 +102,6 @@ pub fn generate_template<TP: TemplateProcessor>(template_path: &Path, values: &T
 
     let template_path = util::normalize_path(template_path);
 
-    dbg!(&template_path);
-
     // Get template directory path
     let template_dir = template_path.parent().unwrap();
 
