@@ -3,8 +3,8 @@ use std::env;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 
-use glob;
 use strum_macros::EnumString;
+use walkdir;
 
 use crate::template::{self, RenderTemplateError, TemplateInput};
 use crate::util;
@@ -151,20 +151,23 @@ impl Vut {
         let root_path = &self.root_path;
         let template_input = self.generate_template_input()?;
 
-        // Set current path to the root path.
-        // This is currently required to ensure that relative paths in the configuration
-        // are resolved correctly.
-        env::set_current_dir(root_path)
-            .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
-
-        let files: Vec<PathBuf> = glob::glob("**/*.vutemplate")
-        .expect("No glob!")
-        .filter_map(|path| path.ok())
-        // Make paths absolute
-        .map(|path| util::normalize_path(&path).into_owned())
-        // Exclude paths outside the root path
-        .filter(|path| path.starts_with(&root_path))
-        .collect();
+        let files: Vec<PathBuf> = walkdir::WalkDir::new(root_path).into_iter()
+            // Filter known VCS metadata directories
+            .filter_entry(|entry| !entry.file_name().to_str().map(|s| s == ".git" || s == ".hg").unwrap_or(false))
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.into_path())
+            // Only include template files
+            .filter(|path| {
+                match path.extension() {
+                    Some(ext) => ext.to_str().unwrap() == "vutemplate",
+                    None => false,
+                }
+            })
+            // Make paths absolute
+            .map(|path| util::normalize_path(&path).into_owned())
+            // Exclude paths outside the root path
+            .filter(|path| path.starts_with(&root_path))
+            .collect();
 
         let mut processed_files: Vec<PathBuf> = Vec::new();
         let mut generated_files: Vec<PathBuf> = Vec::new();
