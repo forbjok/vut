@@ -1,14 +1,20 @@
 use std::borrow::Cow;
 use std::env;
+use std::ffi::OsStr;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 
+use lazy_static::lazy_static;
 use strum_macros::EnumString;
 use walkdir;
 
 use crate::template::{self, RenderTemplateError, TemplateInput};
 use crate::util;
 use crate::version::{self, Version};
+
+lazy_static! {
+    static ref VUTEMPLATE_EXTENSION: &'static OsStr = OsStr::new("vutemplate");
+}
 
 #[derive(Debug, EnumString)]
 #[strum(serialize_all = "lowercase")]
@@ -159,7 +165,7 @@ impl Vut {
             // Only include template files
             .filter(|path| {
                 match path.extension() {
-                    Some(ext) => ext.to_str().unwrap() == "vutemplate",
+                    Some(ext) => ext == *VUTEMPLATE_EXTENSION,
                     None => false,
                 }
             })
