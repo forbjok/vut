@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 
 use encoding::{DecoderTrap, EncodingRef, EncoderTrap};
 use encoding::label::encoding_from_whatwg_label;
+use log::info;
 
 use crate::util;
 
@@ -43,7 +44,7 @@ pub enum RenderTemplateError {
 
 impl fmt::Display for RenderTemplateError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self {
+        match self {
             RenderTemplateError::OpenTemplate(err) => write!(f, "Error opening template: {}", err),
             RenderTemplateError::OpenOutput(err) => write!(f, "Error opening output: {}", err),
             RenderTemplateError::ReadTemplate(err) => write!(f, "Error reading template: {}", err),
@@ -67,6 +68,8 @@ pub fn render_template<TP: TemplateProcessor>(text: &str, values: &TemplateInput
 }
 
 pub fn generate_template<TP: TemplateProcessor>(template_path: &Path, values: &TemplateInput, encoding: Option<String>) -> Result<PathBuf, RenderTemplateError> {
+    info!("Generating template file {}", template_path.to_string_lossy());
+
     // If an encoding was specified, try to get an implementation for it.
     let encoding: Option<EncodingRef> = encoding.map(|enc_name| encoding_from_whatwg_label(&enc_name).expect("Cannot get encoding!"));
 
