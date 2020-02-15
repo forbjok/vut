@@ -16,7 +16,7 @@ pub fn init(version: Option<&str>) -> Result<(), CommandError> {
 
     let version = match version {
         Some(v) => v.parse().map_err(|err| CommandError::new(CommandErrorKind::Other, err))?,
-        None => Version::new(),
+        None => Version::new(0, 0, 0, None, None),
     };
 
     vut.set_version(&version)?;

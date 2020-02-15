@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::str::FromStr;
 
 use lazy_static::lazy_static;
@@ -15,38 +14,18 @@ pub struct Version {
     pub major: u32,
     pub minor: u32,
     pub patch: u32,
-    pub prerelease: String,
-    pub build: String,
+    pub prerelease: Option<String>,
+    pub build: Option<String>,
 }
 
 impl Version {
-    pub fn new() -> Self {
-        Self {
-            major: 0,
-            minor: 0,
-            patch: 0,
-            prerelease: "".to_owned(),
-            build: "".to_owned(),
-        }
-    }
-
-    pub fn new_rel(major: u32, minor: u32, patch: u32) -> Self {
+    pub fn new(major: u32, minor: u32, patch: u32, prerelease: Option<&str>, build: Option<&str>) -> Self {
         Self {
             major,
             minor,
             patch,
-            prerelease: "".to_owned(),
-            build: "".to_owned(),
-        }
-    }
-
-    pub fn new_pre(major: u32, minor: u32, patch: u32, prerelease: &str, build: &str) -> Self {
-        Self {
-            major,
-            minor,
-            patch,
-            prerelease: prerelease.to_owned(),
-            build: build.to_owned(),
+            prerelease: prerelease.map(|s| s.to_owned()),
+            build: build.map(|s| s.to_owned()),
         }
     }
 
@@ -56,8 +35,8 @@ impl Version {
             major: self.major + 1,
             minor: 0,
             patch: 0,
-            prerelease: "".to_owned(),
-            build: "".to_owned(),
+            prerelease: None,
+            build: self.build.clone(),
         }
     }
 
@@ -67,8 +46,8 @@ impl Version {
             major: self.major,
             minor: self.minor + 1,
             patch: 0,
-            prerelease: "".to_owned(),
-            build: "".to_owned(),
+            prerelease: None,
+            build: self.build.clone(),
         }
     }
 
@@ -78,20 +57,24 @@ impl Version {
             major: self.major,
             minor: self.minor,
             patch: self.patch + 1,
-            prerelease: "".to_owned(),
-            build: "".to_owned(),
+            prerelease: None,
+            build: self.build.clone(),
         }
     }
 
     /// Bump the number of a numbered prerelease string.
     pub fn bump_prerelease(&self) -> Self {
-        if let Some((prefix, number)) = split_numbered_prerelease(&self.prerelease) {
-            Self {
-                major: self.major,
-                minor: self.minor,
-                patch: self.patch,
-                prerelease: format!("{}{}", prefix, number + 1),
-                build: "".to_owned(),
+        if let Some(prerelease) = &self.prerelease {
+            if let Some((prefix, number)) = split_numbered_prerelease(prerelease) {
+                Self {
+                    major: self.major,
+                    minor: self.minor,
+                    patch: self.patch,
+                    prerelease: Some(format!("{}{}", prefix, number + 1)),
+                    build: self.build.clone(),
+                }
+            } else {
+                self.clone()
             }
         } else {
             self.clone()
@@ -100,13 +83,17 @@ impl Version {
 
     /// Bump the number of a numbered build string.
     pub fn bump_build(&self) -> Self {
-        if let Some((prefix, number)) = split_numbered_prerelease(&self.build) {
-            Self {
-                major: self.major,
-                minor: self.minor,
-                patch: self.patch,
-                prerelease: self.prerelease.to_owned(),
-                build: format!("{}{}", prefix, number + 1),
+        if let Some(build) = &self.build {
+            if let Some((prefix, number)) = split_numbered_prerelease(build) {
+                Self {
+                    major: self.major,
+                    minor: self.minor,
+                    patch: self.patch,
+                    prerelease: self.prerelease.to_owned(),
+                    build: Some(format!("{}{}", prefix, number + 1)),
+                }
+            } else {
+                self.clone()
             }
         } else {
             self.clone()
@@ -125,31 +112,28 @@ impl FromStr for Version {
             major: (&cap[1]).parse().unwrap(),
             minor: (&cap[2]).parse().unwrap(),
             patch: (&cap[3]).parse().unwrap(),
-            prerelease: cap.get(4).map_or("", |m| m.as_str()).to_owned(),
-            build: cap.get(5).map_or("", |m| m.as_str()).to_owned(),
+            prerelease: cap.get(4).map_or(None, |m| Some(m.as_str().to_owned())),
+            build: cap.get(5).map_or(None, |m| Some(m.as_str().to_owned())),
         })
     }
 }
 
 impl ToString for Version {
     fn to_string(&self) -> String {
-        format!("{}.{}.{}{}{}", self.major, self.minor, self.patch, prefix_if_not_empty(&self.prerelease, "-"), prefix_if_not_empty(&self.build, "+"))
+        format!(
+            "{}.{}.{}{}{}",
+            self.major,
+            self.minor,
+            self.patch,
+            self.prerelease.as_ref().map_or_else(|| "".to_owned(), |p| format!("-{}", p)),
+            self.build.as_ref().map_or_else(|| "".to_owned(), |b| format!("+{}", b))
+        )
     }
-}
-
-/// Add a prefix to the specified string only if it is not empty.
-fn prefix_if_not_empty<'a>(s: &'a str, prefix: &str) -> Cow<'a, str> {
-    if s.is_empty() {
-        return Cow::Borrowed(s);
-    }
-
-    Cow::Owned(format!("{}{}", prefix, s))
 }
 
 /// Split a prerelease string with a number at the end into separate string prefix and number components.
 pub fn split_numbered_prerelease(s: &str) -> Option<(&str, u32)> {
     if let Some(cap) = REGEX_SPLIT_NUMBERED_PRERELEASE.captures(s) {
-
         let prefix = cap.get(1).unwrap().as_str();
         let number = cap.get(2).unwrap().as_str().parse().unwrap();
 
@@ -184,11 +168,11 @@ mod test {
     #[test]
     /// Test bumps
     fn test_bumps() {
-        assert_eq!(Version::new_rel(1, 2, 3).bump_major().to_string(), "2.0.0");
-        assert_eq!(Version::new_rel(1, 2, 3).bump_minor().to_string(), "1.3.0");
-        assert_eq!(Version::new_rel(1, 2, 3).bump_patch().to_string(), "1.2.4");
+        assert_eq!(Version::new(1, 2, 3, None, None).bump_major().to_string(), "2.0.0");
+        assert_eq!(Version::new(1, 2, 3, None, None).bump_minor().to_string(), "1.3.0");
+        assert_eq!(Version::new(1, 2, 3, None, None).bump_patch().to_string(), "1.2.4");
 
-        assert_eq!(Version::new_pre(1, 2, 3, "beta.1", "").bump_prerelease().to_string(), "1.2.3-beta.2");
-        assert_eq!(Version::new_pre(1, 2, 3, "beta.1", "build.7").bump_build().to_string(), "1.2.3-beta.1+build.8");
+        assert_eq!(Version::new(1, 2, 3, Some("beta.1"), None).bump_prerelease().to_string(), "1.2.3-beta.2");
+        assert_eq!(Version::new(1, 2, 3, Some("beta.1"), Some("build.7")).bump_build().to_string(), "1.2.3-beta.1+build.8");
     }
 }
