@@ -7,7 +7,7 @@ pub fn bump(bump_version: BumpVersion) -> Result<(), CommandError> {
     if let Some(vut) = Vut::from_current_dir() {
         let new_version: Version = vut.bump_version(bump_version)?;
 
-        println!("Version bumped to {}.", new_version.to_string());
+        eprintln!("Version bumped to {}.", new_version.to_string());
 
         // Regenerate template output
         vut.generate_output()?;

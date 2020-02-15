@@ -4,8 +4,11 @@ use super::{CommandError, CommandErrorKind};
 
 pub fn generate() -> Result<(), CommandError> {
     if let Some(vut) = Vut::from_current_dir() {
-        println!("Generating templates...");
+        eprint!("Generating templates... ");
+
         vut.generate_output()?;
+
+        eprintln!("Done.");
 
         Ok(())
     } else {

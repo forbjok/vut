@@ -73,7 +73,6 @@ fn main() {
 
     debug!("Debug logging enabled.");
 
-
     let cmd_result = match opt.command {
         Command::Bump { bump_version } => command::bump(bump_version),
         Command::Generate => command::generate(),

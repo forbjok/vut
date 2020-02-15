@@ -10,7 +10,7 @@ pub fn set(version: &str) -> Result<(), CommandError> {
 
         vut.set_version(&new_version)?;
 
-        println!("Version set to {}.", new_version.to_string());
+        eprintln!("Version set to {}.", new_version.to_string());
 
         // Regenerate template output
         vut.generate_output()?;
