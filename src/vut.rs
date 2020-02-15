@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::env;
 use std::ffi::OsStr;
-use std::io::{self, Read, Write};
+use std::io;
 use std::path::{Path, PathBuf};
 
 use lazy_static::lazy_static;
@@ -11,6 +11,7 @@ use walkdir;
 use crate::template::{self, RenderTemplateError, TemplateInput};
 use crate::util;
 use crate::version::{self, Version};
+use crate::version_source::{self, VersionSource};
 
 lazy_static! {
     static ref VUTEMPLATE_EXTENSION: &'static OsStr = OsStr::new("vutemplate");
@@ -36,29 +37,27 @@ pub enum VutError {
 
 pub struct Vut {
     root_path: PathBuf,
-    version_file_path: PathBuf,
+    source: Box<dyn VersionSource>,
 }
 
 impl Vut {
-    const VERSION_FILENAME: &'static str = "VERSION";
-
     pub fn new(path: impl AsRef<Path>) -> Self {
         let path = path.as_ref();
+        let source = version_source::sources::VersionFileSource::new(path);
 
         Self {
             root_path: path.to_path_buf(),
-            version_file_path: path.join(Self::VERSION_FILENAME),
+            source: Box::new(source),
         }
     }
 
     pub fn from_path(path: impl AsRef<Path>) -> Option<Self> {
-        if let Some(version_file_path) = util::locate_config_file(path, Self::VERSION_FILENAME) {
-            // Can this actually fail?
-            let root_path = version_file_path.parent().unwrap();
+        if let Some(source) = version_source::sources::VersionFileSource::locate_from_path(path.as_ref()) {
+            let root_path = source.get_root_path();
 
             Some(Self {
                 root_path: root_path.to_path_buf(),
-                version_file_path,
+                source: Box::new(source),
             })
         } else {
             None
@@ -72,47 +71,22 @@ impl Vut {
     }
 
     pub fn exists(&self) -> bool {
-        self.version_file_path.exists()
+        self.source.exists()
     }
 
     pub fn get_root_path(&self) -> &Path {
         &self.root_path
     }
 
-    pub fn get_version_file_path(&self) -> &Path {
-        &self.version_file_path
-    }
-
     pub fn get_version(&self) -> Result<Version, VutError> {
-        let version_str = {
-            let mut file = util::open_file(&self.version_file_path)
-                .map_err(|err| VutError::VersionFileOpen(err))?;
-
-            let mut version_str = String::new();
-
-            file.read_to_string(&mut version_str)
-                .map_err(|err| VutError::VersionFileRead(err))?;
-
-            version_str
-        };
-
-        let version = version_str.parse()
-            .map_err(|err| VutError::Other(Cow::Owned(err)))?;
-
-        Ok(version)
+        self.source.get_version()
     }
 
-    pub fn set_version(&self, version: &Version) -> Result<(), VutError> {
-        let mut file = util::create_file(&self.version_file_path)
-            .map_err(|err| VutError::VersionFileOpen(err))?;
-
-        file.write(version.to_string().as_bytes())
-            .map_err(|err| VutError::VersionFileWrite(err))?;
-
-        Ok(())
+    pub fn set_version(&mut self, version: &Version) -> Result<(), VutError> {
+        self.source.set_version(version)
     }
 
-    pub fn bump_version(&self, bump_version: BumpVersion) -> Result<Version, VutError> {
+    pub fn bump_version(&mut self, bump_version: BumpVersion) -> Result<Version, VutError> {
         let version = self.get_version()?;
 
         let version = match bump_version {
@@ -123,7 +97,7 @@ impl Vut {
             BumpVersion::Build => version.bump_build(),
         };
 
-        self.set_version(&version)?;
+        self.source.set_version(&version)?;
 
         Ok(version)
     }

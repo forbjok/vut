@@ -10,6 +10,7 @@ mod command;
 mod util;
 mod template;
 mod version;
+mod version_source;
 mod vut;
 
 use vut::BumpVersion;
