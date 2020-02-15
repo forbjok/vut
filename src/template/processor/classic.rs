@@ -1,23 +1,26 @@
-use regex;
+use lazy_static::lazy_static;
+use regex::Regex;
 
 use crate::template::{TemplateInput, TemplateProcessor};
+
+lazy_static! {
+    static ref REGEX_FIND_TEMPLATE_VARS: Regex = Regex::new(r#"\{\{(?:\|([^\|]*)\|)?([\w\d]*)(?:\|([^\|]*)\|)?\}\}"#).unwrap();
+}
 
 pub struct ClassicProcessor;
 
 impl TemplateProcessor for ClassicProcessor {
     fn process(template: &str, values: &TemplateInput) -> Result<String, String> {
-        let find_template_vars = regex::Regex::new(r#"\{\{(?:\|([^\|]*)\|)?([\w\d]*)(?:\|([^\|]*)\|)?\}\}"#).unwrap();
-
         let variables = &values.values;
 
         let mut variables_not_found: Vec<String> = Vec::new();
 
-        let output = find_template_vars.replace_all(&template, |captures: &regex::Captures| {
+        let output = REGEX_FIND_TEMPLATE_VARS.replace_all(&template, |captures: &regex::Captures| {
             let prefix = captures.get(1).map(|v| v.as_str()).unwrap_or("");
             let variable_name = &captures[2];
             let suffix = captures.get(3).map(|v| v.as_str()).unwrap_or("");
 
-            let variable_value = if let Some(value) = variables.get(variable_name).as_ref() {
+            let variable_value = if let Some(value) = variables.get(variable_name) {
                 value
             } else {
                 variables_not_found.push(variable_name.to_owned());
