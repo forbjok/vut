@@ -153,11 +153,10 @@ impl Vut {
         Ok(template_input)
     }
 
-    pub fn generate_output(&self) -> Result<(), VutError> {
+    pub fn locate_templates(&self) -> Vec<PathBuf> {
         let root_path = &self.root_path;
-        let template_input = self.generate_template_input()?;
 
-        let files: Vec<PathBuf> = walkdir::WalkDir::new(root_path).into_iter()
+        let template_files: Vec<PathBuf> = walkdir::WalkDir::new(root_path).into_iter()
             // Filter known VCS metadata directories
             .filter_entry(|entry| !entry.file_name().to_str().map(|s| s == ".git" || s == ".hg").unwrap_or(false))
             .filter_map(|entry| entry.ok())
@@ -175,10 +174,17 @@ impl Vut {
             .filter(|path| path.starts_with(&root_path))
             .collect();
 
+        template_files
+    }
+
+    pub fn generate_output(&self) -> Result<(), VutError> {
+        let template_input = self.generate_template_input()?;
+        let template_files = self.locate_templates();
+
         let mut processed_files: Vec<PathBuf> = Vec::new();
         let mut generated_files: Vec<PathBuf> = Vec::new();
 
-        for file in files {
+        for file in template_files {
             let generated_file = template::generate_template::<template::processor::ClassicProcessor>(&file, &template_input, None)
                 .map_err(|err| VutError::TemplateGenerate(err))?;
 
