@@ -21,6 +21,7 @@ pub use set::*;
 pub enum CommandErrorKind {
     Arguments,
     Config,
+    NoVersionSource,
     Other,
 }
 
@@ -29,6 +30,7 @@ impl CommandErrorKind {
         match self {
             Self::Arguments => 1,
             Self::Config => 2,
+            Self::NoVersionSource => 3,
             Self::Other => 101,
         }
     }

@@ -14,6 +14,6 @@ pub fn bump(bump_version: BumpVersion) -> Result<(), CommandError> {
 
         Ok(())
     } else {
-        return Err(CommandError::new(CommandErrorKind::Config, "No version file found."));
+        return Err(CommandError::new(CommandErrorKind::NoVersionSource, "No version source found."));
     }
 }
