@@ -171,7 +171,7 @@ impl Vut {
         let mut generated_files: Vec<PathBuf> = Vec::new();
 
         for file in template_files {
-            let generated_file = template::generate_template::<template::processor::ClassicProcessor>(&file, &template_input, None)
+            let generated_file = template::generate_template::<template::processor::VutProcessor>(&file, &template_input, None)
                 .map_err(|err| VutError::TemplateGenerate(err))?;
 
             processed_files.push(file);

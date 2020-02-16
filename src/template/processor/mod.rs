@@ -1,3 +1,3 @@
-mod classic;
+mod vut;
 
-pub use classic::ClassicProcessor;
+pub use vut::VutProcessor;

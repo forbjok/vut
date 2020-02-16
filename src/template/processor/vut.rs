@@ -7,9 +7,9 @@ lazy_static! {
     static ref REGEX_FIND_TEMPLATE_VARS: Regex = Regex::new(r#"\{\{(?:\|([^\|]*)\|)?([\w\d]*)(?:\|([^\|]*)\|)?\}\}"#).unwrap();
 }
 
-pub struct ClassicProcessor;
+pub struct VutProcessor;
 
-impl TemplateProcessor for ClassicProcessor {
+impl TemplateProcessor for VutProcessor {
     fn process(template: &str, values: &TemplateInput) -> Result<String, String> {
         let variables = &values.values;
 
@@ -86,7 +86,7 @@ mod test {
     }
 
     test_processor! {
-        test_classic : ClassicProcessor {
+        test_classic : VutProcessor {
             ok {
                 "BLAH={{TheVariable}};" => "BLAH=42;"
                 "BLAH={{|.|TheVariable}};" => "BLAH=.42;"
