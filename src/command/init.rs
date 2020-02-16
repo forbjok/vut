@@ -8,7 +8,7 @@ use super::{CommandError, CommandErrorKind};
 pub fn init(version: Option<&str>) -> Result<(), CommandError> {
     let current_dir = env::current_dir()?;
 
-    if let Some(vut) = Vut::from_path(&current_dir) {
+    if let Some(vut) = Vut::from_path(&current_dir)? {
         return Err(CommandError::new(CommandErrorKind::Other, format!("An existing version file was found at: {}", vut.get_root_path().to_string_lossy())));
     }
 

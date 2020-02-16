@@ -8,10 +8,13 @@ use lazy_static::lazy_static;
 use strum_macros::EnumString;
 use walkdir;
 
+use crate::config;
 use crate::template::{self, RenderTemplateError, TemplateInput};
 use crate::util;
 use crate::version::{self, Version};
 use crate::version_source::{self, VersionSource};
+
+const VUT_CONFIG_FILENAME: &str = ".vutconfig";
 
 lazy_static! {
     static ref VUTEMPLATE_EXTENSION: &'static OsStr = OsStr::new("vutemplate");
@@ -28,6 +31,8 @@ pub enum BumpVersion {
 }
 
 pub enum VutError {
+    OpenConfig(util::FileError),
+    ParseConfig(Cow<'static, str>),
     VersionFileOpen(util::FileError),
     VersionFileRead(io::Error),
     VersionFileWrite(io::Error),
@@ -51,8 +56,16 @@ impl Vut {
         }
     }
 
-    pub fn from_path(path: impl AsRef<Path>) -> Option<Self> {
+    pub fn from_path(path: impl AsRef<Path>) -> Result<Option<Self>, VutError> {
         let path = path.as_ref();
+
+        let config_file_path = util::locate_config_file(path, VUT_CONFIG_FILENAME);
+
+        let config = if let Some(path) = config_file_path {
+            config::VutConfig::from_file(&path)?
+        } else {
+            config::VutConfig::default()
+        };
 
         let source: Option<Box<dyn VersionSource>> = if let Some(source) = version_source::VersionFileSource::locate_from_path(path) {
             Some(Box::new(source))
@@ -64,7 +77,7 @@ impl Vut {
             None
         };
 
-        if let Some(source) = source {
+        Ok(if let Some(source) = source {
             let root_path = source.get_root_path();
 
             Some(Self {
@@ -73,10 +86,10 @@ impl Vut {
             })
         } else {
             None
-        }
+        })
     }
 
-    pub fn from_current_dir() -> Option<Self> {
+    pub fn from_current_dir() -> Result<Option<Self>, VutError> {
         let current_dir = env::current_dir().unwrap();
 
         Self::from_path(current_dir)

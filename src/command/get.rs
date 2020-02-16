@@ -8,7 +8,7 @@ use crate::vut::Vut;
 use super::{CommandError, CommandErrorKind};
 
 pub fn get(format: &str) -> Result<(), CommandError> {
-    if let Some(vut) = Vut::from_current_dir() {
+    if let Some(vut) = Vut::from_current_dir()? {
         match format {
             "json" => get_json(&vut),
             _ => Err(CommandError::new(CommandErrorKind::Arguments, format!("Invalid format: {}!", format))),

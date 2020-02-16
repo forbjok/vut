@@ -72,6 +72,8 @@ impl From<util::FileError> for CommandError {
 impl From<VutError> for CommandError {
     fn from(error: VutError) -> Self {
         let description = match error {
+            VutError::OpenConfig(err) => format!("Error opening config file: {}", err.to_string()),
+            VutError::ParseConfig(err) => format!("Error parsing configuration: {}", err),
             VutError::VersionFileOpen(err) => format!("Error opening version file: {}", err.to_string()),
             VutError::VersionFileRead(err) => format!("Error reading version file: {}", err.to_string()),
             VutError::VersionFileWrite(err) => format!("Error writing version file: {}", err.to_string()),

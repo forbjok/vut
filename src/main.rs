@@ -7,6 +7,7 @@ use log::{
 use structopt::StructOpt;
 
 mod command;
+mod config;
 mod util;
 mod template;
 mod version;
