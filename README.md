@@ -6,7 +6,7 @@ It lets you easily keep track of a project's version and do things like bump its
 Its main strength, however is in the way it propagates version numbers to where they are needed - using templates.
 
 Ideally, it would be sufficient to store the one true version number in only a single place, and every other place that requires it would just read it from that one place.
-Unfortunately, realistically that's just not doable most of the time.
+Unfortunately, realistically that's just not always possible.
 Rather than rely on inflexible and specific code for generating files containing the version in specific formats or languages, or having to write equally specific scripts, Vut allows propagation of versions by using templates.
 
 ## Installing
@@ -18,17 +18,20 @@ C:\> choco install vut
 For GNU/Linux and other operating systems, you will have to compile it yourself.
 
 ## Compiling
-1. Download and install the lastest version of DMD (the reference D compiler) from [dlang.org](http://dlang.org/) or your distro's package manager
-2. Download and install DUB from [code.dlang.org](https://code.dlang.org/) or your distro's package manager
-3. Clone this repository and execute the following command in it:
+1. Install Rust using the instructions [here](https://www.rust-lang.org/tools/install) or your distro's package manager.
+2. Clone this repository and execute the following command in it:
 ```
-$ dub build
+$ cargo build --release
 ```
 
-Voila! You should now have a usable executable in the root of the repository.
+Voila! You should now have a usable executable in the `target/release` subdirectory.
 
-## Creating a VERSION file
-In order to store the ONE TRUE VERSION, Vut uses a file called VERSION.
+## Authoritative Version Source
+In order to do its work, Vut requires a supported version source to be present in the project.
+Currently supported version sources are: **VERSION file**, **Cargo.toml** (Rust) and **package.json** (NPM).
+
+### VERSION file
+At its simplest, this can be a file called VERSION.
 It's a plain UTF-8 encoded text file containing the full SemVer string, with no newline at the end.
 
 The recommended way of creating one is to run the following command in the root of your repository (or wherever the root of the versioned content is):
@@ -36,6 +39,14 @@ The recommended way of creating one is to run the following command in the root 
 $ vut init 1.0.0
 ```
 ... where 1.0.0 can be substituted with any SemVer 2.0 compatible version string that will be used as the initial version.
+
+### Cargo.toml (Rust)
+Cargo.toml is the package manifesto file used by Rust's package manager Cargo.
+If Vut is executed within a Cargo project, Cargo.toml should be automatically detected and used as the authoritative version source.
+
+### package.json (NPM)
+package.json is the package description format used by the NPM package manager.
+If Vut is executed within an NPM project, package.json should be automatically detected and used as the authoritative version source.
 
 ## Bumping a version
 To bump a version component, use any one of:
@@ -81,35 +92,26 @@ $ vut set 1.0.2-beta.3+build42
 Sometimes you may want to easily get the current version, or some component of it - for example in a build script.
 That's the purpose `vut get` is designed for.
 ```
-$ vut get
+$ vut get json
 ```
 will output all the available variables in json format:
 ```json
 {
-    "build": "build42",
-    "buildNumber": "42",
-    "buildPrefix": "build",
-    "fullVersion": "1.0.2-beta.3+build42",
-    "major": "1",
-    "majorMinor": "1.0",
-    "majorMinorPatch": "1.0.2",
-    "minor": "0",
-    "patch": "2",
-    "prerelease": "beta.3",
-    "prereleaseNumber": "3",
-    "prereleasePrefix": "beta.",
-    "version": "1.0.2-beta.3"
+  "Build": "",
+  "BuildNumber": "",
+  "BuildPrefix": "",
+  "FullVersion": "0.1.0",
+  "Major": "0",
+  "MajorMinor": "0.1",
+  "MajorMinorPatch": "0.1.0",
+  "Minor": "1",
+  "Patch": "0",
+  "Prerelease": "",
+  "PrereleaseNumber": "",
+  "PrereleasePrefix": "",
+  "Version": "0.1.0"
 }
 ```
-
-If you need to retrieve a custom version string, whether it's just a single variable or a combination of many (for example for use in a shell script), you can use:
-```
-$ vut get --format="{{MajorMinorPatch}} {{PrereleasePrefix}}{{PrereleaseNumber}}"
-```
-to get output like `1.0.2 beta.3`.
-The format here is exactly the same as in templates. Anything you can put in a template, you can put in a --format string and vice versa.
-
-*Note that all the variables start with a lowercase letter in the json output, whereas they must start with a capital letter when used in templates or format strings.*
 
 ## Regenerating templates without changing the version
 Sometimes you may want to regenerate all templates even though the version hasn't changed. For example, if you've changed or added a template.
