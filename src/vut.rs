@@ -52,12 +52,20 @@ impl Vut {
     }
 
     pub fn from_path(path: impl AsRef<Path>) -> Option<Self> {
-        if let Some(source) = version_source::sources::VersionFileSource::locate_from_path(path.as_ref()) {
+        let source: Option<Box<dyn VersionSource>> = if let Some(source) = version_source::sources::VersionFileSource::locate_from_path(path.as_ref()) {
+            Some(Box::new(source))
+        } else if let Some(source) = version_source::sources::CargoSource::locate_from_path(path.as_ref()) {
+            Some(Box::new(source))
+        } else {
+            None
+        };
+
+        if let Some(source) = source {
             let root_path = source.get_root_path();
 
             Some(Self {
                 root_path: root_path.to_path_buf(),
-                source: Box::new(source),
+                source,
             })
         } else {
             None
