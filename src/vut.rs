@@ -43,7 +43,7 @@ pub struct Vut {
 impl Vut {
     pub fn new(path: impl AsRef<Path>) -> Self {
         let path = path.as_ref();
-        let source = version_source::sources::VersionFileSource::new(path);
+        let source = version_source::VersionFileSource::new(path);
 
         Self {
             root_path: path.to_path_buf(),
@@ -54,11 +54,11 @@ impl Vut {
     pub fn from_path(path: impl AsRef<Path>) -> Option<Self> {
         let path = path.as_ref();
 
-        let source: Option<Box<dyn VersionSource>> = if let Some(source) = version_source::sources::VersionFileSource::locate_from_path(path) {
+        let source: Option<Box<dyn VersionSource>> = if let Some(source) = version_source::VersionFileSource::locate_from_path(path) {
             Some(Box::new(source))
-        } else if let Some(source) = version_source::sources::CargoSource::locate_from_path(path) {
+        } else if let Some(source) = version_source::CargoSource::locate_from_path(path) {
             Some(Box::new(source))
-        } else if let Some(source) = version_source::sources::NpmSource::locate_from_path(path) {
+        } else if let Some(source) = version_source::NpmSource::locate_from_path(path) {
             Some(Box::new(source))
         } else {
             None

@@ -3,7 +3,13 @@ use std::path::Path;
 use crate::version::Version;
 use crate::vut::VutError;
 
-pub mod sources;
+mod cargo;
+mod npm;
+mod version_file;
+
+pub use cargo::*;
+pub use npm::*;
+pub use version_file::*;
 
 /// Trait representing the authoritative source of a project's version
 pub trait VersionSource {
