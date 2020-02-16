@@ -5,6 +5,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use lazy_static::lazy_static;
+use log::warn;
 use strum_macros::EnumString;
 use walkdir;
 
@@ -33,6 +34,7 @@ pub enum BumpVersion {
 pub enum VutError {
     OpenConfig(util::FileError),
     ParseConfig(Cow<'static, str>),
+    NoVersionSource,
     VersionFileOpen(util::FileError),
     VersionFileRead(io::Error),
     VersionFileWrite(io::Error),
@@ -42,7 +44,7 @@ pub enum VutError {
 
 pub struct Vut {
     root_path: PathBuf,
-    source: Box<dyn VersionSource>,
+    authoritative_version_source: Box<dyn VersionSource>,
 }
 
 impl Vut {
@@ -52,51 +54,58 @@ impl Vut {
 
         Self {
             root_path: path.to_path_buf(),
-            source: Box::new(source),
+            authoritative_version_source: Box::new(source),
         }
     }
 
-    pub fn from_path(path: impl AsRef<Path>) -> Result<Option<Self>, VutError> {
+    pub fn from_path(path: impl AsRef<Path>) -> Result<Self, VutError> {
         let path = path.as_ref();
 
         let config_file_path = util::locate_config_file(path, VUT_CONFIG_FILENAME);
 
-        let config = if let Some(path) = config_file_path {
-            config::VutConfig::from_file(&path)?
+        let _config = if let Some(path) = config_file_path.as_ref() {
+            config::VutConfig::from_file(path)?
         } else {
             config::VutConfig::default()
         };
 
-        let source: Option<Box<dyn VersionSource>> = if let Some(source) = version_source::VersionFileSource::locate_from_path(path) {
-            Some(Box::new(source))
-        } else if let Some(source) = version_source::CargoSource::locate_from_path(path) {
-            Some(Box::new(source))
-        } else if let Some(source) = version_source::NpmSource::locate_from_path(path) {
-            Some(Box::new(source))
+        let (root_path, authoritative_version_source) = if let Some(config_file_path) = config_file_path.as_ref() {
+            let root_path = config_file_path.parent().unwrap().to_path_buf();
+
+            // TODO: Implement the correct method to use here. This is wrong.
+            let source = version_source::locate_version_source_from(path)
+                .ok_or_else(|| VutError::NoVersionSource)?;
+
+                (root_path, source)
         } else {
-            None
+            // No config file found.
+            // Fall back to trying to locate a version source instead.
+
+            let source = version_source::locate_version_source_from(path)
+                .ok_or_else(|| VutError::NoVersionSource)?;
+
+            // TODO: Find a better way to display deprecation warning.
+            warn!("DEPRECATED: Authoritative version source present with no config file. Create a .vutconfig in the root of the project.");
+
+            let root_path = source.get_path().to_path_buf();
+
+            (root_path, source)
         };
 
-        Ok(if let Some(source) = source {
-            let root_path = source.get_root_path();
-
-            Some(Self {
-                root_path: root_path.to_path_buf(),
-                source,
-            })
-        } else {
-            None
+        Ok(Self {
+            root_path: root_path.to_path_buf(),
+            authoritative_version_source,
         })
     }
 
-    pub fn from_current_dir() -> Result<Option<Self>, VutError> {
+    pub fn from_current_dir() -> Result<Self, VutError> {
         let current_dir = env::current_dir().unwrap();
 
         Self::from_path(current_dir)
     }
 
     pub fn exists(&self) -> bool {
-        self.source.exists()
+        self.authoritative_version_source.exists()
     }
 
     pub fn get_root_path(&self) -> &Path {
@@ -104,11 +113,11 @@ impl Vut {
     }
 
     pub fn get_version(&self) -> Result<Version, VutError> {
-        self.source.get_version()
+        self.authoritative_version_source.get_version()
     }
 
     pub fn set_version(&mut self, version: &Version) -> Result<(), VutError> {
-        self.source.set_version(version)
+        self.authoritative_version_source.set_version(version)
     }
 
     pub fn bump_version(&mut self, bump_version: BumpVersion) -> Result<Version, VutError> {
@@ -122,7 +131,7 @@ impl Vut {
             BumpVersion::Build => version.bump_build(),
         };
 
-        self.source.set_version(&version)?;
+        self.authoritative_version_source.set_version(&version)?;
 
         Ok(version)
     }

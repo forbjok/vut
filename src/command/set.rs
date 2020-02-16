@@ -4,19 +4,17 @@ use crate::vut::Vut;
 use super::{CommandError, CommandErrorKind};
 
 pub fn set(version: &str) -> Result<(), CommandError> {
-    if let Some(mut vut) = Vut::from_current_dir()? {
-        let new_version: Version = version.parse()
-            .map_err(|err| CommandError::new(CommandErrorKind::Other, err))?;
+    let mut vut = Vut::from_current_dir()?;
 
-        vut.set_version(&new_version)?;
+    let new_version: Version = version.parse()
+        .map_err(|err| CommandError::new(CommandErrorKind::Other, err))?;
 
-        eprintln!("Version set to {}.", new_version.to_string());
+    vut.set_version(&new_version)?;
 
-        // Regenerate template output
-        vut.generate_output()?;
+    eprintln!("Version set to {}.", new_version.to_string());
 
-        Ok(())
-    } else {
-        return Err(CommandError::new(CommandErrorKind::NoVersionSource, "No version source found."));
-    }
+    // Regenerate template output
+    vut.generate_output()?;
+
+    Ok(())
 }

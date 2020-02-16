@@ -3,15 +3,13 @@ use crate::vut::Vut;
 use super::{CommandError, CommandErrorKind};
 
 pub fn generate() -> Result<(), CommandError> {
-    if let Some(vut) = Vut::from_current_dir()? {
-        eprint!("Generating templates... ");
+    let vut = Vut::from_current_dir()?;
 
-        vut.generate_output()?;
+    eprint!("Generating templates... ");
 
-        eprintln!("Done.");
+    vut.generate_output()?;
 
-        Ok(())
-    } else {
-        return Err(CommandError::new(CommandErrorKind::NoVersionSource, "No version source found."));
-    }
+    eprintln!("Done.");
+
+    Ok(())
 }

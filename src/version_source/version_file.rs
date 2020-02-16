@@ -10,14 +10,14 @@ use crate::version_source::VersionSource;
 use crate::vut::VutError;
 
 pub struct VersionFileSource {
-    pub root_path: PathBuf,
+    pub path: PathBuf,
     pub version_file_path: PathBuf,
 }
 
 impl VersionFileSource {
     pub fn new(path: &Path) -> Self {
         Self {
-            root_path: path.to_path_buf(),
+            path: path.to_path_buf(),
             version_file_path: path.to_path_buf(),
         }
     }
@@ -27,7 +27,7 @@ impl VersionFileSource {
             let root_path = path.parent().unwrap();
 
             Some(Self {
-                root_path: root_path.to_path_buf(),
+                path: root_path.to_path_buf(),
                 version_file_path: path.to_path_buf(),
             })
         })
@@ -35,8 +35,8 @@ impl VersionFileSource {
 }
 
 impl VersionSource for VersionFileSource {
-    fn get_root_path(&self) -> &Path {
-        &self.root_path
+    fn get_path(&self) -> &Path {
+        &self.path
     }
 
     fn exists(&self) -> bool {

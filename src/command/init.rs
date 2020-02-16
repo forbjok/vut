@@ -1,16 +1,19 @@
 use std::env;
 
 use crate::version::Version;
-use crate::vut::Vut;
+use crate::vut::{Vut, VutError};
 
 use super::{CommandError, CommandErrorKind};
 
 pub fn init(version: Option<&str>) -> Result<(), CommandError> {
     let current_dir = env::current_dir()?;
 
-    if let Some(vut) = Vut::from_path(&current_dir)? {
-        return Err(CommandError::new(CommandErrorKind::Other, format!("An existing version file was found at: {}", vut.get_root_path().to_string_lossy())));
-    }
+    // Check if there is an existing version source for this path
+    match Vut::from_path(&current_dir) {
+        Ok(vut) => return Err(CommandError::new(CommandErrorKind::Other, format!("An existing version file was found at: {}", vut.get_root_path().to_string_lossy()))),
+        Err(VutError::NoVersionSource) => Ok(()),
+        Err(err) => Err(err),
+    }?;
 
     let mut vut = Vut::new(current_dir);
 

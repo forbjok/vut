@@ -12,14 +12,14 @@ use crate::vut::VutError;
 use toml_edit;
 
 pub struct CargoSource {
-    pub root_path: PathBuf,
+    pub path: PathBuf,
     pub cargo_file_path: PathBuf,
 }
 
 impl CargoSource {
     pub fn new(path: &Path) -> Self {
         Self {
-            root_path: path.to_path_buf(),
+            path: path.to_path_buf(),
             cargo_file_path: path.to_path_buf(),
         }
     }
@@ -29,7 +29,7 @@ impl CargoSource {
             let root_path = path.parent().unwrap();
 
             Some(Self {
-                root_path: root_path.to_path_buf(),
+                path: root_path.to_path_buf(),
                 cargo_file_path: path.to_path_buf(),
             })
         })
@@ -59,8 +59,8 @@ impl CargoSource {
 }
 
 impl VersionSource for CargoSource {
-    fn get_root_path(&self) -> &Path {
-        &self.root_path
+    fn get_path(&self) -> &Path {
+        &self.path
     }
 
     fn exists(&self) -> bool {

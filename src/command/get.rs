@@ -8,13 +8,11 @@ use crate::vut::Vut;
 use super::{CommandError, CommandErrorKind};
 
 pub fn get(format: &str) -> Result<(), CommandError> {
-    if let Some(vut) = Vut::from_current_dir()? {
-        match format {
-            "json" => get_json(&vut),
-            _ => Err(CommandError::new(CommandErrorKind::Arguments, format!("Invalid format: {}!", format))),
-        }
-    } else {
-        return Err(CommandError::new(CommandErrorKind::NoVersionSource, "No version source found."));
+    let vut = Vut::from_current_dir()?;
+
+    match format {
+        "json" => get_json(&vut),
+        _ => Err(CommandError::new(CommandErrorKind::Arguments, format!("Invalid format: {}!", format))),
     }
 }
 

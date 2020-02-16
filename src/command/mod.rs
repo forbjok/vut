@@ -71,19 +71,15 @@ impl From<util::FileError> for CommandError {
 
 impl From<VutError> for CommandError {
     fn from(error: VutError) -> Self {
-        let description = match error {
-            VutError::OpenConfig(err) => format!("Error opening config file: {}", err.to_string()),
-            VutError::ParseConfig(err) => format!("Error parsing configuration: {}", err),
-            VutError::VersionFileOpen(err) => format!("Error opening version file: {}", err.to_string()),
-            VutError::VersionFileRead(err) => format!("Error reading version file: {}", err.to_string()),
-            VutError::VersionFileWrite(err) => format!("Error writing version file: {}", err.to_string()),
-            VutError::TemplateGenerate(err) => format!("Error generating templates: {}", err.to_string()),
-            VutError::Other(err) => err.to_string(),
-        };
-
-        CommandError {
-            kind: CommandErrorKind::Other,
-            description: Cow::Owned(description),
+        match error {
+            VutError::OpenConfig(err) => CommandError::new(CommandErrorKind::Other, format!("Error opening config file: {}", err.to_string())),
+            VutError::ParseConfig(err) => CommandError::new(CommandErrorKind::Other, format!("Error parsing configuration: {}", err)),
+            VutError::NoVersionSource => CommandError::new(CommandErrorKind::NoVersionSource, "No version source found."),
+            VutError::VersionFileOpen(err) => CommandError::new(CommandErrorKind::Other, format!("Error opening version file: {}", err.to_string())),
+            VutError::VersionFileRead(err) => CommandError::new(CommandErrorKind::Other, format!("Error reading version file: {}", err.to_string())),
+            VutError::VersionFileWrite(err) => CommandError::new(CommandErrorKind::Other, format!("Error writing version file: {}", err.to_string())),
+            VutError::TemplateGenerate(err) => CommandError::new(CommandErrorKind::Other, format!("Error generating templates: {}", err.to_string())),
+            VutError::Other(err) => CommandError::new(CommandErrorKind::Other, err.to_string()),
         }
     }
 }
