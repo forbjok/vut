@@ -9,6 +9,7 @@ use crate::vut::VutError;
 
 #[derive(Debug, Deserialize)]
 pub struct VutConfig {
+    pub update_nested_sources: bool,
 }
 
 impl VutConfig {
@@ -25,6 +26,8 @@ impl VutConfig {
 
 impl Default for VutConfig {
     fn default() -> Self {
-        Self { }
+        Self {
+            update_nested_sources: false,
+        }
     }
 }

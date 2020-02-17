@@ -9,7 +9,7 @@ use log::warn;
 use strum_macros::EnumString;
 use walkdir;
 
-use crate::config;
+use crate::config::{self, VutConfig};
 use crate::template::{self, RenderTemplateError, TemplateInput};
 use crate::util;
 use crate::version::{self, Version};
@@ -44,6 +44,7 @@ pub enum VutError {
 
 pub struct Vut {
     root_path: PathBuf,
+    config: VutConfig,
     authoritative_version_source: Box<dyn VersionSource>,
 }
 
@@ -54,6 +55,7 @@ impl Vut {
 
         Self {
             root_path: path.to_path_buf(),
+            config: VutConfig::default(),
             authoritative_version_source: Box::new(source),
         }
     }
@@ -63,7 +65,7 @@ impl Vut {
 
         let config_file_path = util::locate_config_file(path, VUT_CONFIG_FILENAME);
 
-        let _config = if let Some(path) = config_file_path.as_ref() {
+        let config = if let Some(path) = config_file_path.as_ref() {
             config::VutConfig::from_file(path)?
         } else {
             config::VutConfig::default()
@@ -94,6 +96,7 @@ impl Vut {
 
         Ok(Self {
             root_path: root_path.to_path_buf(),
+            config,
             authoritative_version_source,
         })
     }
@@ -185,6 +188,33 @@ impl Vut {
         template_files
     }
 
+    pub fn locate_nested_sources(&self) -> Vec<Box<dyn VersionSource>> {
+        let root_path = &self.root_path;
+
+        let directories: Vec<PathBuf> = walkdir::WalkDir::new(root_path).into_iter()
+            // Filter known VCS metadata directories
+            .filter_entry(|entry| !entry.file_name().to_str().map(|s| s == ".git" || s == ".hg").unwrap_or(false))
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.into_path())
+            // Only include directories
+            .filter(|path| path.is_dir())
+            // Make paths absolute
+            .map(|path| util::normalize_path(&path).into_owned())
+            // Exclude paths outside the root path
+            .filter(|path| path.starts_with(&root_path))
+            .collect();
+
+        let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
+
+        for path in directories.iter() {
+            if let Some(source) = version_source::version_source_from_path(path) {
+                sources.push(source);
+            }
+        }
+
+        sources
+    }
+
     pub fn generate_output(&self) -> Result<(), VutError> {
         let template_input = self.generate_template_input()?;
         let template_files = self.locate_templates();
@@ -198,6 +228,15 @@ impl Vut {
 
             processed_files.push(file);
             generated_files.push(generated_file);
+        }
+
+        if self.config.update_nested_sources {
+            let version = self.get_version()?;
+            let nested_sources = self.locate_nested_sources();
+
+            for mut source in nested_sources {
+                source.set_version(&version)?;
+            }
         }
 
         Ok(())

@@ -20,18 +20,22 @@ pub trait VersionSource {
     fn set_version(&mut self, version: &Version) -> Result<(), VutError>;
 }
 
+pub fn version_source_from_path(path: &Path) -> Option<Box<dyn VersionSource>> {
+    let source: Option<Box<dyn VersionSource>> = if let Some(source) = VersionFileSource::from_path(path) {
+        Some(Box::new(source))
+    } else if let Some(source) = CargoSource::from_path(path) {
+        Some(Box::new(source))
+    } else if let Some(source) = NpmSource::from_path(path) {
+        Some(Box::new(source))
+    } else {
+        None
+    };
+
+    source
+}
+
 pub fn locate_version_source_from(start_path: &Path) -> Option<Box<dyn VersionSource>> {
     util::find_outwards(start_path, |path| {
-        let source: Option<Box<dyn VersionSource>> = if let Some(source) = VersionFileSource::from_path(path) {
-            Some(Box::new(source))
-        } else if let Some(source) = CargoSource::from_path(path) {
-            Some(Box::new(source))
-        } else if let Some(source) = NpmSource::from_path(path) {
-            Some(Box::new(source))
-        } else {
-            None
-        };
-
-        source
+        version_source_from_path(path)
     }).map(|(_, source)| source)
 }
