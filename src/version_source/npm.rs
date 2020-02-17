@@ -24,15 +24,17 @@ impl NpmSource {
         }
     }
 
-    pub fn locate_from_path(path: &Path) -> Option<Self> {
-        util::locate_config_file(path, PACKAGE_FILE_NAME).map_or(None, |path| {
-            let root_path = path.parent().unwrap();
+    pub fn from_path(path: &Path) -> Option<Self> {
+        let package_file_path = path.join(PACKAGE_FILE_NAME);
 
+        if package_file_path.exists() {
             Some(Self {
-                path: root_path.to_path_buf(),
-                package_file_path: path.to_path_buf(),
+                path: path.to_path_buf(),
+                package_file_path,
             })
-        })
+        } else {
+            None
+        }
     }
 
     fn read_package_file(&self) -> Result<String, VutError> {

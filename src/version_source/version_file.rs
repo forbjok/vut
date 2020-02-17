@@ -22,15 +22,17 @@ impl VersionFileSource {
         }
     }
 
-    pub fn locate_from_path(path: &Path) -> Option<Self> {
-        util::locate_config_file(path, VERSION_FILENAME).map_or(None, |path| {
-            let root_path = path.parent().unwrap();
+    pub fn from_path(path: &Path) -> Option<Self> {
+        let version_file_path = path.join(VERSION_FILENAME);
 
+        if version_file_path.exists() {
             Some(Self {
-                path: root_path.to_path_buf(),
-                version_file_path: path.to_path_buf(),
+                path: path.to_path_buf(),
+                version_file_path,
             })
-        })
+        } else {
+            None
+        }
     }
 }
 

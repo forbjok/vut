@@ -24,15 +24,17 @@ impl CargoSource {
         }
     }
 
-    pub fn locate_from_path(path: &Path) -> Option<Self> {
-        util::locate_config_file(path, CARGO_FILE_NAME).map_or(None, |path| {
-            let root_path = path.parent().unwrap();
+    pub fn from_path(path: &Path) -> Option<Self> {
+        let cargo_file_path = path.join(CARGO_FILE_NAME);
 
+        if cargo_file_path.exists() {
             Some(Self {
-                path: root_path.to_path_buf(),
-                cargo_file_path: path.to_path_buf(),
+                path: path.to_path_buf(),
+                cargo_file_path,
             })
-        })
+        } else {
+            None
+        }
     }
 
     fn read_cargo_file(&self) -> Result<String, VutError> {
