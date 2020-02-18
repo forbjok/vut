@@ -18,6 +18,12 @@ pub fn init(version: Option<&str>) -> Result<(), CommandError> {
 
     let vut = Vut::init(current_dir, version.as_ref())?;
 
+    eprintln!(
+        "Initialized Vut project with version {} at {}.",
+        vut.get_version()?.to_string(),
+        vut.get_root_path().to_string_lossy()
+    );
+
     // Generate template output
     vut.generate_output()?;
 
