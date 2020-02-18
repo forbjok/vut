@@ -14,11 +14,10 @@ pub struct VutConfig {
 
 impl VutConfig {
     pub fn from_file(path: &Path) -> Result<Self, VutError> {
-        let file = util::open_file(path)
-            .map_err(|err| VutError::OpenConfig(err))?;
+        let file = util::open_file(path).map_err(|err| VutError::OpenConfig(err))?;
 
-        let config: VutConfig = serde_json::from_reader(file)
-            .map_err(|err| VutError::ParseConfig(Cow::Owned(err.to_string())))?;
+        let config: VutConfig =
+            serde_json::from_reader(file).map_err(|err| VutError::ParseConfig(Cow::Owned(err.to_string())))?;
 
         Ok(config)
     }

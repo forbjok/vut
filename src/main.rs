@@ -1,15 +1,12 @@
 #![allow(dead_code)]
 
-use log::{
-    debug,
-    LevelFilter
-};
+use log::{debug, LevelFilter};
 use structopt::StructOpt;
 
 mod command;
 mod config;
-mod util;
 mod template;
+mod util;
 mod version;
 mod version_source;
 mod vut;
@@ -24,7 +21,6 @@ struct Opt {
     #[structopt(subcommand)]
     command: Command,
 }
-
 
 #[derive(StructOpt, Debug)]
 enum Command {
@@ -84,14 +80,14 @@ fn main() {
     };
 
     match cmd_result {
-        Ok(_) => { },
+        Ok(_) => {}
         Err(err) => {
             // Print error description to stderr
             eprintln!("{}", err.description);
 
             // Return the exit code that corresponds to the error kind
             std::process::exit(err.kind.exit_code());
-        },
+        }
     };
 }
 

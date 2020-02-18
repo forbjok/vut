@@ -35,7 +35,5 @@ pub fn version_source_from_path(path: &Path) -> Option<Box<dyn VersionSource>> {
 }
 
 pub fn locate_version_source_from(start_path: &Path) -> Option<Box<dyn VersionSource>> {
-    util::find_outwards(start_path, |path| {
-        version_source_from_path(path)
-    }).map(|(_, source)| source)
+    util::find_outwards(start_path, |path| version_source_from_path(path)).map(|(_, source)| source)
 }

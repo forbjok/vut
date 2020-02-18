@@ -38,21 +38,17 @@ impl fmt::Display for FileError {
 pub fn create_file(path: impl AsRef<Path>) -> Result<fs::File, FileError> {
     let path = path.as_ref();
 
-    fs::File::create(path).map_err(|err| {
-        FileError {
-            kind: err.into(),
-            path: util::normalize_path(path).into_owned(),
-        }
+    fs::File::create(path).map_err(|err| FileError {
+        kind: err.into(),
+        path: util::normalize_path(path).into_owned(),
     })
 }
 
 pub fn open_file(path: impl AsRef<Path>) -> Result<fs::File, FileError> {
     let path = path.as_ref();
 
-    fs::File::open(path).map_err(|err| {
-        FileError {
-            kind: err.into(),
-            path: util::normalize_path(path).into_owned(),
-        }
+    fs::File::open(path).map_err(|err| FileError {
+        kind: err.into(),
+        path: util::normalize_path(path).into_owned(),
     })
 }

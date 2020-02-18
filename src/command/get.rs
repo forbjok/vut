@@ -12,7 +12,10 @@ pub fn get(format: &str) -> Result<(), CommandError> {
 
     match format {
         "json" => get_json(&vut),
-        _ => Err(CommandError::new(CommandErrorKind::Arguments, format!("Invalid format: {}!", format))),
+        _ => Err(CommandError::new(
+            CommandErrorKind::Arguments,
+            format!("Invalid format: {}!", format),
+        )),
     }
 }
 
@@ -28,8 +31,12 @@ fn get_json(vut: &Vut) -> Result<(), CommandError> {
     }
 
     // Serialize pretty JSON to stdout
-    serde_json::to_writer_pretty(stdout, &values)
-        .map_err(|err| CommandError::new(CommandErrorKind::Other, format!("Error serializing values to JSON: {}", err.to_string())))?;
+    serde_json::to_writer_pretty(stdout, &values).map_err(|err| {
+        CommandError::new(
+            CommandErrorKind::Other,
+            format!("Error serializing values to JSON: {}", err.to_string()),
+        )
+    })?;
 
     Ok(())
 }

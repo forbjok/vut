@@ -6,7 +6,8 @@ use super::{CommandError, CommandErrorKind};
 pub fn set(version: &str) -> Result<(), CommandError> {
     let mut vut = Vut::from_current_dir()?;
 
-    let new_version: Version = version.parse()
+    let new_version: Version = version
+        .parse()
         .map_err(|err| CommandError::new(CommandErrorKind::Other, err))?;
 
     vut.set_version(&new_version)?;

@@ -4,7 +4,8 @@ use lazy_static::lazy_static;
 use regex::Regex;
 
 lazy_static! {
-    static ref REGEX_PARSE_SEMVER: Regex = Regex::new(r#"^(\d+)\.(\d+)\.(\d+)(?:-([\w\d\-\.]+))?(?:\+([\w\d\-\.]+))?"#).unwrap();
+    static ref REGEX_PARSE_SEMVER: Regex =
+        Regex::new(r#"^(\d+)\.(\d+)\.(\d+)(?:-([\w\d\-\.]+))?(?:\+([\w\d\-\.]+))?"#).unwrap();
     static ref REGEX_SPLIT_NUMBERED_PRERELEASE: Regex = regex::Regex::new(r#"([\w\-\.]*?)(\d+)"#).unwrap();
 }
 
@@ -105,7 +106,8 @@ impl FromStr for Version {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let cap = REGEX_PARSE_SEMVER.captures(s)
+        let cap = REGEX_PARSE_SEMVER
+            .captures(s)
             .ok_or_else(|| format!("Invalid version string: {}", s))?;
 
         Ok(Self {
@@ -125,7 +127,9 @@ impl ToString for Version {
             self.major,
             self.minor,
             self.patch,
-            self.prerelease.as_ref().map_or_else(|| "".to_owned(), |p| format!("-{}", p)),
+            self.prerelease
+                .as_ref()
+                .map_or_else(|| "".to_owned(), |p| format!("-{}", p)),
             self.build.as_ref().map_or_else(|| "".to_owned(), |b| format!("+{}", b))
         )
     }
@@ -158,8 +162,17 @@ mod test {
     #[test]
     /// Test to make sure that versions round-trip accurately when parsed and converted back to a string
     fn test_parse() {
-        assert_eq!("1.2.3-beta.6+build.9".parse::<Version>().unwrap().to_string(), "1.2.3-beta.6+build.9");
-        assert_eq!("1.2.3-beta-version.6+build-metadata.9".parse::<Version>().unwrap().to_string(), "1.2.3-beta-version.6+build-metadata.9");
+        assert_eq!(
+            "1.2.3-beta.6+build.9".parse::<Version>().unwrap().to_string(),
+            "1.2.3-beta.6+build.9"
+        );
+        assert_eq!(
+            "1.2.3-beta-version.6+build-metadata.9"
+                .parse::<Version>()
+                .unwrap()
+                .to_string(),
+            "1.2.3-beta-version.6+build-metadata.9"
+        );
         assert_eq!("1.2.3-beta.6".parse::<Version>().unwrap().to_string(), "1.2.3-beta.6");
         assert_eq!("1.2.3".parse::<Version>().unwrap().to_string(), "1.2.3");
         assert_eq!("1.2.3+build.9".parse::<Version>().unwrap().to_string(), "1.2.3+build.9");
@@ -172,7 +185,17 @@ mod test {
         assert_eq!(Version::new(1, 2, 3, None, None).bump_minor().to_string(), "1.3.0");
         assert_eq!(Version::new(1, 2, 3, None, None).bump_patch().to_string(), "1.2.4");
 
-        assert_eq!(Version::new(1, 2, 3, Some("beta.1"), None).bump_prerelease().to_string(), "1.2.3-beta.2");
-        assert_eq!(Version::new(1, 2, 3, Some("beta.1"), Some("build.7")).bump_build().to_string(), "1.2.3-beta.1+build.8");
+        assert_eq!(
+            Version::new(1, 2, 3, Some("beta.1"), None)
+                .bump_prerelease()
+                .to_string(),
+            "1.2.3-beta.2"
+        );
+        assert_eq!(
+            Version::new(1, 2, 3, Some("beta.1"), Some("build.7"))
+                .bump_build()
+                .to_string(),
+            "1.2.3-beta.1+build.8"
+        );
     }
 }

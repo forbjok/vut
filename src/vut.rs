@@ -75,16 +75,14 @@ impl Vut {
             let root_path = config_file_path.parent().unwrap().to_path_buf();
 
             // TODO: Implement the correct method to use here. This is wrong.
-            let source = version_source::locate_version_source_from(path)
-                .ok_or_else(|| VutError::NoVersionSource)?;
+            let source = version_source::locate_version_source_from(path).ok_or_else(|| VutError::NoVersionSource)?;
 
-                (root_path, source)
+            (root_path, source)
         } else {
             // No config file found.
             // Fall back to trying to locate a version source instead.
 
-            let source = version_source::locate_version_source_from(path)
-                .ok_or_else(|| VutError::NoVersionSource)?;
+            let source = version_source::locate_version_source_from(path).ok_or_else(|| VutError::NoVersionSource)?;
 
             // TODO: Find a better way to display deprecation warning.
             warn!("DEPRECATED: Authoritative version source present with no config file. Create a .vutconfig in the root of the project.");
@@ -144,22 +142,73 @@ impl Vut {
 
         let mut template_input = TemplateInput::new();
 
-        let split_prerelease = version.prerelease.as_ref().map_or(None, |p| version::split_numbered_prerelease(p));
-        let split_build = version.build.as_ref().map_or(None, |b| version::split_numbered_prerelease(b));
+        let split_prerelease = version
+            .prerelease
+            .as_ref()
+            .map_or(None, |p| version::split_numbered_prerelease(p));
+        let split_build = version
+            .build
+            .as_ref()
+            .map_or(None, |b| version::split_numbered_prerelease(b));
 
-        template_input.values.insert("FullVersion".to_owned(), version.to_string());
-        template_input.values.insert("Version".to_owned(), Version { build: None, ..version.clone() }.to_string());
-        template_input.values.insert("MajorMinorPatch".to_owned(), format!("{}.{}.{}", version.major, version.minor, version.patch));
-        template_input.values.insert("MajorMinor".to_owned(), format!("{}.{}", version.major, version.minor));
-        template_input.values.insert("Major".to_owned(), format!("{}", version.major));
-        template_input.values.insert("Minor".to_owned(), format!("{}", version.minor));
-        template_input.values.insert("Patch".to_owned(), format!("{}", version.patch));
-        template_input.values.insert("Prerelease".to_owned(), version.prerelease.as_ref().map_or("", |p| p).to_owned());
-        template_input.values.insert("PrereleasePrefix".to_owned(), split_prerelease.and_then(|sp| Some(sp.0.to_owned())).unwrap_or_else(|| "".to_owned()));
-        template_input.values.insert("PrereleaseNumber".to_owned(), split_prerelease.and_then(|sp| Some(format!("{}", sp.1))).unwrap_or_else(|| "".to_owned()));
-        template_input.values.insert("Build".to_owned(), version.build.as_ref().map_or("", |b| b).to_owned());
-        template_input.values.insert("BuildPrefix".to_owned(), split_build.and_then(|sp| Some(sp.0.to_owned())).unwrap_or_else(|| "".to_owned()));
-        template_input.values.insert("BuildNumber".to_owned(), split_build.and_then(|sp| Some(format!("{}", sp.1))).unwrap_or_else(|| "".to_owned()));
+        template_input
+            .values
+            .insert("FullVersion".to_owned(), version.to_string());
+        template_input.values.insert(
+            "Version".to_owned(),
+            Version {
+                build: None,
+                ..version.clone()
+            }
+            .to_string(),
+        );
+        template_input.values.insert(
+            "MajorMinorPatch".to_owned(),
+            format!("{}.{}.{}", version.major, version.minor, version.patch),
+        );
+        template_input
+            .values
+            .insert("MajorMinor".to_owned(), format!("{}.{}", version.major, version.minor));
+        template_input
+            .values
+            .insert("Major".to_owned(), format!("{}", version.major));
+        template_input
+            .values
+            .insert("Minor".to_owned(), format!("{}", version.minor));
+        template_input
+            .values
+            .insert("Patch".to_owned(), format!("{}", version.patch));
+        template_input.values.insert(
+            "Prerelease".to_owned(),
+            version.prerelease.as_ref().map_or("", |p| p).to_owned(),
+        );
+        template_input.values.insert(
+            "PrereleasePrefix".to_owned(),
+            split_prerelease
+                .and_then(|sp| Some(sp.0.to_owned()))
+                .unwrap_or_else(|| "".to_owned()),
+        );
+        template_input.values.insert(
+            "PrereleaseNumber".to_owned(),
+            split_prerelease
+                .and_then(|sp| Some(format!("{}", sp.1)))
+                .unwrap_or_else(|| "".to_owned()),
+        );
+        template_input
+            .values
+            .insert("Build".to_owned(), version.build.as_ref().map_or("", |b| b).to_owned());
+        template_input.values.insert(
+            "BuildPrefix".to_owned(),
+            split_build
+                .and_then(|sp| Some(sp.0.to_owned()))
+                .unwrap_or_else(|| "".to_owned()),
+        );
+        template_input.values.insert(
+            "BuildNumber".to_owned(),
+            split_build
+                .and_then(|sp| Some(format!("{}", sp.1)))
+                .unwrap_or_else(|| "".to_owned()),
+        );
 
         Ok(template_input)
     }
@@ -167,17 +216,22 @@ impl Vut {
     pub fn locate_templates(&self) -> Vec<PathBuf> {
         let root_path = &self.root_path;
 
-        let template_files: Vec<PathBuf> = walkdir::WalkDir::new(root_path).into_iter()
+        let template_files: Vec<PathBuf> = walkdir::WalkDir::new(root_path)
+            .into_iter()
             // Filter known VCS metadata directories
-            .filter_entry(|entry| !entry.file_name().to_str().map(|s| s == ".git" || s == ".hg").unwrap_or(false))
+            .filter_entry(|entry| {
+                !entry
+                    .file_name()
+                    .to_str()
+                    .map(|s| s == ".git" || s == ".hg")
+                    .unwrap_or(false)
+            })
             .filter_map(|entry| entry.ok())
             .map(|entry| entry.into_path())
             // Only include template files
-            .filter(|path| {
-                match path.extension() {
-                    Some(ext) => ext == *VUTEMPLATE_EXTENSION,
-                    None => false,
-                }
+            .filter(|path| match path.extension() {
+                Some(ext) => ext == *VUTEMPLATE_EXTENSION,
+                None => false,
             })
             // Make paths absolute
             .map(|path| util::normalize_path(&path).into_owned())
@@ -191,9 +245,16 @@ impl Vut {
     pub fn locate_nested_sources(&self) -> Vec<Box<dyn VersionSource>> {
         let root_path = &self.root_path;
 
-        let directories: Vec<PathBuf> = walkdir::WalkDir::new(root_path).into_iter()
+        let directories: Vec<PathBuf> = walkdir::WalkDir::new(root_path)
+            .into_iter()
             // Filter known VCS metadata directories
-            .filter_entry(|entry| !entry.file_name().to_str().map(|s| s == ".git" || s == ".hg").unwrap_or(false))
+            .filter_entry(|entry| {
+                !entry
+                    .file_name()
+                    .to_str()
+                    .map(|s| s == ".git" || s == ".hg")
+                    .unwrap_or(false)
+            })
             .filter_map(|entry| entry.ok())
             .map(|entry| entry.into_path())
             // Only include directories
@@ -223,8 +284,9 @@ impl Vut {
         let mut generated_files: Vec<PathBuf> = Vec::new();
 
         for file in template_files {
-            let generated_file = template::generate_template::<template::processor::VutProcessor>(&file, &template_input, None)
-                .map_err(|err| VutError::TemplateGenerate(err))?;
+            let generated_file =
+                template::generate_template::<template::processor::VutProcessor>(&file, &template_input, None)
+                    .map_err(|err| VutError::TemplateGenerate(err))?;
 
             processed_files.push(file);
             generated_files.push(generated_file);

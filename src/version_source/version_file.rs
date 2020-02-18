@@ -47,8 +47,7 @@ impl VersionSource for VersionFileSource {
 
     fn get_version(&self) -> Result<Version, VutError> {
         let version_str = {
-            let mut file = util::open_file(&self.version_file_path)
-                .map_err(|err| VutError::VersionFileOpen(err))?;
+            let mut file = util::open_file(&self.version_file_path).map_err(|err| VutError::VersionFileOpen(err))?;
 
             let mut version_str = String::new();
 
@@ -58,15 +57,13 @@ impl VersionSource for VersionFileSource {
             version_str
         };
 
-        let version = version_str.parse()
-            .map_err(|err| VutError::Other(Cow::Owned(err)))?;
+        let version = version_str.parse().map_err(|err| VutError::Other(Cow::Owned(err)))?;
 
         Ok(version)
     }
 
     fn set_version(&mut self, version: &Version) -> Result<(), VutError> {
-        let mut file = util::create_file(&self.version_file_path)
-            .map_err(|err| VutError::VersionFileOpen(err))?;
+        let mut file = util::create_file(&self.version_file_path).map_err(|err| VutError::VersionFileOpen(err))?;
 
         file.write(version.to_string().as_bytes())
             .map_err(|err| VutError::VersionFileWrite(err))?;

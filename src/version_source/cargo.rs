@@ -38,8 +38,7 @@ impl CargoSource {
     }
 
     fn read_cargo_file(&self) -> Result<String, VutError> {
-        let mut file = util::open_file(&self.cargo_file_path)
-            .map_err(|err| VutError::VersionFileOpen(err))?;
+        let mut file = util::open_file(&self.cargo_file_path).map_err(|err| VutError::VersionFileOpen(err))?;
 
         let mut toml_str = String::new();
 
@@ -50,8 +49,7 @@ impl CargoSource {
     }
 
     fn write_cargo_file(&mut self, toml_str: &str) -> Result<(), VutError> {
-        let mut file = util::create_file(&self.cargo_file_path)
-            .map_err(|err| VutError::VersionFileOpen(err))?;
+        let mut file = util::create_file(&self.cargo_file_path).map_err(|err| VutError::VersionFileOpen(err))?;
 
         file.write(toml_str.as_bytes())
             .map_err(|err| VutError::VersionFileWrite(err))?;
@@ -75,7 +73,8 @@ impl VersionSource for CargoSource {
             let toml_str = self.read_cargo_file()?;
 
             // Parse as document
-            let doc = toml_str.parse::<toml_edit::Document>()
+            let doc = toml_str
+                .parse::<toml_edit::Document>()
                 .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
             // Get version string
@@ -85,8 +84,7 @@ impl VersionSource for CargoSource {
         };
 
         // Parse version string
-        let version = version_str.parse()
-            .map_err(|err| VutError::Other(Cow::Owned(err)))?;
+        let version = version_str.parse().map_err(|err| VutError::Other(Cow::Owned(err)))?;
 
         Ok(version)
     }
@@ -96,7 +94,8 @@ impl VersionSource for CargoSource {
         let toml_str = self.read_cargo_file()?;
 
         // Parse as document
-        let mut doc = toml_str.parse::<toml_edit::Document>()
+        let mut doc = toml_str
+            .parse::<toml_edit::Document>()
             .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
         // Replace version number

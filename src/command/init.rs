@@ -10,7 +10,15 @@ pub fn init(version: Option<&str>) -> Result<(), CommandError> {
 
     // Check if there is an existing version source for this path
     match Vut::from_path(&current_dir) {
-        Ok(vut) => return Err(CommandError::new(CommandErrorKind::Other, format!("An existing version file was found at: {}", vut.get_root_path().to_string_lossy()))),
+        Ok(vut) => {
+            return Err(CommandError::new(
+                CommandErrorKind::Other,
+                format!(
+                    "An existing version file was found at: {}",
+                    vut.get_root_path().to_string_lossy()
+                ),
+            ))
+        }
         Err(VutError::NoVersionSource) => Ok(()),
         Err(err) => Err(err),
     }?;
@@ -18,7 +26,9 @@ pub fn init(version: Option<&str>) -> Result<(), CommandError> {
     let mut vut = Vut::new(current_dir);
 
     let version = match version {
-        Some(v) => v.parse().map_err(|err| CommandError::new(CommandErrorKind::Other, err))?,
+        Some(v) => v
+            .parse()
+            .map_err(|err| CommandError::new(CommandErrorKind::Other, err))?,
         None => Version::new(0, 0, 0, None, None),
     };
 
