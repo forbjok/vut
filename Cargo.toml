@@ -19,5 +19,6 @@ serde_json = { version = "1.0.48", features = ["preserve_order"] }
 structopt = "0.3.9"
 strum = "0.17.1"
 strum_macros = "0.17.1"
+toml = "0.5.6"
 toml_edit = "0.1.5"
 walkdir = "2.3.1"

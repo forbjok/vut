@@ -72,12 +72,16 @@ impl From<VutError> for CommandError {
     fn from(error: VutError) -> Self {
         match error {
             VutError::OpenConfig(err) => CommandError::new(
-                CommandErrorKind::Other,
+                CommandErrorKind::Config,
                 format!("Error opening config file: {}", err.to_string()),
             ),
-            VutError::ParseConfig(err) => {
-                CommandError::new(CommandErrorKind::Other, format!("Error parsing configuration: {}", err))
+            VutError::ReadConfig(err) => {
+                CommandError::new(CommandErrorKind::Config, format!("Error reading config file: {}", err))
             }
+            VutError::ParseConfig(err) => CommandError::new(
+                CommandErrorKind::Config,
+                format!("Error parsing configuration: {}", err),
+            ),
             VutError::NoVersionSource => {
                 CommandError::new(CommandErrorKind::NoVersionSource, "No version source found.")
             }

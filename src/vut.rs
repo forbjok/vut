@@ -15,7 +15,7 @@ use crate::util;
 use crate::version::{self, Version};
 use crate::version_source::{self, VersionSource};
 
-const VUT_CONFIG_FILENAME: &str = ".vutconfig";
+const VUT_CONFIG_FILENAME: &str = ".vutconfig.toml";
 
 lazy_static! {
     static ref VUTEMPLATE_EXTENSION: &'static OsStr = OsStr::new("vutemplate");
@@ -33,6 +33,7 @@ pub enum BumpVersion {
 
 pub enum VutError {
     OpenConfig(util::FileError),
+    ReadConfig(io::Error),
     ParseConfig(Cow<'static, str>),
     NoVersionSource,
     VersionFileOpen(util::FileError),
