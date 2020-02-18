@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::env;
 use std::ffi::OsStr;
-use std::io;
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 use lazy_static::lazy_static;
@@ -16,6 +16,9 @@ use crate::version::{self, Version};
 use crate::version_source::{self, VersionSource};
 
 const VUT_CONFIG_FILENAME: &str = ".vutconfig.toml";
+const VUT_CONFIG_DEFAULT: &str = r###"
+update_nested_sources = false
+"###;
 
 lazy_static! {
     static ref VUTEMPLATE_EXTENSION: &'static OsStr = OsStr::new("vutemplate");
@@ -36,6 +39,7 @@ pub enum VutError {
     OpenConfig(util::FileError),
     ReadConfig(io::Error),
     ParseConfig(Cow<'static, str>),
+    WriteConfig(io::Error),
     NoVersionSource,
     VersionFileOpen(util::FileError),
     VersionFileRead(io::Error),
@@ -60,6 +64,14 @@ impl Vut {
             Err(VutError::NoVersionSource) => Ok(()),
             Err(err) => Err(err),
         }?;
+
+        let config_file_path = path.join(VUT_CONFIG_FILENAME);
+
+        // Create configuration file with default content
+        util::create_file(&config_file_path)
+            .map_err(|err| VutError::OpenConfig(err))?
+            .write(VUT_CONFIG_DEFAULT.as_bytes())
+            .map_err(|err| VutError::WriteConfig(err))?;
 
         let version = version
             .map(|v| Cow::Borrowed(v))

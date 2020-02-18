@@ -89,6 +89,9 @@ impl From<VutError> for CommandError {
                 CommandErrorKind::Config,
                 format!("Error parsing configuration: {}", err),
             ),
+            VutError::WriteConfig(err) => {
+                CommandError::new(CommandErrorKind::Config, format!("Error writing config file: {}", err))
+            }
             VutError::NoVersionSource => {
                 CommandError::new(CommandErrorKind::NoVersionSource, "No version source found.")
             }
