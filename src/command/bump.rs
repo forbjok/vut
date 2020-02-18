@@ -1,7 +1,7 @@
 use crate::version::Version;
 use crate::vut::{BumpVersion, Vut};
 
-use super::{CommandError, CommandErrorKind};
+use super::CommandError;
 
 pub fn bump(bump_version: BumpVersion) -> Result<(), CommandError> {
     let mut vut = Vut::from_current_dir()?;

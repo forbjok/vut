@@ -1,6 +1,6 @@
 use crate::vut::Vut;
 
-use super::{CommandError, CommandErrorKind};
+use super::CommandError;
 
 pub fn generate() -> Result<(), CommandError> {
     let vut = Vut::from_current_dir()?;
