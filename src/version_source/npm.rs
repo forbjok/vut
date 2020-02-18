@@ -17,13 +17,6 @@ pub struct NpmSource {
 }
 
 impl NpmSource {
-    pub fn new(path: &Path) -> Self {
-        Self {
-            path: path.to_path_buf(),
-            package_file_path: path.to_path_buf(),
-        }
-    }
-
     pub fn from_path(path: &Path) -> Option<Self> {
         let package_file_path = path.join(PACKAGE_FILE_NAME);
 

@@ -16,9 +16,11 @@ pub struct VersionFileSource {
 
 impl VersionFileSource {
     pub fn new(path: &Path) -> Self {
+        let version_file_path = path.join(VERSION_FILENAME);
+
         Self {
             path: path.to_path_buf(),
-            version_file_path: path.to_path_buf(),
+            version_file_path,
         }
     }
 

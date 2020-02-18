@@ -32,6 +32,7 @@ pub enum BumpVersion {
 }
 
 pub enum VutError {
+    AlreadyInit(PathBuf),
     OpenConfig(util::FileError),
     ReadConfig(io::Error),
     ParseConfig(Cow<'static, str>),
@@ -50,15 +51,31 @@ pub struct Vut {
 }
 
 impl Vut {
-    pub fn new(path: impl AsRef<Path>) -> Self {
+    pub fn init(path: impl AsRef<Path>, version: Option<&Version>) -> Result<Self, VutError> {
         let path = path.as_ref();
-        let source = version_source::VersionFileSource::new(path);
 
-        Self {
+        // Check if there is an existing Vut configuration for this path
+        match Self::from_path(path) {
+            Ok(vut) => Err(VutError::AlreadyInit(vut.get_root_path().to_path_buf())),
+            Err(VutError::NoVersionSource) => Ok(()),
+            Err(err) => Err(err),
+        }?;
+
+        let version = version
+            .map(|v| Cow::Borrowed(v))
+            .unwrap_or_else(|| Cow::Owned(Version::new(0, 0, 0, None, None)));
+
+        // Create a new version file source
+        let mut source = version_source::VersionFileSource::new(path);
+
+        // Set initial version
+        source.set_version(&version)?;
+
+        Ok(Self {
             root_path: path.to_path_buf(),
             config: VutConfig::default(),
             authoritative_version_source: Box::new(source),
-        }
+        })
     }
 
     pub fn from_path(path: impl AsRef<Path>) -> Result<Self, VutError> {

@@ -71,6 +71,13 @@ impl From<util::FileError> for CommandError {
 impl From<VutError> for CommandError {
     fn from(error: VutError) -> Self {
         match error {
+            VutError::AlreadyInit(root_path) => CommandError::new(
+                CommandErrorKind::Other,
+                format!(
+                    "An existing configuration was found at: {}",
+                    root_path.to_string_lossy()
+                ),
+            ),
             VutError::OpenConfig(err) => CommandError::new(
                 CommandErrorKind::Config,
                 format!("Error opening config file: {}", err.to_string()),

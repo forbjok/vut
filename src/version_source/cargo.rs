@@ -17,13 +17,6 @@ pub struct CargoSource {
 }
 
 impl CargoSource {
-    pub fn new(path: &Path) -> Self {
-        Self {
-            path: path.to_path_buf(),
-            cargo_file_path: path.to_path_buf(),
-        }
-    }
-
     pub fn from_path(path: &Path) -> Option<Self> {
         let cargo_file_path = path.join(CARGO_FILE_NAME);
 
