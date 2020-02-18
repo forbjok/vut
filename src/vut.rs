@@ -214,10 +214,10 @@ impl Vut {
         Ok(template_input)
     }
 
-    pub fn locate_templates(&self) -> Vec<PathBuf> {
+    pub fn locate_templates_and_nested_sources(&self) -> (Vec<PathBuf>, Vec<Box<dyn VersionSource>>) {
         let root_path = &self.root_path;
 
-        let template_files: Vec<PathBuf> = walkdir::WalkDir::new(root_path)
+        let dir_entries: Vec<walkdir::DirEntry> = walkdir::WalkDir::new(root_path)
             .into_iter()
             // Filter known VCS metadata directories
             .filter_entry(|entry| {
@@ -228,58 +228,42 @@ impl Vut {
                     .unwrap_or(false)
             })
             .filter_map(|entry| entry.ok())
-            .map(|entry| entry.into_path())
+            .collect();
+
+        let template_files: Vec<PathBuf> = dir_entries
+            .iter()
+            .map(|entry| entry.path())
             // Only include template files
             .filter(|path| match path.extension() {
                 Some(ext) => ext == *VUTEMPLATE_EXTENSION,
                 None => false,
             })
-            // Make paths absolute
-            .map(|path| util::normalize_path(&path).into_owned())
-            // Exclude paths outside the root path
-            .filter(|path| path.starts_with(&root_path))
-            .collect();
-
-        template_files
-    }
-
-    pub fn locate_nested_sources(&self) -> Vec<Box<dyn VersionSource>> {
-        let root_path = &self.root_path;
-
-        let directories: Vec<PathBuf> = walkdir::WalkDir::new(root_path)
-            .into_iter()
-            // Filter known VCS metadata directories
-            .filter_entry(|entry| {
-                !entry
-                    .file_name()
-                    .to_str()
-                    .map(|s| s == ".git" || s == ".hg")
-                    .unwrap_or(false)
-            })
-            .filter_map(|entry| entry.ok())
-            .map(|entry| entry.into_path())
-            // Only include directories
-            .filter(|path| path.is_dir())
-            // Make paths absolute
-            .map(|path| util::normalize_path(&path).into_owned())
-            // Exclude paths outside the root path
-            .filter(|path| path.starts_with(&root_path))
+            // Transform Path references into owned PathBufs
+            .map(|path| path.to_path_buf())
             .collect();
 
         let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
 
-        for path in directories.iter() {
-            if let Some(source) = version_source::version_source_from_path(path) {
-                sources.push(source);
+        if self.config.update_nested_sources {
+            let dirs_iter = dir_entries
+                .iter()
+                .map(|entry| entry.path())
+                // Only include directories
+                .filter(|path| path.is_dir());
+
+            for path in dirs_iter {
+                if let Some(source) = version_source::version_source_from_path(&path) {
+                    sources.push(source);
+                }
             }
         }
 
-        sources
+        (template_files, sources)
     }
 
     pub fn generate_output(&self) -> Result<(), VutError> {
         let template_input = self.generate_template_input()?;
-        let template_files = self.locate_templates();
+        let (template_files, nested_sources) = self.locate_templates_and_nested_sources();
 
         let mut processed_files: Vec<PathBuf> = Vec::new();
         let mut generated_files: Vec<PathBuf> = Vec::new();
@@ -295,7 +279,6 @@ impl Vut {
 
         if self.config.update_nested_sources {
             let version = self.get_version()?;
-            let nested_sources = self.locate_nested_sources();
 
             for mut source in nested_sources {
                 source.set_version(&version)?;
