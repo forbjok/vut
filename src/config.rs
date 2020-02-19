@@ -14,6 +14,12 @@ pub struct VutConfig {
 }
 
 impl VutConfig {
+    pub fn from_str(s: &str) -> Result<Self, VutError> {
+        let config: VutConfig = toml::from_str(s).map_err(|err| VutError::ParseConfig(Cow::Owned(err.to_string())))?;
+
+        Ok(config)
+    }
+
     pub fn from_file(path: &Path) -> Result<Self, VutError> {
         let mut file = util::open_file(path).map_err(|err| VutError::OpenConfig(err))?;
 
@@ -21,10 +27,7 @@ impl VutConfig {
         file.read_to_string(&mut toml_str)
             .map_err(|err| VutError::ReadConfig(err))?;
 
-        let config: VutConfig =
-            toml::from_str(&toml_str).map_err(|err| VutError::ParseConfig(Cow::Owned(err.to_string())))?;
-
-        Ok(config)
+        Self::from_str(&toml_str)
     }
 }
 

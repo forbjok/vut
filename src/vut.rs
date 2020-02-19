@@ -59,12 +59,21 @@ impl Vut {
         let path = path.as_ref();
 
         // Check if there is an existing Vut configuration for this path
-        match Self::from_path(path) {
-            Ok(vut) => Err(VutError::AlreadyInit(vut.get_root_path().to_path_buf())),
-            Err(VutError::NoVersionSource) => Ok(()),
+        let vut: Option<Vut> = match Self::from_path(path) {
+            Ok(vut) => {
+                let existing_root_path = vut.get_root_path();
+
+                if existing_root_path != path || existing_root_path.join(VUT_CONFIG_FILENAME).exists() {
+                    Err(VutError::AlreadyInit(vut.get_root_path().to_path_buf()))
+                } else {
+                    Ok(Some(vut))
+                }
+            }
+            Err(VutError::NoVersionSource) => Ok(None),
             Err(err) => Err(err),
         }?;
 
+        // Construct config file path
         let config_file_path = path.join(VUT_CONFIG_FILENAME);
 
         // Create configuration file with default content
@@ -73,21 +82,37 @@ impl Vut {
             .write(VUT_CONFIG_DEFAULT.as_bytes())
             .map_err(|err| VutError::WriteConfig(err))?;
 
-        let version = version
-            .map(|v| Cow::Borrowed(v))
-            .unwrap_or_else(|| Cow::Owned(Version::new(0, 0, 0, None, None)));
+        let vut = if let Some(vut) = vut {
+            // A version source was found, but no configuration file...
+            // We need to support this in order to create a configuration file
+            // for existing sources.
 
-        // Create a new version file source
-        let mut source = version_source::VersionFileSource::new(path);
+            Self {
+                root_path: vut.root_path,
+                config: VutConfig::from_str(VUT_CONFIG_DEFAULT)?,
+                authoritative_version_source: vut.authoritative_version_source,
+            }
+        } else {
+            // No version source was found...
 
-        // Set initial version
-        source.set_version(&version)?;
+            let version = version
+                .map(|v| Cow::Borrowed(v))
+                .unwrap_or_else(|| Cow::Owned(Version::new(0, 0, 0, None, None)));
 
-        Ok(Self {
-            root_path: path.to_path_buf(),
-            config: VutConfig::default(),
-            authoritative_version_source: Box::new(source),
-        })
+            // Create a new version file source
+            let mut source = version_source::VersionFileSource::new(path);
+
+            // Set initial version
+            source.set_version(&version)?;
+
+            Self {
+                root_path: path.to_path_buf(),
+                config: VutConfig::default(),
+                authoritative_version_source: Box::new(source),
+            }
+        };
+
+        Ok(vut)
     }
 
     pub fn from_path(path: impl AsRef<Path>) -> Result<Self, VutError> {
