@@ -79,7 +79,7 @@ impl Vut {
         // Create configuration file with default content
         util::create_file(&config_file_path)
             .map_err(|err| VutError::OpenConfig(err))?
-            .write(VUT_CONFIG_DEFAULT.as_bytes())
+            .write(VUT_CONFIG_DEFAULT.trim().as_bytes())
             .map_err(|err| VutError::WriteConfig(err))?;
 
         let vut = if let Some(vut) = vut {
