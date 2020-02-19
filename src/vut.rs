@@ -4,6 +4,7 @@ use std::ffi::OsStr;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
+use globset;
 use lazy_static::lazy_static;
 use log::warn;
 use strum_macros::EnumString;
@@ -17,7 +18,15 @@ use crate::version_source::{self, VersionSource};
 
 const VUT_CONFIG_FILENAME: &str = ".vutconfig.toml";
 const VUT_CONFIG_DEFAULT: &str = r###"
+# Don't automatically update nested version sources.
+# If you want all nested sources to be automatically updated,
+# set this to true.
 update_nested_sources = false
+
+ignore = [
+  # Ignore Git directories
+  "**/.git",
+]
 "###;
 
 lazy_static! {
@@ -268,18 +277,39 @@ impl Vut {
         Ok(template_input)
     }
 
-    pub fn locate_templates_and_nested_sources(&self) -> (Vec<PathBuf>, Vec<Box<dyn VersionSource>>) {
+    /// Build a GlobSet from the ignore patterns in the configuration
+    fn build_ignore_globset(&self) -> Result<globset::GlobSet, VutError> {
+        let mut builder = globset::GlobSetBuilder::new();
+
+        for pattern in self.config.ignore.iter() {
+            let glob = globset::Glob::new(pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+
+            builder.add(glob);
+        }
+
+        let ignore_globset = builder
+            .build()
+            .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+
+        Ok(ignore_globset)
+    }
+
+    pub fn locate_templates_and_nested_sources(&self) -> Result<(Vec<PathBuf>, Vec<Box<dyn VersionSource>>), VutError> {
         let root_path = &self.root_path;
+
+        // Build ignore GlobSet from config
+        let ignore_globset = self.build_ignore_globset()?;
 
         let dir_entries: Vec<walkdir::DirEntry> = walkdir::WalkDir::new(root_path)
             .into_iter()
             // Filter known VCS metadata directories
             .filter_entry(|entry| {
-                !entry
-                    .file_name()
-                    .to_str()
-                    .map(|s| s == ".git" || s == ".hg")
-                    .unwrap_or(false)
+                // Make path relative, as we only want to match on the path
+                // relative to the root.
+                let rel_path = entry.path().strip_prefix(root_path).unwrap();
+
+                // Exclude paths matching any of the ignore glob patterns
+                !ignore_globset.is_match(rel_path)
             })
             .filter_map(|entry| entry.ok())
             .collect();
@@ -312,12 +342,12 @@ impl Vut {
             }
         }
 
-        (template_files, sources)
+        Ok((template_files, sources))
     }
 
     pub fn generate_output(&self) -> Result<(), VutError> {
         let template_input = self.generate_template_input()?;
-        let (template_files, nested_sources) = self.locate_templates_and_nested_sources();
+        let (template_files, nested_sources) = self.locate_templates_and_nested_sources()?;
 
         let mut processed_files: Vec<PathBuf> = Vec::new();
         let mut generated_files: Vec<PathBuf> = Vec::new();
