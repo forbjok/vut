@@ -138,8 +138,8 @@ impl Vut {
         let (root_path, authoritative_version_source) = if let Some(config_file_path) = config_file_path.as_ref() {
             let root_path = config_file_path.parent().unwrap().to_path_buf();
 
-            // TODO: Implement the correct method to use here. This is wrong.
-            let source = version_source::locate_version_source_from(path).ok_or_else(|| VutError::NoVersionSource)?;
+            let source =
+                version_source::version_source_from_path(&root_path).ok_or_else(|| VutError::NoVersionSource)?;
 
             (root_path, source)
         } else {
