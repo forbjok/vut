@@ -63,7 +63,7 @@ impl From<util::FileError> for CommandError {
     fn from(error: util::FileError) -> Self {
         CommandError {
             kind: CommandErrorKind::Other,
-            description: Cow::Owned(format!("File not found: {}", error.path.to_string_lossy())),
+            description: Cow::Owned(format!("File not found: {}", error.path.display())),
         }
     }
 }
@@ -73,10 +73,7 @@ impl From<VutError> for CommandError {
         match error {
             VutError::AlreadyInit(root_path) => CommandError::new(
                 CommandErrorKind::Other,
-                format!(
-                    "An existing configuration was found at: {}",
-                    root_path.to_string_lossy()
-                ),
+                format!("An existing configuration was found at: {}", root_path.display()),
             ),
             VutError::OpenConfig(err) => CommandError::new(
                 CommandErrorKind::Config,

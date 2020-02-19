@@ -29,7 +29,7 @@ pub struct FileError {
 impl fmt::Display for FileError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self.kind {
-            FileErrorKind::NotFound => write!(f, "File not found: {}", self.path.to_string_lossy()),
+            FileErrorKind::NotFound => write!(f, "File not found: {}", self.path.display()),
             FileErrorKind::Other(err) => write!(f, "{}", err),
         }
     }

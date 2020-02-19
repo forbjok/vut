@@ -73,7 +73,7 @@ pub fn generate_template<TP: TemplateProcessor>(
     values: &TemplateInput,
     encoding: Option<String>,
 ) -> Result<PathBuf, RenderTemplateError> {
-    info!("Generating template file {}", template_path.to_string_lossy());
+    info!("Generating template file {}", template_path.display());
 
     // If an encoding was specified, try to get an implementation for it.
     let encoding: Option<EncodingRef> =

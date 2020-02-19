@@ -21,7 +21,7 @@ pub fn init(version: Option<&str>) -> Result<(), CommandError> {
     eprintln!(
         "Initialized Vut project with version {} at {}.",
         vut.get_version()?.to_string(),
-        vut.get_root_path().to_string_lossy()
+        vut.get_root_path().display()
     );
 
     // Generate template output
