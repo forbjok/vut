@@ -21,7 +21,7 @@ const VUT_CONFIG_DEFAULT: &str = r###"
 # Don't automatically update nested version sources.
 # If you want all nested sources to be automatically updated,
 # set this to true.
-update_nested_sources = false
+auto_update_sources = false
 
 ignore = [
   # Ignore Git directories
@@ -328,7 +328,7 @@ impl Vut {
 
         let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
 
-        if self.config.update_nested_sources {
+        if self.config.auto_update_sources {
             let dirs_iter = dir_entries
                 .iter()
                 .map(|entry| entry.path())
@@ -361,7 +361,7 @@ impl Vut {
             generated_files.push(generated_file);
         }
 
-        if self.config.update_nested_sources {
+        if self.config.auto_update_sources {
             let version = self.get_version()?;
 
             for mut source in nested_sources {
