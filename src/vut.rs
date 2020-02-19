@@ -23,11 +23,16 @@ ignore = [
   "**/.git",
 ]
 
+# Nested version sources to update.
 update_sources = [
   # If you want to automatically update all version sources,
   # uncomment the below pattern.
   #"**",
 ]
+
+# Nested version sources to exclude from being updated
+# even if they are included in update_sources.
+exclude_sources = []
 "###;
 
 lazy_static! {
@@ -312,6 +317,23 @@ impl Vut {
         Ok(update_sources_globset)
     }
 
+    /// Build a GlobSet from the exclude_sources patterns in the configuration
+    fn build_exclude_sources_globset(&self) -> Result<globset::GlobSet, VutError> {
+        let mut builder = globset::GlobSetBuilder::new();
+
+        for pattern in self.config.exclude_sources.iter() {
+            let glob = globset::Glob::new(pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+
+            builder.add(glob);
+        }
+
+        let exclude_sources_globset = builder
+            .build()
+            .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+
+        Ok(exclude_sources_globset)
+    }
+
     pub fn locate_templates_and_nested_sources(&self) -> Result<(Vec<PathBuf>, Vec<Box<dyn VersionSource>>), VutError> {
         let root_path = &self.root_path;
 
@@ -348,6 +370,7 @@ impl Vut {
 
         if !self.config.update_sources.is_empty() {
             let update_sources_globset = self.build_update_sources_globset()?;
+            let exclude_sources_globset = self.build_exclude_sources_globset()?;
 
             let dirs_iter = dir_entries
                 .iter()
@@ -360,7 +383,7 @@ impl Vut {
                     // relative to the root.
                     let rel_path = path.strip_prefix(root_path).unwrap();
 
-                    update_sources_globset.is_match(rel_path)
+                    update_sources_globset.is_match(rel_path) && !exclude_sources_globset.is_match(rel_path)
                 });
 
             for path in dirs_iter {

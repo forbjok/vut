@@ -13,6 +13,7 @@ use crate::vut::VutError;
 pub struct VutConfig {
     pub ignore: Vec<String>,
     pub update_sources: Vec<String>,
+    pub exclude_sources: Vec<String>,
 }
 
 impl VutConfig {
@@ -38,6 +39,7 @@ impl Default for VutConfig {
         Self {
             ignore: vec!["**/.git".to_owned()],
             update_sources: Vec::new(),
+            exclude_sources: Vec::new(),
         }
     }
 }
