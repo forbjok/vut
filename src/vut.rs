@@ -18,14 +18,15 @@ use crate::version_source::{self, VersionSource};
 
 const VUT_CONFIG_FILENAME: &str = ".vutconfig.toml";
 const VUT_CONFIG_DEFAULT: &str = r###"
-# Don't automatically update nested version sources.
-# If you want all nested sources to be automatically updated,
-# set this to true.
-auto_update_sources = false
-
 ignore = [
   # Ignore Git directories
   "**/.git",
+]
+
+update_sources = [
+  # If you want to automatically update all version sources,
+  # uncomment the below pattern.
+  #"**",
 ]
 "###;
 
@@ -294,6 +295,23 @@ impl Vut {
         Ok(ignore_globset)
     }
 
+    /// Build a GlobSet from the update_sources patterns in the configuration
+    fn build_update_sources_globset(&self) -> Result<globset::GlobSet, VutError> {
+        let mut builder = globset::GlobSetBuilder::new();
+
+        for pattern in self.config.update_sources.iter() {
+            let glob = globset::Glob::new(pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+
+            builder.add(glob);
+        }
+
+        let update_sources_globset = builder
+            .build()
+            .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+
+        Ok(update_sources_globset)
+    }
+
     pub fn locate_templates_and_nested_sources(&self) -> Result<(Vec<PathBuf>, Vec<Box<dyn VersionSource>>), VutError> {
         let root_path = &self.root_path;
 
@@ -328,12 +346,22 @@ impl Vut {
 
         let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
 
-        if self.config.auto_update_sources {
+        if !self.config.update_sources.is_empty() {
+            let update_sources_globset = self.build_update_sources_globset()?;
+
             let dirs_iter = dir_entries
                 .iter()
                 .map(|entry| entry.path())
                 // Only include directories
-                .filter(|path| path.is_dir());
+                .filter(|path| path.is_dir())
+                // Filter based on update_sources configuration
+                .filter(|path| {
+                    // Make path relative, as we only want to match on the path
+                    // relative to the root.
+                    let rel_path = path.strip_prefix(root_path).unwrap();
+
+                    update_sources_globset.is_match(rel_path)
+                });
 
             for path in dirs_iter {
                 if let Some(source) = version_source::version_source_from_path(&path) {
@@ -361,7 +389,7 @@ impl Vut {
             generated_files.push(generated_file);
         }
 
-        if self.config.auto_update_sources {
+        if !self.config.update_sources.is_empty() {
             let version = self.get_version()?;
 
             for mut source in nested_sources {

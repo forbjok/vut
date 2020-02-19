@@ -11,8 +11,8 @@ use crate::vut::VutError;
 #[derive(Debug, Deserialize)]
 #[serde(default)]
 pub struct VutConfig {
-    pub auto_update_sources: bool,
     pub ignore: Vec<String>,
+    pub update_sources: Vec<String>,
 }
 
 impl VutConfig {
@@ -36,8 +36,8 @@ impl VutConfig {
 impl Default for VutConfig {
     fn default() -> Self {
         Self {
-            auto_update_sources: false,
             ignore: vec!["**/.git".to_owned()],
+            update_sources: Vec::new(),
         }
     }
 }
