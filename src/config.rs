@@ -9,10 +9,23 @@ use crate::util;
 use crate::vut::VutError;
 
 #[derive(Debug, Deserialize)]
+pub struct UpdateSourceDetail {
+    pub path: String,
+    pub types: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum UpdateSource {
+    Simple(String),
+    Detailed(UpdateSourceDetail),
+}
+
+#[derive(Debug, Deserialize)]
 #[serde(default)]
 pub struct VutConfig {
     pub ignore: Vec<String>,
-    pub update_sources: Vec<String>,
+    pub update_sources: Vec<UpdateSource>,
     pub exclude_sources: Vec<String>,
 }
 

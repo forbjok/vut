@@ -10,7 +10,7 @@ use log::warn;
 use strum_macros::EnumString;
 use walkdir;
 
-use crate::config::{self, VutConfig};
+use crate::config::{self, UpdateSource, VutConfig};
 use crate::template::{self, RenderTemplateError, TemplateInput};
 use crate::util;
 use crate::version::{self, Version};
@@ -37,6 +37,7 @@ exclude_sources = []
 
 lazy_static! {
     static ref VUTEMPLATE_EXTENSION: &'static OsStr = OsStr::new("vutemplate");
+    static ref ALL_SOURCE_TYPES: Vec<String> = vec!["*".to_owned()];
 }
 
 #[derive(Debug, EnumString)]
@@ -301,20 +302,31 @@ impl Vut {
     }
 
     /// Build a GlobSet from the update_sources patterns in the configuration
-    fn build_update_sources_globset(&self) -> Result<globset::GlobSet, VutError> {
-        let mut builder = globset::GlobSetBuilder::new();
+    fn build_update_sources_globsets(
+        &self,
+    ) -> Result<Vec<(globset::GlobSet, Box<dyn Fn(&Path) -> Option<Box<dyn VersionSource>>>)>, VutError> {
+        let mut update_version_sources: Vec<(globset::GlobSet, Box<dyn Fn(&Path) -> Option<Box<dyn VersionSource>>>)> =
+            Vec::new();
 
-        for pattern in self.config.update_sources.iter() {
-            let glob = globset::Glob::new(pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+        for update_source in self.config.update_sources.iter() {
+            let (pattern, types) = match update_source {
+                UpdateSource::Simple(path) => (path, &*ALL_SOURCE_TYPES),
+                UpdateSource::Detailed(us) => (&us.path, &us.types),
+            };
 
-            builder.add(glob);
+            let glob = globset::Glob::new(&pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+
+            let globset = globset::GlobSetBuilder::new()
+                .add(glob)
+                .build()
+                .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+
+            let checker = version_source::build_version_source_checker(&types);
+
+            update_version_sources.push((globset, checker));
         }
 
-        let update_sources_globset = builder
-            .build()
-            .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
-
-        Ok(update_sources_globset)
+        Ok(update_version_sources)
     }
 
     /// Build a GlobSet from the exclude_sources patterns in the configuration
@@ -369,7 +381,7 @@ impl Vut {
         let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
 
         if !self.config.update_sources.is_empty() {
-            let update_sources_globset = self.build_update_sources_globset()?;
+            let update_sources_globsets = self.build_update_sources_globsets()?;
             let exclude_sources_globset = self.build_exclude_sources_globset()?;
 
             let dirs_iter = dir_entries
@@ -377,18 +389,21 @@ impl Vut {
                 .map(|entry| entry.path())
                 // Only include directories
                 .filter(|path| path.is_dir())
-                // Filter based on update_sources configuration
-                .filter(|path| {
-                    // Make path relative, as we only want to match on the path
-                    // relative to the root.
-                    let rel_path = path.strip_prefix(root_path).unwrap();
-
-                    update_sources_globset.is_match(rel_path) && !exclude_sources_globset.is_match(rel_path)
-                });
+                // Exclude all paths matched in exclude sources
+                .filter(|path| !exclude_sources_globset.is_match(path));
 
             for path in dirs_iter {
-                if let Some(source) = version_source::version_source_from_path(&path) {
-                    sources.push(source);
+                // Make path relative, as we only want to match on the path
+                // relative to the root.
+                let rel_path = path.strip_prefix(root_path).unwrap();
+
+                for (globset, checker) in update_sources_globsets.iter() {
+                    if globset.is_match(&rel_path) {
+                        if let Some(source) = checker(&path) {
+                            sources.push(source);
+                            break;
+                        }
+                    }
                 }
             }
         }
