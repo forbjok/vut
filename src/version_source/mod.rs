@@ -57,28 +57,20 @@ macro_rules! generate_version_sources_from_path {
             sources
         }
 
-        /// Return a function that checks a specified path and returns all version sources of the types listed in source_types.
-        pub fn build_version_sources_from_path_fn(source_types: &HashSet<String>) -> Box<dyn Fn(&Path) -> Vec<Box<dyn VersionSource>>>
+        /// Return all version sources of the types specified in source_types found at the specified path.
+        pub fn specific_version_sources_from_path(path: &Path, source_types: &HashSet<String>) -> Vec<Box<dyn VersionSource>>
         {
-            let source_types = source_types.clone();
+            let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
 
-            if source_types.contains("*") {
-                Box::new(version_sources_from_path)
-            } else {
-                Box::new(move |path: &Path| -> Vec<Box<dyn VersionSource>> {
-                    let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
+            $(
+                if source_types.contains($src_name) {
+                    if let Some(source) = <$src_type>::from_path(path) {
+                        sources.push(Box::new(source));
+                    }
+                }
+            )*
 
-                    $(
-                        if source_types.contains($src_name) {
-                            if let Some(source) = <$src_type>::from_path(path) {
-                                sources.push(Box::new(source));
-                            }
-                        }
-                    )*
-
-                    sources
-                })
-            }
+            sources
         }
     };
 }

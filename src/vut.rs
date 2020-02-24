@@ -38,12 +38,6 @@ exclude_sources = []
 
 lazy_static! {
     static ref VUTEMPLATE_EXTENSION: &'static OsStr = OsStr::new("vutemplate");
-    static ref ALL_SOURCE_TYPES: HashSet<String> = {
-        let mut set = HashSet::new();
-        set.insert("*".to_owned());
-
-        set
-    };
 }
 
 #[derive(Debug, EnumString)]
@@ -309,16 +303,13 @@ impl Vut {
     }
 
     /// Build a GlobSet from the update_sources patterns in the configuration
-    fn build_update_sources_globsets(
-        &self,
-    ) -> Result<Vec<(globset::GlobSet, Box<dyn Fn(&Path) -> Vec<Box<dyn VersionSource>>>)>, VutError> {
-        let mut update_version_sources: Vec<(globset::GlobSet, Box<dyn Fn(&Path) -> Vec<Box<dyn VersionSource>>>)> =
-            Vec::new();
+    fn build_update_sources_globsets(&self) -> Result<Vec<(globset::GlobSet, Option<HashSet<String>>)>, VutError> {
+        let mut update_version_sources: Vec<(globset::GlobSet, Option<HashSet<String>>)> = Vec::new();
 
         for update_source in self.config.update_sources.iter() {
             let (pattern, source_types) = match update_source {
-                UpdateSource::Simple(path) => (path, &*ALL_SOURCE_TYPES),
-                UpdateSource::Detailed(us) => (&us.path, &us.types),
+                UpdateSource::Simple(path) => (path, None),
+                UpdateSource::Detailed(us) => (&us.path, Some(&us.types)),
             };
 
             let glob = globset::Glob::new(&pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
@@ -328,9 +319,7 @@ impl Vut {
                 .build()
                 .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
-            let get_version_sources_fn = version_source::build_version_sources_from_path_fn(&source_types);
-
-            update_version_sources.push((globset, get_version_sources_fn));
+            update_version_sources.push((globset, source_types.map(|v| v.clone())));
         }
 
         Ok(update_version_sources)
@@ -404,10 +393,14 @@ impl Vut {
                 // relative to the root.
                 let rel_path = path.strip_prefix(root_path).unwrap();
 
-                for (globset, get_version_sources_fn) in update_sources_globsets.iter() {
+                for (globset, source_types) in update_sources_globsets.iter() {
                     if globset.is_match(&rel_path) {
                         // Check for version sources at this path
-                        let mut new_sources = get_version_sources_fn(&path);
+                        let mut new_sources = if let Some(source_types) = source_types {
+                            version_source::specific_version_sources_from_path(&path, &source_types)
+                        } else {
+                            version_source::version_sources_from_path(&path)
+                        };
 
                         // Append all found sources to the main list of sources
                         sources.append(&mut new_sources);
