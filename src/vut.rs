@@ -304,8 +304,8 @@ impl Vut {
     /// Build a GlobSet from the update_sources patterns in the configuration
     fn build_update_sources_globsets(
         &self,
-    ) -> Result<Vec<(globset::GlobSet, Box<dyn Fn(&Path) -> Option<Box<dyn VersionSource>>>)>, VutError> {
-        let mut update_version_sources: Vec<(globset::GlobSet, Box<dyn Fn(&Path) -> Option<Box<dyn VersionSource>>>)> =
+    ) -> Result<Vec<(globset::GlobSet, Box<dyn Fn(&Path) -> Vec<Box<dyn VersionSource>>>)>, VutError> {
+        let mut update_version_sources: Vec<(globset::GlobSet, Box<dyn Fn(&Path) -> Vec<Box<dyn VersionSource>>>)> =
             Vec::new();
 
         for update_source in self.config.update_sources.iter() {
@@ -399,10 +399,11 @@ impl Vut {
 
                 for (globset, checker) in update_sources_globsets.iter() {
                     if globset.is_match(&rel_path) {
-                        if let Some(source) = checker(&path) {
-                            sources.push(source);
-                            break;
-                        }
+                        // Check for version sources at this path
+                        let mut new_sources = checker(&path);
+
+                        // Append all found sources to the main list of sources
+                        sources.append(&mut new_sources);
                     }
                 }
             }

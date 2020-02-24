@@ -40,7 +40,7 @@ macro_rules! generate_build_version_source_checker {
             $( $src_name:expr => $src_type:ty ),* $(,)*
         }
     ) => {
-        pub fn $fn_name(source_names: &[String]) -> Box<dyn Fn(&Path) -> Option<Box<dyn VersionSource>>>
+        pub fn $fn_name(source_names: &[String]) -> Box<dyn Fn(&Path) -> Vec<Box<dyn VersionSource>>>
         {
             let mut checkers: Vec<Box<dyn Fn(&Path) -> Option<Box<dyn VersionSource>>>> = Vec::new();
 
@@ -61,14 +61,16 @@ macro_rules! generate_build_version_source_checker {
                 }
             }
 
-            Box::new(move |path: &Path| -> Option<Box<dyn VersionSource>> {
+            Box::new(move |path: &Path| -> Vec<Box<dyn VersionSource>> {
+                let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
+
                 for checker in checkers.iter() {
                     if let Some(source) = checker(path) {
-                        return Some(source);
+                        sources.push(source);
                     }
                 }
 
-                None
+                sources
             })
         }
     };
