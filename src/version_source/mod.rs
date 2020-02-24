@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::path::Path;
 
 use crate::util;
@@ -46,36 +47,35 @@ macro_rules! generate_build_version_source_checker {
     ) => {
         pub fn $fn_name(source_names: &[String]) -> Box<dyn Fn(&Path) -> Vec<Box<dyn VersionSource>>>
         {
-            let mut checkers: Vec<Box<dyn Fn(&Path) -> Option<Box<dyn VersionSource>>>> = Vec::new();
+            let source_types: HashSet<String> = source_names.iter().map(|n| n.clone()).collect();
 
-            if source_names.iter().any(|n| n == "*") {
-                // Source names contains "*" wildcard - add all version source checks
-                $( checkers.push(Box::new(move |path: &Path| <$src_type>::from_path(path).map(|s| Box::new(s) as Box<dyn VersionSource>))); )*
+            if source_types.contains("*") {
+                Box::new(move |path: &Path| -> Vec<Box<dyn VersionSource>> {
+                    let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
+
+                    $(
+                        if let Some(source) = <$src_type>::from_path(path).map(|s| Box::new(s) as Box<dyn VersionSource>) {
+                            sources.push(source);
+                        }
+                    )*
+
+                    sources
+                })
             } else {
-                // Source names does not contain wildcard. Add sources based on names in the list.
-                for name in source_names {
-                    let checker: Option<Box<dyn Fn(&Path) -> Option<Box<dyn VersionSource>>>> = match name.as_str() {
-                        $( $src_name => Some(Box::new(move |path: &Path| <$src_type>::from_path(path).map(|s| Box::new(s) as Box<dyn VersionSource>))), )*
-                        _ => None,
-                    };
+                Box::new(move |path: &Path| -> Vec<Box<dyn VersionSource>> {
+                    let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
 
-                    if let Some(checker) = checker {
-                        checkers.push(checker);
-                    }
-                }
+                    $(
+                        if source_types.contains($src_name) {
+                            if let Some(source) = <$src_type>::from_path(path).map(|s| Box::new(s) as Box<dyn VersionSource>) {
+                                sources.push(source);
+                            }
+                        }
+                    )*
+
+                    sources
+                })
             }
-
-            Box::new(move |path: &Path| -> Vec<Box<dyn VersionSource>> {
-                let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
-
-                for checker in checkers.iter() {
-                    if let Some(source) = checker(path) {
-                        sources.push(source);
-                    }
-                }
-
-                sources
-            })
         }
     };
 }
