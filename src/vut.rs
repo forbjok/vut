@@ -322,9 +322,9 @@ impl Vut {
                 .build()
                 .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
-            let checker = version_source::build_version_source_checker(&types);
+            let get_version_sources_fn = version_source::build_version_sources_from_path_fn(&types);
 
-            update_version_sources.push((globset, checker));
+            update_version_sources.push((globset, get_version_sources_fn));
         }
 
         Ok(update_version_sources)
@@ -398,10 +398,10 @@ impl Vut {
                 // relative to the root.
                 let rel_path = path.strip_prefix(root_path).unwrap();
 
-                for (globset, checker) in update_sources_globsets.iter() {
+                for (globset, get_version_sources_fn) in update_sources_globsets.iter() {
                     if globset.is_match(&rel_path) {
                         // Check for version sources at this path
-                        let mut new_sources = checker(&path);
+                        let mut new_sources = get_version_sources_fn(&path);
 
                         // Append all found sources to the main list of sources
                         sources.append(&mut new_sources);
