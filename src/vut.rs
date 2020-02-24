@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::collections::HashSet;
 use std::env;
 use std::ffi::OsStr;
 use std::io::{self, Write};
@@ -37,7 +38,12 @@ exclude_sources = []
 
 lazy_static! {
     static ref VUTEMPLATE_EXTENSION: &'static OsStr = OsStr::new("vutemplate");
-    static ref ALL_SOURCE_TYPES: Vec<String> = vec!["*".to_owned()];
+    static ref ALL_SOURCE_TYPES: HashSet<String> = {
+        let mut set = HashSet::new();
+        set.insert("*".to_owned());
+
+        set
+    };
 }
 
 #[derive(Debug, EnumString)]
@@ -310,7 +316,7 @@ impl Vut {
             Vec::new();
 
         for update_source in self.config.update_sources.iter() {
-            let (pattern, types) = match update_source {
+            let (pattern, source_types) = match update_source {
                 UpdateSource::Simple(path) => (path, &*ALL_SOURCE_TYPES),
                 UpdateSource::Detailed(us) => (&us.path, &us.types),
             };
@@ -322,7 +328,7 @@ impl Vut {
                 .build()
                 .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
-            let get_version_sources_fn = version_source::build_version_sources_from_path_fn(&types);
+            let get_version_sources_fn = version_source::build_version_sources_from_path_fn(&source_types);
 
             update_version_sources.push((globset, get_version_sources_fn));
         }

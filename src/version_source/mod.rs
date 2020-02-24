@@ -58,9 +58,9 @@ macro_rules! generate_version_sources_from_path {
         }
 
         /// Return a function that checks a specified path and returns all version sources of the types listed in source_types.
-        pub fn build_version_sources_from_path_fn(source_types: &[String]) -> Box<dyn Fn(&Path) -> Vec<Box<dyn VersionSource>>>
+        pub fn build_version_sources_from_path_fn(source_types: &HashSet<String>) -> Box<dyn Fn(&Path) -> Vec<Box<dyn VersionSource>>>
         {
-            let source_types: HashSet<String> = source_types.iter().map(|n| n.clone()).collect();
+            let source_types = source_types.clone();
 
             if source_types.contains("*") {
                 Box::new(version_sources_from_path)

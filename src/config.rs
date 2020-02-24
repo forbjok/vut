@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::collections::HashSet;
 use std::io::Read;
 use std::path::Path;
 
@@ -11,7 +12,7 @@ use crate::vut::VutError;
 #[derive(Debug, Deserialize)]
 pub struct UpdateSourceDetail {
     pub path: String,
-    pub types: Vec<String>,
+    pub types: HashSet<String>,
 }
 
 #[derive(Debug, Deserialize)]
