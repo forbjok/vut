@@ -146,14 +146,15 @@ impl Vut {
             let root_path = config_file_path.parent().unwrap().to_path_buf();
 
             let source =
-                version_source::version_source_from_path(&root_path).ok_or_else(|| VutError::NoVersionSource)?;
+                version_source::first_version_source_from_path(&root_path).ok_or_else(|| VutError::NoVersionSource)?;
 
             (root_path, source)
         } else {
             // No config file found.
             // Fall back to trying to locate a version source instead.
 
-            let source = version_source::locate_version_source_from(path).ok_or_else(|| VutError::NoVersionSource)?;
+            let source =
+                version_source::locate_first_version_source_from(path).ok_or_else(|| VutError::NoVersionSource)?;
 
             // TODO: Find a better way to display deprecation warning.
             warn!("DEPRECATED: Authoritative version source present with no config file. Create a .vutconfig in the root of the project.");

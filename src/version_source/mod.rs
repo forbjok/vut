@@ -20,7 +20,7 @@ pub trait VersionSource {
     fn set_version(&mut self, version: &Version) -> Result<(), VutError>;
 }
 
-pub fn version_source_from_path(path: &Path) -> Option<Box<dyn VersionSource>> {
+pub fn first_version_source_from_path(path: &Path) -> Option<Box<dyn VersionSource>> {
     let source: Option<Box<dyn VersionSource>> = if let Some(source) = VersionFileSource::from_path(path) {
         Some(Box::new(source))
     } else if let Some(source) = CargoSource::from_path(path) {
@@ -32,6 +32,10 @@ pub fn version_source_from_path(path: &Path) -> Option<Box<dyn VersionSource>> {
     };
 
     source
+}
+
+pub fn locate_first_version_source_from(start_path: &Path) -> Option<Box<dyn VersionSource>> {
+    util::find_outwards(start_path, |path| first_version_source_from_path(path)).map(|(_, source)| source)
 }
 
 macro_rules! generate_build_version_source_checker {
@@ -82,8 +86,4 @@ generate_build_version_source_checker! {
         "cargo" => CargoSource,
         "npm" => NpmSource,
     }
-}
-
-pub fn locate_version_source_from(start_path: &Path) -> Option<Box<dyn VersionSource>> {
-    util::find_outwards(start_path, |path| version_source_from_path(path)).map(|(_, source)| source)
 }
