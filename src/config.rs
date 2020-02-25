@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
@@ -15,6 +15,19 @@ use crate::vut::VutError;
 pub enum Patterns {
     Single(String),
     Multiple(Vec<String>),
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RegexCustomSourceType {
+    pub file_name: String,
+    pub regex: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+#[serde(tag = "type")]
+pub enum CustomSourceType {
+    Regex(RegexCustomSourceType),
 }
 
 /// One or more version source types
@@ -58,6 +71,7 @@ pub struct General {
 #[serde(default)]
 pub struct VutConfig {
     pub general: General,
+    pub custom_source_types: HashMap<String, CustomSourceType>,
     pub version_source: Vec<VersionSource>,
     pub template: Vec<Template>,
 }
@@ -92,6 +106,7 @@ impl Default for VutConfig {
     fn default() -> Self {
         Self {
             general: General::default(),
+            custom_source_types: HashMap::new(),
             version_source: Vec::new(),
             template: vec![Template {
                 pattern: Patterns::Single("**/*.vutemplate".to_owned()),

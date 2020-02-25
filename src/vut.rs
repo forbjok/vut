@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::env;
 use std::ffi::OsStr;
 use std::io::{self, Write};
@@ -454,6 +454,40 @@ impl Vut {
 
         let version_sources_globsets = self.build_version_sources_globsets()?;
 
+        let mut custom_source_types: HashMap<&str, version_source::CustomRegexSourceTemplate> = HashMap::new();
+
+        // Construct custom source type templates
+        for (k, v) in self.config.custom_source_types.iter() {
+            // Extract regex custom source type information from the enum.
+            // Currently regex is the only type implemented.
+            let regex_custom_source_type = match v {
+                config::CustomSourceType::Regex(v) => v,
+            };
+
+            // Try to parse regex string
+            let regex = {
+                let mut builder = regex::RegexBuilder::new(&regex_custom_source_type.regex);
+                builder.multi_line(true);
+
+                match builder.build() {
+                    Ok(v) => v,
+                    Err(err) => {
+                        return Err(VutError::Other(Cow::Owned(format!(
+                            "Invalid regex '{}': {}",
+                            &regex_custom_source_type.regex,
+                            err.to_string()
+                        ))))
+                    }
+                }
+            };
+
+            // Construct source type template
+            let source = version_source::CustomRegexSourceTemplate::new(&regex_custom_source_type.file_name, regex);
+
+            // Add source to hashmap for later use
+            custom_source_types.insert(k, source);
+        }
+
         let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
 
         let dirs_iter = dir_entries
@@ -475,9 +509,19 @@ impl Vut {
                         }
                     }
 
-                    // Check for version sources at this path
+                    // Check for built-in version sources at this path
                     let mut new_sources = if let Some(source_types) = source_types {
-                        version_source::specific_version_sources_from_path(&path, &source_types)
+                        let new_sources = version_source::specific_version_sources_from_path(&path, &source_types);
+
+                        for source_type in source_types {
+                            if let Some(custom_source_type_template) = custom_source_types.get(source_type.as_str()) {
+                                if let Some(source) = custom_source_type_template.instance_from_path(&path) {
+                                    sources.push(Box::new(source));
+                                }
+                            }
+                        }
+
+                        new_sources
                     } else {
                         version_source::version_sources_from_path(&path)
                     };

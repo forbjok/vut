@@ -6,10 +6,12 @@ use crate::version::Version;
 use crate::vut::VutError;
 
 mod cargo;
+mod custom_regex;
 mod npm;
 mod version_file;
 
 pub use cargo::*;
+pub use custom_regex::CustomRegexSourceTemplate;
 pub use npm::*;
 pub use version_file::*;
 

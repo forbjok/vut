@@ -6,6 +6,20 @@
     "**/.git",
   ]
 
+# Define a custom source type.
+# This may be used if you need to support a file format
+# that does not have a built-in version source.
+# The example below defines a type named "example" that
+# expects a file called "example.file" in which the version
+# is on a line starting with "Version = ", followed by the version
+# and a semicolon.
+# In regex, there must always be exactly 3 capture groups,
+# and the second (middle) one must be the version string.
+#[custom_source_types.example]
+#type = "regex"
+#file_name = "example.file"
+#regex = '(^Version = )(\d+\.\d+\.\d+.*)(;.*)'
+
 # Define version source pattern.
 # There can be more than one of these.
 [[version_source]]
