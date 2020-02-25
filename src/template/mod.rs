@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt;
 use std::io::{self, Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use encoding::label::encoding_from_whatwg_label;
 use encoding::{DecoderTrap, EncoderTrap, EncodingRef};
@@ -33,6 +33,7 @@ pub trait TemplateProcessor {
 
 #[derive(Debug)]
 pub enum RenderTemplateError {
+    InvalidProcessor(Cow<'static, str>),
     OpenTemplate(util::FileError),
     OpenOutput(util::FileError),
     ReadTemplate(io::Error),
@@ -43,6 +44,9 @@ pub enum RenderTemplateError {
 impl fmt::Display for RenderTemplateError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            RenderTemplateError::InvalidProcessor(processor_name) => {
+                write!(f, "Invalid template processor: {}", processor_name)
+            }
             RenderTemplateError::OpenTemplate(err) => write!(f, "Error opening template: {}", err),
             RenderTemplateError::OpenOutput(err) => write!(f, "Error opening output: {}", err),
             RenderTemplateError::ReadTemplate(err) => write!(f, "Error reading template: {}", err),
@@ -70,9 +74,10 @@ pub fn render_template<TP: TemplateProcessor>(
 
 pub fn generate_template<TP: TemplateProcessor>(
     template_path: &Path,
+    output_file_path: &Path,
     values: &TemplateInput,
-    encoding: Option<String>,
-) -> Result<PathBuf, RenderTemplateError> {
+    encoding: Option<&str>,
+) -> Result<(), RenderTemplateError> {
     info!("Generating template file {}", template_path.display());
 
     // If an encoding was specified, try to get an implementation for it.
@@ -109,17 +114,6 @@ pub fn generate_template<TP: TemplateProcessor>(
 
     let text = render_template::<TP>(&text, values)?;
 
-    let template_path = util::normalize_path(template_path);
-
-    // Get template directory path
-    let template_dir = template_path.parent().unwrap();
-
-    // Get template filename
-    let template_filename = template_path.file_stem().unwrap();
-
-    // Construct output file path.
-    let output_file_path = template_dir.join(template_filename);
-
     // Create output file.
     let mut output_file = util::create_file(&output_file_path)
         .map_err::<RenderTemplateError, _>(|err| RenderTemplateError::OpenOutput(err))?;
@@ -140,6 +134,20 @@ pub fn generate_template<TP: TemplateProcessor>(
         .write(&output_data)
         .map_err::<RenderTemplateError, _>(|err| RenderTemplateError::WriteOutput(err))?;
 
-    // Return path to output file
-    Ok(output_file_path)
+    Ok(())
+}
+
+pub fn generate_template_with_processor_name(
+    processor_name: &str,
+    template_path: &Path,
+    output_file_path: &Path,
+    values: &TemplateInput,
+    encoding: Option<&str>,
+) -> Result<(), RenderTemplateError> {
+    match processor_name {
+        "vut" => generate_template::<processor::VutProcessor>(template_path, output_file_path, values, encoding),
+        _ => Err(RenderTemplateError::InvalidProcessor(Cow::Owned(
+            processor_name.to_owned(),
+        ))),
+    }
 }

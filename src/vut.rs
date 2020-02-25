@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use globset;
 use lazy_static::lazy_static;
-use log::warn;
+use log::{debug, warn};
 use strum_macros::EnumString;
 use walkdir;
 
@@ -269,6 +269,32 @@ impl Vut {
         Ok(template_input)
     }
 
+    fn build_template_globsets(&self) -> Result<Vec<(&config::Template, globset::GlobSet)>, VutError> {
+        let mut template_globsets: Vec<(&config::Template, globset::GlobSet)> = Vec::new();
+
+        for template in self.config.template.iter() {
+            let patterns = match &template.pattern {
+                config::Patterns::Single(v) => vec![v],
+                config::Patterns::Multiple(v) => v.iter().collect(),
+            };
+
+            let mut globset = globset::GlobSetBuilder::new();
+
+            for pattern in patterns {
+                let glob = globset::Glob::new(&pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+                globset.add(glob);
+            }
+
+            let globset = globset
+                .build()
+                .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+
+            template_globsets.push((&template, globset));
+        }
+
+        Ok(template_globsets)
+    }
+
     /// Build a GlobSet from the ignore patterns in the configuration
     fn build_ignore_globset(&self) -> Result<globset::GlobSet, VutError> {
         let mut builder = globset::GlobSetBuilder::new();
@@ -326,7 +352,119 @@ impl Vut {
         Ok(exclude_sources_globset)
     }
 
-    pub fn locate_templates_and_nested_sources(&self) -> Result<(Vec<PathBuf>, Vec<Box<dyn VersionSource>>), VutError> {
+    fn generate_template_output(&self, dir_entries: &[walkdir::DirEntry]) -> Result<(), VutError> {
+        let root_path = &self.root_path;
+
+        let template_globsets = self.build_template_globsets()?;
+
+        let template_input = self.generate_template_input()?;
+
+        let mut processed_files: Vec<PathBuf> = Vec::new();
+        let mut generated_files: Vec<PathBuf> = Vec::new();
+
+        for (template, globset) in template_globsets {
+            debug!("{:?}", template);
+
+            let start_path: Cow<Path> = match &template.start_path {
+                Some(p) => Cow::Owned(root_path.join(p)),
+                None => Cow::Borrowed(root_path),
+            };
+
+            let output_path = match &template.output_path {
+                Some(p) => Cow::Owned(root_path.join(p)),
+                None => start_path.clone(),
+            };
+
+            let processor = template.processor.as_ref().map(|s| s.as_str()).unwrap_or("vut");
+            let encoding = template.encoding.as_ref().map(|s| s.as_str());
+
+            let template_files_iter = dir_entries
+                .iter()
+                .map(|entry| entry.path())
+                // Exclude files outside the start path
+                .filter(|path| path.starts_with(&start_path))
+                // Only include template files
+                .filter_map(|path| {
+                    // Make path relative, as we only want to match on the path
+                    // relative to the start path.
+                    let rel_path = path.strip_prefix(&start_path).unwrap();
+
+                    if globset.is_match(rel_path) {
+                        Some((path, rel_path))
+                    } else {
+                        None
+                    }
+                });
+
+            for (path, rel_path) in template_files_iter {
+                debug!("Processing template {}", path.display());
+
+                let output_file_name: &OsStr = path.file_stem().unwrap();
+                let output_file_path = output_path.join(rel_path.with_file_name(output_file_name));
+
+                template::generate_template_with_processor_name(
+                    processor,
+                    path,
+                    &output_file_path,
+                    &template_input,
+                    encoding,
+                )
+                .map_err(|err| VutError::TemplateGenerate(err))?;
+
+                processed_files.push(path.to_path_buf());
+                generated_files.push(output_file_path);
+            }
+        }
+
+        Ok(())
+    }
+
+    fn update_version_sources(&self, dir_entries: &[walkdir::DirEntry]) -> Result<(), VutError> {
+        let root_path = &self.root_path;
+
+        let update_sources_globsets = self.build_update_sources_globsets()?;
+        let exclude_sources_globset = self.build_exclude_sources_globset()?;
+
+        let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
+
+        let dirs_iter = dir_entries
+            .iter()
+            .map(|entry| entry.path())
+            // Only include directories
+            .filter(|path| path.is_dir())
+            // Exclude all paths matched in exclude sources
+            .filter(|path| !exclude_sources_globset.is_match(path));
+
+        for path in dirs_iter {
+            // Make path relative, as we only want to match on the path
+            // relative to the root.
+            let rel_path = path.strip_prefix(root_path).unwrap();
+
+            for (globset, source_types) in update_sources_globsets.iter() {
+                if globset.is_match(&rel_path) {
+                    // Check for version sources at this path
+                    let mut new_sources = if let Some(source_types) = source_types {
+                        version_source::specific_version_sources_from_path(&path, &source_types)
+                    } else {
+                        version_source::version_sources_from_path(&path)
+                    };
+
+                    // Append all found sources to the main list of sources
+                    sources.append(&mut new_sources);
+                }
+            }
+        }
+
+        let version = self.get_version()?;
+
+        for mut source in sources {
+            source.set_version(&version)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn generate_output(&self) -> Result<(), VutError> {
         let root_path = &self.root_path;
 
         // Build ignore GlobSet from config
@@ -346,79 +484,11 @@ impl Vut {
             .filter_map(|entry| entry.ok())
             .collect();
 
-        let template_files: Vec<PathBuf> = dir_entries
-            .iter()
-            .map(|entry| entry.path())
-            // Only include template files
-            .filter(|path| match path.extension() {
-                Some(ext) => ext == *VUTEMPLATE_EXTENSION,
-                None => false,
-            })
-            // Transform Path references into owned PathBufs
-            .map(|path| path.to_path_buf())
-            .collect();
-
-        let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
-
         if !self.config.update_sources.is_empty() {
-            let update_sources_globsets = self.build_update_sources_globsets()?;
-            let exclude_sources_globset = self.build_exclude_sources_globset()?;
-
-            let dirs_iter = dir_entries
-                .iter()
-                .map(|entry| entry.path())
-                // Only include directories
-                .filter(|path| path.is_dir())
-                // Exclude all paths matched in exclude sources
-                .filter(|path| !exclude_sources_globset.is_match(path));
-
-            for path in dirs_iter {
-                // Make path relative, as we only want to match on the path
-                // relative to the root.
-                let rel_path = path.strip_prefix(root_path).unwrap();
-
-                for (globset, source_types) in update_sources_globsets.iter() {
-                    if globset.is_match(&rel_path) {
-                        // Check for version sources at this path
-                        let mut new_sources = if let Some(source_types) = source_types {
-                            version_source::specific_version_sources_from_path(&path, &source_types)
-                        } else {
-                            version_source::version_sources_from_path(&path)
-                        };
-
-                        // Append all found sources to the main list of sources
-                        sources.append(&mut new_sources);
-                    }
-                }
-            }
+            self.update_version_sources(&dir_entries)?;
         }
 
-        Ok((template_files, sources))
-    }
-
-    pub fn generate_output(&self) -> Result<(), VutError> {
-        let template_input = self.generate_template_input()?;
-        let (template_files, nested_sources) = self.locate_templates_and_nested_sources()?;
-
-        let mut processed_files: Vec<PathBuf> = Vec::new();
-        let mut generated_files: Vec<PathBuf> = Vec::new();
-
-        for file in template_files {
-            let generated_file =
-                template::generate_template::<template::processor::VutProcessor>(&file, &template_input, None)
-                    .map_err(|err| VutError::TemplateGenerate(err))?;
-
-            processed_files.push(file);
-            generated_files.push(generated_file);
-        }
-
-        if !self.config.update_sources.is_empty() {
-            let version = self.get_version()?;
-
-            for mut source in nested_sources {
-                source.set_version(&version)?;
-            }
-        }
+        self.generate_template_output(&dir_entries)?;
 
         Ok(())
     }

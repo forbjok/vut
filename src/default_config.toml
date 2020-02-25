@@ -15,3 +15,28 @@ update_sources = [
 # Nested version sources to exclude from being updated
 # even if they are included in update_sources.
 exclude_sources = []
+
+# Define template pattern.
+# There can be more than one of these.
+[[template]]
+  pattern = "**/*.vutemplate"
+
+  # Directory to start scanning from.
+  # If not specified, the root directory will be used.
+  #start_path = "."
+
+  # Directory to use as the root for output files.
+  # If specified, this will cause output files to be generated in this directory,
+  # in the template's subdirectory relative to the start path
+  # instead of in the same directory as the template.
+  # This should generally only be used if for some reason templates cannot exist
+  # within a particular directory, as it makes it less obvious where files will be generated.
+  #output_path = "."
+
+  # Template processor to use.
+  # The default, and currently only supported processor is "vut".
+  #processor = "vut"
+
+  # Encoding to use for these templates.
+  # The default is "utf-8".
+  #encoding = "utf-8"
