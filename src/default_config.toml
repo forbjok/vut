@@ -1,0 +1,17 @@
+# Directories to ignore completely along with all their content.
+# Typically used to avoid wasting time on scanning VCS directories.
+ignore = [
+  # Ignore Git directories
+  "**/.git",
+]
+
+# Nested version sources to update.
+update_sources = [
+  # If you want to automatically update all version sources,
+  # uncomment the below pattern.
+  #"**",
+]
+
+# Nested version sources to exclude from being updated
+# even if they are included in update_sources.
+exclude_sources = []

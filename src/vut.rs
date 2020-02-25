@@ -18,23 +18,7 @@ use crate::version::{self, Version};
 use crate::version_source::{self, VersionSource};
 
 const VUT_CONFIG_FILENAME: &str = ".vutconfig.toml";
-const VUT_CONFIG_DEFAULT: &str = r###"
-ignore = [
-  # Ignore Git directories
-  "**/.git",
-]
-
-# Nested version sources to update.
-update_sources = [
-  # If you want to automatically update all version sources,
-  # uncomment the below pattern.
-  #"**",
-]
-
-# Nested version sources to exclude from being updated
-# even if they are included in update_sources.
-exclude_sources = []
-"###;
+const VUT_CONFIG_DEFAULT: &str = include_str!("default_config.toml");
 
 lazy_static! {
     static ref VUTEMPLATE_EXTENSION: &'static OsStr = OsStr::new("vutemplate");
