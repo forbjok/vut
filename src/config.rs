@@ -17,6 +17,14 @@ pub enum Patterns {
     Multiple(Vec<String>),
 }
 
+/// One or more version source types
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum VersionSourceTypes {
+    Single(String),
+    Multiple(HashSet<String>),
+}
+
 #[derive(Debug, Deserialize)]
 pub struct Template {
     pub pattern: Patterns,
@@ -27,24 +35,30 @@ pub struct Template {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct UpdateSourceDetail {
-    pub path: String,
-    pub types: HashSet<String>,
+pub struct VersionSourceDetail {
+    pub pattern: Patterns,
+    pub exclude_pattern: Option<Patterns>,
+    pub types: Option<VersionSourceTypes>,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
-pub enum UpdateSource {
-    Simple(String),
-    Detailed(UpdateSourceDetail),
+pub enum VersionSource {
+    Simple(Patterns),
+    Detailed(VersionSourceDetail),
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(default)]
+pub struct General {
+    pub ignore: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(default)]
 pub struct VutConfig {
-    pub ignore: Vec<String>,
-    pub update_sources: Vec<UpdateSource>,
-    pub exclude_sources: Vec<String>,
+    pub general: General,
+    pub version_source: Vec<VersionSource>,
     pub template: Vec<Template>,
 }
 
@@ -66,12 +80,19 @@ impl VutConfig {
     }
 }
 
-impl Default for VutConfig {
+impl Default for General {
     fn default() -> Self {
         Self {
             ignore: vec!["**/.git".to_owned()],
-            update_sources: Vec::new(),
-            exclude_sources: Vec::new(),
+        }
+    }
+}
+
+impl Default for VutConfig {
+    fn default() -> Self {
+        Self {
+            general: General::default(),
+            version_source: Vec::new(),
             template: vec![Template {
                 pattern: Patterns::Single("**/*.vutemplate".to_owned()),
                 start_path: None,

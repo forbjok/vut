@@ -11,7 +11,7 @@ use log::{debug, warn};
 use strum_macros::EnumString;
 use walkdir;
 
-use crate::config::{self, UpdateSource, VutConfig};
+use crate::config::{self, VutConfig};
 use crate::template::{self, RenderTemplateError, TemplateInput};
 use crate::util;
 use crate::version::{self, Version};
@@ -299,7 +299,7 @@ impl Vut {
     fn build_ignore_globset(&self) -> Result<globset::GlobSet, VutError> {
         let mut builder = globset::GlobSetBuilder::new();
 
-        for pattern in self.config.ignore.iter() {
+        for pattern in self.config.general.ignore.iter() {
             let glob = globset::Glob::new(pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
             builder.add(glob);
@@ -313,43 +313,73 @@ impl Vut {
     }
 
     /// Build a GlobSet from the update_sources patterns in the configuration
-    fn build_update_sources_globsets(&self) -> Result<Vec<(globset::GlobSet, Option<HashSet<String>>)>, VutError> {
-        let mut update_version_sources: Vec<(globset::GlobSet, Option<HashSet<String>>)> = Vec::new();
+    fn build_version_sources_globsets(
+        &self,
+    ) -> Result<Vec<(globset::GlobSet, Option<globset::GlobSet>, Option<HashSet<String>>)>, VutError> {
+        let mut update_version_sources: Vec<(globset::GlobSet, Option<globset::GlobSet>, Option<HashSet<String>>)> =
+            Vec::new();
 
-        for update_source in self.config.update_sources.iter() {
-            let (pattern, source_types) = match update_source {
-                UpdateSource::Simple(path) => (path, None),
-                UpdateSource::Detailed(us) => (&us.path, Some(&us.types)),
+        for version_source in self.config.version_source.iter() {
+            let (pattern, exclude_pattern, source_types) = match version_source {
+                config::VersionSource::Simple(pattern) => (pattern, None, None),
+                config::VersionSource::Detailed(vs) => (&vs.pattern, vs.exclude_pattern.as_ref(), vs.types.as_ref()),
             };
 
-            let glob = globset::Glob::new(&pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+            let mut include_globset = globset::GlobSetBuilder::new();
 
-            let globset = globset::GlobSetBuilder::new()
-                .add(glob)
+            let patterns = match pattern {
+                config::Patterns::Single(v) => vec![v],
+                config::Patterns::Multiple(v) => v.iter().collect(),
+            };
+
+            for pattern in patterns {
+                let glob = globset::Glob::new(&pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+
+                include_globset.add(glob);
+            }
+
+            let include_globset = include_globset
                 .build()
                 .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
-            update_version_sources.push((globset, source_types.map(|v| v.clone())));
+            let exclude_globset = if let Some(pattern) = exclude_pattern {
+                let patterns = match &pattern {
+                    config::Patterns::Single(v) => vec![v],
+                    config::Patterns::Multiple(v) => v.iter().collect(),
+                };
+
+                let mut exclude_globset = globset::GlobSetBuilder::new();
+
+                for pattern in patterns {
+                    let glob =
+                        globset::Glob::new(&pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+
+                    exclude_globset.add(glob);
+                }
+
+                let exclude_globset = exclude_globset
+                    .build()
+                    .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+
+                Some(exclude_globset)
+            } else {
+                None
+            };
+
+            let source_types = source_types.map(|v| match v {
+                config::VersionSourceTypes::Single(name) => {
+                    let mut set = HashSet::new();
+                    set.insert(name.clone());
+
+                    set
+                }
+                config::VersionSourceTypes::Multiple(set) => set.clone(),
+            });
+
+            update_version_sources.push((include_globset, exclude_globset, source_types.map(|v| v.clone())));
         }
 
         Ok(update_version_sources)
-    }
-
-    /// Build a GlobSet from the exclude_sources patterns in the configuration
-    fn build_exclude_sources_globset(&self) -> Result<globset::GlobSet, VutError> {
-        let mut builder = globset::GlobSetBuilder::new();
-
-        for pattern in self.config.exclude_sources.iter() {
-            let glob = globset::Glob::new(pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
-
-            builder.add(glob);
-        }
-
-        let exclude_sources_globset = builder
-            .build()
-            .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
-
-        Ok(exclude_sources_globset)
     }
 
     fn generate_template_output(&self, dir_entries: &[walkdir::DirEntry]) -> Result<(), VutError> {
@@ -422,8 +452,7 @@ impl Vut {
     fn update_version_sources(&self, dir_entries: &[walkdir::DirEntry]) -> Result<(), VutError> {
         let root_path = &self.root_path;
 
-        let update_sources_globsets = self.build_update_sources_globsets()?;
-        let exclude_sources_globset = self.build_exclude_sources_globset()?;
+        let version_sources_globsets = self.build_version_sources_globsets()?;
 
         let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
 
@@ -431,17 +460,21 @@ impl Vut {
             .iter()
             .map(|entry| entry.path())
             // Only include directories
-            .filter(|path| path.is_dir())
-            // Exclude all paths matched in exclude sources
-            .filter(|path| !exclude_sources_globset.is_match(path));
+            .filter(|path| path.is_dir());
 
         for path in dirs_iter {
             // Make path relative, as we only want to match on the path
             // relative to the root.
             let rel_path = path.strip_prefix(root_path).unwrap();
 
-            for (globset, source_types) in update_sources_globsets.iter() {
-                if globset.is_match(&rel_path) {
+            for (include_globset, exclude_globset, source_types) in version_sources_globsets.iter() {
+                if include_globset.is_match(&rel_path) {
+                    if let Some(exclude_globset) = exclude_globset {
+                        if exclude_globset.is_match(&rel_path) {
+                            continue;
+                        }
+                    }
+
                     // Check for version sources at this path
                     let mut new_sources = if let Some(source_types) = source_types {
                         version_source::specific_version_sources_from_path(&path, &source_types)
@@ -484,7 +517,7 @@ impl Vut {
             .filter_map(|entry| entry.ok())
             .collect();
 
-        if !self.config.update_sources.is_empty() {
+        if !self.config.version_source.is_empty() {
             self.update_version_sources(&dir_entries)?;
         }
 

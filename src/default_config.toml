@@ -1,20 +1,22 @@
-# Directories to ignore completely along with all their content.
-# Typically used to avoid wasting time on scanning VCS directories.
-ignore = [
-  # Ignore Git directories
-  "**/.git",
-]
+[general]
+  # Directories to ignore completely along with all their content.
+  # Typically used to avoid wasting time on scanning VCS directories.
+  ignore = [
+    # Ignore Git directories
+    "**/.git",
+  ]
 
-# Nested version sources to update.
-update_sources = [
-  # If you want to automatically update all version sources,
-  # uncomment the below pattern.
-  #"**",
-]
+# Define version source pattern.
+# There can be more than one of these.
+[[version_source]]
+  pattern = "**"
 
-# Nested version sources to exclude from being updated
-# even if they are included in update_sources.
-exclude_sources = []
+  # Uncomment if you want to exclude one or more patterns that would otherwise be included.
+  #exclude_pattern = "some_dir/**"
+
+  # Specify which source types to update.
+  # By default, all source types will be updated.
+  #types = ["vut", "cargo", "npm"]
 
 # Define template pattern.
 # There can be more than one of these.
