@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 
 use regex::Regex;
 
@@ -11,20 +12,20 @@ use crate::vut::VutError;
 
 pub struct CustomRegexSourceTemplate {
     file_name: String,
-    regex: Regex,
+    regex: Rc<Regex>,
 }
 
-pub struct CustomRegexSource<'a> {
+pub struct CustomRegexSource {
     path: PathBuf,
     file_path: PathBuf,
-    template: &'a CustomRegexSourceTemplate,
+    regex: Rc<Regex>,
 }
 
 impl CustomRegexSourceTemplate {
     pub fn new(file_name: &str, regex: Regex) -> Self {
         Self {
             file_name: file_name.to_owned(),
-            regex,
+            regex: Rc::new(regex),
         }
     }
 
@@ -35,7 +36,7 @@ impl CustomRegexSourceTemplate {
             Some(CustomRegexSource {
                 path: path.to_path_buf(),
                 file_path,
-                template: self,
+                regex: self.regex.clone(),
             })
         } else {
             None
@@ -43,7 +44,7 @@ impl CustomRegexSourceTemplate {
     }
 }
 
-impl<'a> CustomRegexSource<'a> {
+impl<'a> CustomRegexSource {
     fn read_file(&self) -> Result<String, VutError> {
         let mut file = util::open_file(&self.file_path).map_err(|err| VutError::VersionFileOpen(err))?;
 
@@ -65,7 +66,7 @@ impl<'a> CustomRegexSource<'a> {
     }
 }
 
-impl<'a> VersionSource for CustomRegexSource<'a> {
+impl<'a> VersionSource for CustomRegexSource {
     fn get_path(&self) -> &Path {
         &self.path
     }
@@ -80,9 +81,8 @@ impl<'a> VersionSource for CustomRegexSource<'a> {
             let text = self.read_file()?;
 
             // Get version string using regex
-            let version_str = if let Some(caps) = self.template.regex.captures(&text) {
-                dbg!(&caps);
-                caps[1].to_owned()
+            let version_str = if let Some(caps) = self.regex.captures(&text) {
+                caps[2].to_owned()
             } else {
                 return Err(VutError::Other(Cow::Borrowed("Error parsing file using custom regex!")));
             };
@@ -103,7 +103,7 @@ impl<'a> VersionSource for CustomRegexSource<'a> {
         let version_str = version.to_string();
 
         // Replace version number
-        let text = self.template.regex.replace_all(&text, |caps: &regex::Captures| {
+        let text = self.regex.replace_all(&text, |caps: &regex::Captures| {
             format!("{}{}{}", &caps[1], &version_str, &caps[3])
         });
 

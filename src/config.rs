@@ -68,9 +68,18 @@ pub struct General {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct AuthoritativeVersionSource {
+    pub path: PathBuf,
+
+    #[serde(rename = "type")]
+    pub _type: String,
+}
+
+#[derive(Debug, Deserialize)]
 #[serde(default)]
 pub struct VutConfig {
     pub general: General,
+    pub authoritative_version_source: Option<AuthoritativeVersionSource>,
     pub custom_source_types: HashMap<String, CustomSourceType>,
     pub version_source: Vec<VersionSource>,
     pub template: Vec<Template>,
@@ -106,6 +115,7 @@ impl Default for VutConfig {
     fn default() -> Self {
         Self {
             general: General::default(),
+            authoritative_version_source: None,
             custom_source_types: HashMap::new(),
             version_source: Vec::new(),
             template: vec![Template {

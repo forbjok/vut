@@ -86,6 +86,9 @@ impl From<VutError> for CommandError {
                 CommandErrorKind::Config,
                 format!("Error parsing configuration: {}", err),
             ),
+            VutError::Config(err) => {
+                CommandError::new(CommandErrorKind::Config, format!("Configuration error: {}", err))
+            }
             VutError::WriteConfig(err) => {
                 CommandError::new(CommandErrorKind::Config, format!("Error writing config file: {}", err))
             }

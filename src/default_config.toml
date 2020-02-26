@@ -6,6 +6,13 @@
     "**/.git",
   ]
 
+# Specify path and type of the authoritative version source.
+# By default, if this is not configured, it will use the first
+# version source found in the root path.
+#[authoritative_version_source]
+#path = "."
+#type = "vut"
+
 # Define a custom source type.
 # This may be used if you need to support a file format
 # that does not have a built-in version source.

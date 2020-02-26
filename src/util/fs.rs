@@ -40,7 +40,7 @@ pub fn create_file(path: impl AsRef<Path>) -> Result<fs::File, FileError> {
 
     fs::File::create(path).map_err(|err| FileError {
         kind: err.into(),
-        path: util::normalize_path(path).into_owned(),
+        path: util::normalize_path(path),
     })
 }
 
@@ -49,6 +49,6 @@ pub fn open_file(path: impl AsRef<Path>) -> Result<fs::File, FileError> {
 
     fs::File::open(path).map_err(|err| FileError {
         kind: err.into(),
-        path: util::normalize_path(path).into_owned(),
+        path: util::normalize_path(path),
     })
 }

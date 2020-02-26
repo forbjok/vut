@@ -39,6 +39,7 @@ pub enum VutError {
     OpenConfig(util::FileError),
     ReadConfig(io::Error),
     ParseConfig(Cow<'static, str>),
+    Config(Cow<'static, str>),
     WriteConfig(io::Error),
     NoVersionSource,
     VersionFileOpen(util::FileError),
@@ -129,8 +130,63 @@ impl Vut {
         let (root_path, authoritative_version_source) = if let Some(config_file_path) = config_file_path.as_ref() {
             let root_path = config_file_path.parent().unwrap().to_path_buf();
 
-            let source =
-                version_source::first_version_source_from_path(&root_path).ok_or_else(|| VutError::NoVersionSource)?;
+            let source = if let Some(auth_vs_config) = &config.authoritative_version_source {
+                // Authoritative version source configuration preset...
+
+                // Path must be relative to the root path.
+                if auth_vs_config.path.is_absolute() {
+                    return Err(VutError::Config(Cow::Borrowed(
+                        "Authoritative version source path must be relative!",
+                    )));
+                }
+
+                // Construct absolute path.
+                let auth_vs_path = root_path.join(&auth_vs_config.path);
+                let auth_vs_path = util::normalize_path(&auth_vs_path);
+
+                // If the specified path is outside the root path, return an error.
+                if !auth_vs_path.starts_with(&root_path) {
+                    return Err(VutError::Config(Cow::Borrowed(
+                        "Authoritative version source path must be inside the root directory!",
+                    )));
+                }
+
+                let auth_vs_type = &auth_vs_config._type;
+
+                // Build HashSet containing only a single type name - the one specified in the configuration.
+                // We need this to pass to the version source function below.
+                let source_types: HashSet<String> = vec![auth_vs_type.clone()].into_iter().collect();
+
+                // Try to get built-in version source.
+                let mut version_sources =
+                    version_source::specific_version_sources_from_path(&auth_vs_path, &source_types);
+
+                // If no version source was found, try custom version sources.
+                if version_sources.is_empty() {
+                    let custom_source_types = Self::build_custom_source_type_templates(&config)?;
+
+                    if let Some(custom_source_type_template) = custom_source_types.get(auth_vs_type.as_str()) {
+                        if let Some(source) = custom_source_type_template.instance_from_path(&auth_vs_path) {
+                            version_sources.push(Box::new(source));
+                        }
+                    }
+                }
+
+                if version_sources.is_empty() {
+                    // If still no version source was found, return an error.
+                    return Err(VutError::NoVersionSource);
+                } else if version_sources.len() > 1 {
+                    // Since only one type is allowed to be specified,
+                    // it should never be possible for more than one source to be returned.
+                    return Err(VutError::Other(Cow::Borrowed("More than one authoritative version source was returned! This should never happen, and is probably caused by a bug.")));
+                }
+
+                // Return the first (and only) version source.
+                version_sources.remove(0)
+            } else {
+                // No authoritative version source configuration specified, use root path.
+                version_source::first_version_source_from_path(&root_path).ok_or_else(|| VutError::NoVersionSource)?
+            };
 
             (root_path, source)
         } else {
@@ -449,15 +505,13 @@ impl Vut {
         Ok(())
     }
 
-    fn update_version_sources(&self, dir_entries: &[walkdir::DirEntry]) -> Result<(), VutError> {
-        let root_path = &self.root_path;
-
-        let version_sources_globsets = self.build_version_sources_globsets()?;
-
-        let mut custom_source_types: HashMap<&str, version_source::CustomRegexSourceTemplate> = HashMap::new();
+    fn build_custom_source_type_templates(
+        config: &VutConfig,
+    ) -> Result<HashMap<String, version_source::CustomRegexSourceTemplate>, VutError> {
+        let mut custom_source_types: HashMap<String, version_source::CustomRegexSourceTemplate> = HashMap::new();
 
         // Construct custom source type templates
-        for (k, v) in self.config.custom_source_types.iter() {
+        for (k, v) in config.custom_source_types.iter() {
             // Extract regex custom source type information from the enum.
             // Currently regex is the only type implemented.
             let regex_custom_source_type = match v {
@@ -485,8 +539,17 @@ impl Vut {
             let source = version_source::CustomRegexSourceTemplate::new(&regex_custom_source_type.file_name, regex);
 
             // Add source to hashmap for later use
-            custom_source_types.insert(k, source);
+            custom_source_types.insert(k.clone(), source);
         }
+
+        Ok(custom_source_types)
+    }
+
+    fn update_version_sources(&self, dir_entries: &[walkdir::DirEntry]) -> Result<(), VutError> {
+        let root_path = &self.root_path;
+
+        let version_sources_globsets = self.build_version_sources_globsets()?;
+        let custom_source_types = Self::build_custom_source_type_templates(&self.config)?;
 
         let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
 
