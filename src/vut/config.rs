@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
-use std::io::Read;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use serde_derive::Deserialize;
@@ -8,6 +8,8 @@ use toml;
 
 use crate::util;
 use crate::vut::VutError;
+
+pub const VUT_CONFIG_DEFAULT: &str = include_str!("default_config.toml");
 
 /// One or more glob patterns.
 #[derive(Debug, Deserialize)]
@@ -127,4 +129,15 @@ impl Default for VutConfig {
             }],
         }
     }
+}
+
+pub fn create_default_config_file(path: &Path) -> Result<VutConfig, VutError> {
+    let default_config = VUT_CONFIG_DEFAULT.trim();
+
+    util::create_file(&path)
+        .map_err(|err| VutError::OpenConfig(err))?
+        .write(default_config.as_bytes())
+        .map_err(|err| VutError::WriteConfig(err))?;
+
+    VutConfig::from_str(default_config)
 }
