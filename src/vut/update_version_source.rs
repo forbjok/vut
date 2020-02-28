@@ -231,11 +231,11 @@ impl VersionSourceFinder {
     }
 
     pub fn find_version_sources(&self, path: &Path, rel_path: &Path) -> Vec<Box<dyn VersionSource>> {
-        let mut version_sources = Vec::new();
-
-        for spec in self.specs.iter() {
-            version_sources.append(&mut spec.find_version_sources(path, rel_path));
-        }
+        let version_sources = self
+            .specs
+            .iter()
+            .flat_map(|spec| spec.find_version_sources(path, rel_path).into_iter())
+            .collect();
 
         version_sources
     }
