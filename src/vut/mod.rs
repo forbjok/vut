@@ -147,12 +147,14 @@ impl Vut {
 
                 // If no version source was found, try custom version sources.
                 if version_sources.is_empty() {
-                    let custom_source_types = build_custom_source_type_templates(&config)?;
+                    let custom_source_types = CustomSourceTypes::from_config(&config)?;
 
-                    if let Some(custom_source_type_template) = custom_source_types.get(auth_vs_type.as_str()) {
-                        if let Some(source) = custom_source_type_template.instance_from_path(&auth_vs_path) {
-                            version_sources.push(Box::new(source));
-                        }
+                    if let Some(source) = custom_source_types
+                        .version_sources_from_path(&auth_vs_path, &source_types)
+                        .into_iter()
+                        .next()
+                    {
+                        version_sources.push(source);
                     }
                 }
 
