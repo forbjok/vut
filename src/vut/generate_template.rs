@@ -11,34 +11,68 @@ use crate::version::{self, Version};
 
 use super::{config, VutConfig, VutError};
 
+#[derive(Debug)]
+struct TemplateSpec<'a> {
+    include_globset: globset::GlobSet,
+    def: &'a config::Template,
+}
+
+impl<'a> TemplateSpec<'a> {
+    pub fn from_config_template(cfg_t: &'a config::Template) -> Result<Self, VutError> {
+        let patterns = match &cfg_t.pattern {
+            config::Patterns::Single(v) => vec![v],
+            config::Patterns::Multiple(v) => v.iter().collect(),
+        };
+
+        let mut globset = globset::GlobSetBuilder::new();
+
+        for pattern in patterns {
+            let glob = globset::Glob::new(&pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+            globset.add(glob);
+        }
+
+        let include_globset = globset
+            .build()
+            .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+
+        Ok(Self {
+            include_globset,
+            def: cfg_t,
+        })
+    }
+}
+
 pub fn generate_template_output(
     config: &VutConfig,
     root_path: &Path,
     version: &Version,
     dir_entries: &[walkdir::DirEntry],
 ) -> Result<(), VutError> {
-    let template_globsets = build_template_globsets(config)?;
+    let specs = build_template_specs(config)?;
 
     let template_input = generate_template_input(version)?;
 
     let mut processed_files: Vec<PathBuf> = Vec::new();
     let mut generated_files: Vec<PathBuf> = Vec::new();
 
-    for (template, globset) in template_globsets {
-        debug!("{:?}", template);
+    for spec in specs.iter() {
+        debug!("{:?}", spec);
 
-        let start_path: Cow<Path> = match &template.start_path {
+        let include_globset = &spec.include_globset;
+        let def = spec.def;
+
+        let start_path: Cow<Path> = match &def.start_path {
             Some(p) => Cow::Owned(root_path.join(p)),
             None => Cow::Borrowed(root_path),
         };
 
-        let output_path = match &template.output_path {
+        let output_path = match &def.output_path {
             Some(p) => Cow::Owned(root_path.join(p)),
             None => start_path.clone(),
         };
 
-        let processor = template.processor.as_ref().map(|s| s.as_str()).unwrap_or("vut");
-        let encoding = template.encoding.as_ref().map(|s| s.as_str());
+        let processor = def.processor.as_ref().map(|s| s.as_str()).unwrap_or("vut");
+        let encoding = def.encoding.as_ref().map(|s| s.as_str());
 
         let template_files_iter = dir_entries
             .iter()
@@ -51,7 +85,7 @@ pub fn generate_template_output(
                 // relative to the start path.
                 let rel_path = path.strip_prefix(&start_path).unwrap();
 
-                if globset.is_match(rel_path) {
+                if include_globset.is_match(rel_path) {
                     Some((path, rel_path))
                 } else {
                     None
@@ -155,28 +189,14 @@ pub fn generate_template_input(version: &Version) -> Result<TemplateInput, VutEr
     Ok(template_input)
 }
 
-pub fn build_template_globsets(config: &VutConfig) -> Result<Vec<(&config::Template, globset::GlobSet)>, VutError> {
-    let mut template_globsets: Vec<(&config::Template, globset::GlobSet)> = Vec::new();
+fn build_template_specs(config: &VutConfig) -> Result<Vec<TemplateSpec>, VutError> {
+    let mut specs: Vec<TemplateSpec> = Vec::new();
 
-    for template in config.template.iter() {
-        let patterns = match &template.pattern {
-            config::Patterns::Single(v) => vec![v],
-            config::Patterns::Multiple(v) => v.iter().collect(),
-        };
+    for cfg_t in config.template.iter() {
+        let spec = TemplateSpec::from_config_template(cfg_t)?;
 
-        let mut globset = globset::GlobSetBuilder::new();
-
-        for pattern in patterns {
-            let glob = globset::Glob::new(&pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
-            globset.add(glob);
-        }
-
-        let globset = globset
-            .build()
-            .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
-
-        template_globsets.push((&template, globset));
+        specs.push(spec);
     }
 
-    Ok(template_globsets)
+    Ok(specs)
 }
