@@ -5,10 +5,10 @@ use serde_json;
 
 use crate::vut::Vut;
 
-use super::{CommandError, CommandErrorKind};
+use super::{stderr_vut_callbacks, CommandError, CommandErrorKind};
 
 pub fn get(format: &str) -> Result<(), CommandError> {
-    let vut = Vut::from_current_dir()?;
+    let vut = Vut::from_current_dir(Some(stderr_vut_callbacks()))?;
 
     match format {
         "json" => get_json(&vut),

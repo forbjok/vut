@@ -3,7 +3,6 @@ use std::collections::HashSet;
 use std::env;
 use std::path::{Path, PathBuf};
 
-use log::warn;
 use strum_macros::EnumString;
 use walkdir;
 
@@ -34,18 +33,42 @@ pub enum BumpVersion {
     Build,
 }
 
+pub struct VutCallbacks {
+    pub deprecated: Option<Box<dyn Fn(&str)>>,
+}
+
+impl Default for VutCallbacks {
+    fn default() -> Self {
+        Self { deprecated: None }
+    }
+}
+
+impl VutCallbacks {
+    fn deprecated(&self, message: impl AsRef<str>) {
+        if let Some(callback) = &self.deprecated {
+            callback(message.as_ref());
+        }
+    }
+}
+
 pub struct Vut {
     root_path: PathBuf,
     config: VutConfig,
     authoritative_version_source: Box<dyn VersionSource>,
+    callbacks: VutCallbacks,
 }
 
 impl Vut {
-    pub fn init(path: impl AsRef<Path>, version: Option<&Version>) -> Result<Self, VutError> {
+    pub fn init(
+        path: impl AsRef<Path>,
+        version: Option<&Version>,
+        callbacks: Option<VutCallbacks>,
+    ) -> Result<Self, VutError> {
         let path = path.as_ref();
+        let callbacks = callbacks.unwrap_or_else(|| VutCallbacks::default());
 
         // Check if there is an existing Vut configuration for this path
-        let vut: Option<Vut> = match Self::from_path(path) {
+        let vut: Option<Vut> = match Self::from_path(path, None) {
             Ok(vut) => {
                 let existing_root_path = vut.get_root_path();
 
@@ -74,6 +97,7 @@ impl Vut {
                 root_path: vut.root_path,
                 config: VutConfig::from_str(config::VUT_CONFIG_DEFAULT)?,
                 authoritative_version_source: vut.authoritative_version_source,
+                callbacks,
             }
         } else {
             // No version source was found...
@@ -92,14 +116,16 @@ impl Vut {
                 root_path: path.to_path_buf(),
                 config: VutConfig::default(),
                 authoritative_version_source: Box::new(source),
+                callbacks,
             }
         };
 
         Ok(vut)
     }
 
-    pub fn from_path(path: impl AsRef<Path>) -> Result<Self, VutError> {
+    pub fn from_path(path: impl AsRef<Path>, callbacks: Option<VutCallbacks>) -> Result<Self, VutError> {
         let path = path.as_ref();
+        let callbacks = callbacks.unwrap_or_else(|| VutCallbacks::default());
 
         let config_file_path = util::locate_config_file(path, VUT_CONFIG_FILENAME);
 
@@ -180,8 +206,8 @@ impl Vut {
             let source =
                 version_source::locate_first_version_source_from(path).ok_or_else(|| VutError::NoVersionSource)?;
 
-            // TODO: Find a better way to display deprecation warning.
-            warn!("DEPRECATED: Authoritative version source present with no config file. Create a .vutconfig in the root of the project.");
+            // Display deprecation warning.
+            callbacks.deprecated("Authoritative version source present with no config file. Use 'vut init' to create a configuration file in the project root.");
 
             let root_path = source.get_path().to_path_buf();
 
@@ -192,13 +218,14 @@ impl Vut {
             root_path: root_path.to_path_buf(),
             config,
             authoritative_version_source,
+            callbacks,
         })
     }
 
-    pub fn from_current_dir() -> Result<Self, VutError> {
+    pub fn from_current_dir(callbacks: Option<VutCallbacks>) -> Result<Self, VutError> {
         let current_dir = env::current_dir().unwrap();
 
-        Self::from_path(current_dir)
+        Self::from_path(current_dir, callbacks)
     }
 
     pub fn exists(&self) -> bool {

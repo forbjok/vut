@@ -1,10 +1,10 @@
 use crate::version::Version;
 use crate::vut::{BumpVersion, Vut};
 
-use super::CommandError;
+use super::{stderr_vut_callbacks, CommandError};
 
 pub fn bump(bump_version: BumpVersion) -> Result<(), CommandError> {
-    let mut vut = Vut::from_current_dir()?;
+    let mut vut = Vut::from_current_dir(Some(stderr_vut_callbacks()))?;
 
     let new_version: Version = vut.bump_version(bump_version)?;
 

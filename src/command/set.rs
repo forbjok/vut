@@ -1,10 +1,10 @@
 use crate::version::Version;
 use crate::vut::Vut;
 
-use super::{CommandError, CommandErrorKind};
+use super::{stderr_vut_callbacks, CommandError, CommandErrorKind};
 
 pub fn set(version: &str) -> Result<(), CommandError> {
-    let mut vut = Vut::from_current_dir()?;
+    let mut vut = Vut::from_current_dir(Some(stderr_vut_callbacks()))?;
 
     let new_version: Version = version
         .parse()

@@ -3,7 +3,7 @@ use std::env;
 use crate::version::Version;
 use crate::vut::Vut;
 
-use super::{CommandError, CommandErrorKind};
+use super::{stderr_vut_callbacks, CommandError, CommandErrorKind};
 
 pub fn init(version: Option<&str>) -> Result<(), CommandError> {
     let current_dir = env::current_dir()?;
@@ -16,7 +16,7 @@ pub fn init(version: Option<&str>) -> Result<(), CommandError> {
         None => None,
     };
 
-    let vut = Vut::init(current_dir, version.as_ref())?;
+    let vut = Vut::init(current_dir, version.as_ref(), Some(stderr_vut_callbacks()))?;
 
     eprintln!(
         "Initialized Vut project with version {} at {}.",

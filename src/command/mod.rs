@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::io;
 
 use crate::util;
-use crate::vut::VutError;
+use crate::vut::{VutCallbacks, VutError};
 
 mod bump;
 mod generate;
@@ -113,5 +113,11 @@ impl From<VutError> for CommandError {
             ),
             VutError::Other(err) => CommandError::new(CommandErrorKind::Other, err.to_string()),
         }
+    }
+}
+
+fn stderr_vut_callbacks() -> VutCallbacks {
+    VutCallbacks {
+        deprecated: Some(Box::new(|m| eprintln!("DEPRECATED: {}", m))),
     }
 }
