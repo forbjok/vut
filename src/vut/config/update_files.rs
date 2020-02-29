@@ -4,7 +4,7 @@ use super::*;
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateFilesDef {
-    pub pattern: Patterns,
+    pub globs: Globs,
     pub updater_type: String,
 }
 

@@ -30,10 +30,10 @@
 # Define version source pattern.
 # There can be more than one of these.
 [[version_source]]
-  pattern = "**"
+  globs = "**"
 
   # Uncomment if you want to exclude one or more patterns that would otherwise be included.
-  #exclude_pattern = "some_dir/**"
+  #exclude_globs = "some_dir/**"
 
   # Specify which source types to update.
   # By default, all source types will be updated.
@@ -42,7 +42,7 @@
 # Define template pattern.
 # There can be more than one of these.
 [[template]]
-  pattern = "**/*.vutemplate"
+  globs = "**/*.vutemplate"
 
   # Directory to start scanning from.
   # If not specified, the root directory will be used.

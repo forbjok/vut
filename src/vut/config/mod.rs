@@ -35,7 +35,7 @@ pub enum VersionSourceTypes {
 
 #[derive(Debug, Deserialize)]
 pub struct TemplateDef {
-    pub pattern: Patterns,
+    pub globs: Globs,
     pub start_path: Option<PathBuf>,
     pub output_path: Option<PathBuf>,
     pub processor: Option<String>,
@@ -45,7 +45,7 @@ pub struct TemplateDef {
 #[derive(Debug, Deserialize)]
 #[serde(default)]
 pub struct General {
-    pub ignore: Patterns,
+    pub ignore: Globs,
 }
 
 #[derive(Debug, Deserialize)]
@@ -89,7 +89,7 @@ impl VutConfig {
 impl Default for General {
     fn default() -> Self {
         Self {
-            ignore: Patterns::Single("**/.git".to_owned()),
+            ignore: Globs::Single("**/.git".to_owned()),
         }
     }
 }
@@ -104,7 +104,7 @@ impl Default for VutConfig {
             update_files: Vec::new(),
             version_source: Vec::new(),
             template: vec![TemplateDef {
-                pattern: Patterns::Single("**/*.vutemplate".to_owned()),
+                globs: Globs::Single("**/*.vutemplate".to_owned()),
                 start_path: None,
                 output_path: None,
                 processor: None,
@@ -117,9 +117,9 @@ impl Default for VutConfig {
 impl VersionSourceDef {
     pub fn to_detail(&self) -> Cow<VersionSourceDetail> {
         match self {
-            Self::Simple(pattern) => Cow::Owned(VersionSourceDetail {
-                pattern: pattern.clone(),
-                exclude_pattern: None,
+            Self::Simple(globs) => Cow::Owned(VersionSourceDetail {
+                globs: globs.clone(),
+                exclude_globs: None,
                 types: None,
             }),
             Self::Detailed(detail) => Cow::Borrowed(detail),

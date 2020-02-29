@@ -17,7 +17,7 @@ struct UpdateFilesSpec {
 
 impl UpdateFilesSpec {
     pub fn from_def(def: &config::UpdateFilesDef) -> Result<Self, VutError> {
-        let include_globset = def.pattern.build_globset()?;
+        let include_globset = def.globs.build_globset()?;
         let updater_type = def.updater_type.clone();
 
         Ok(Self {

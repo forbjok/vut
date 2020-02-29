@@ -118,8 +118,8 @@ impl VersionSourceSpec {
     ) -> Result<Self, VutError> {
         let detail = def.to_detail();
 
-        let include_globset = detail.pattern.build_globset()?;
-        let exclude_globset = match &detail.exclude_pattern {
+        let include_globset = detail.globs.build_globset()?;
+        let exclude_globset = match &detail.exclude_globs {
             Some(ep) => Some(ep.build_globset()?),
             None => None,
         };

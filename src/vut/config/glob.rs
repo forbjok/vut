@@ -7,24 +7,23 @@ use crate::vut::VutError;
 /// One or more glob patterns.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
-pub enum Patterns {
+pub enum Globs {
     Single(String),
     Multiple(Vec<String>),
 }
 
-impl Patterns {
+impl Globs {
     pub fn build_globset(&self) -> Result<globset::GlobSet, VutError> {
         let mut builder = globset::GlobSetBuilder::new();
 
         match self {
-            Self::Single(pattern) => {
-                let glob = globset::Glob::new(&pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+            Self::Single(glob) => {
+                let glob = globset::Glob::new(glob).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
                 builder.add(glob);
             }
-            Self::Multiple(patterns) => {
-                for pattern in patterns.iter() {
-                    let glob =
-                        globset::Glob::new(&pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+            Self::Multiple(globs) => {
+                for glob in globs.iter() {
+                    let glob = globset::Glob::new(glob).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
                     builder.add(glob);
                 }
             }

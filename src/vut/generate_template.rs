@@ -19,7 +19,7 @@ struct TemplateSpec<'a> {
 
 impl<'a> TemplateSpec<'a> {
     pub fn from_config_template(def: &'a config::TemplateDef) -> Result<Self, VutError> {
-        let include_globset = def.pattern.build_globset()?;
+        let include_globset = def.globs.build_globset()?;
 
         Ok(Self { include_globset, def })
     }

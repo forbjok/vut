@@ -5,13 +5,13 @@ use super::*;
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum VersionSourceDef {
-    Simple(Patterns),
+    Simple(Globs),
     Detailed(VersionSourceDetail),
 }
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct VersionSourceDetail {
-    pub pattern: Patterns,
-    pub exclude_pattern: Option<Patterns>,
+    pub globs: Globs,
+    pub exclude_globs: Option<Globs>,
     pub types: Option<VersionSourceTypes>,
 }
