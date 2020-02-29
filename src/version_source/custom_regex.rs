@@ -103,7 +103,7 @@ impl<'a> VersionSource for CustomRegexSource {
         let version_str = version.to_string();
 
         // Replace version number
-        let text = self.regex.replace_all(&text, |caps: &regex::Captures| {
+        let text = self.regex.replace(&text, |caps: &regex::Captures| {
             format!("{}{}{}", &caps[1], &version_str, &caps[3])
         });
 

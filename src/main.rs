@@ -4,6 +4,7 @@ use log::{debug, LevelFilter};
 use structopt::StructOpt;
 
 mod command;
+mod file_updater;
 mod template;
 mod util;
 mod version;

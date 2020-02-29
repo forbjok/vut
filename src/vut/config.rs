@@ -19,6 +19,14 @@ pub enum Patterns {
     Multiple(Vec<String>),
 }
 
+/// One or more regexes
+#[derive(Clone, Debug, Deserialize)]
+#[serde(untagged)]
+pub enum Regexes {
+    Single(String),
+    Multiple(Vec<String>),
+}
+
 #[derive(Debug, Deserialize)]
 pub struct RegexCustomSourceTypeDef {
     pub file_name: String,
@@ -30,6 +38,27 @@ pub struct RegexCustomSourceTypeDef {
 #[serde(tag = "type")]
 pub enum CustomSourceTypeDef {
     Regex(RegexCustomSourceTypeDef),
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RegexFileUpdaterTypeDef {
+    pub regex: Regexes,
+    pub encoding: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+#[serde(tag = "type")]
+pub enum CustomFileUpdaterTypeDef {
+    Regex(RegexFileUpdaterTypeDef),
+}
+
+/// One or more file updater types
+#[derive(Clone, Debug, Deserialize)]
+#[serde(untagged)]
+pub enum FileUpdaterTypes {
+    Single(String),
+    Multiple(HashSet<String>),
 }
 
 /// One or more version source types
@@ -47,6 +76,12 @@ pub struct TemplateDef {
     pub output_path: Option<PathBuf>,
     pub processor: Option<String>,
     pub encoding: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateFilesDef {
+    pub pattern: Patterns,
+    pub updater_type: String,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -82,7 +117,9 @@ pub struct AuthoritativeVersionSource {
 pub struct VutConfig {
     pub general: General,
     pub authoritative_version_source: Option<AuthoritativeVersionSource>,
+    pub custom_file_updaters: HashMap<String, CustomFileUpdaterTypeDef>,
     pub custom_source_types: HashMap<String, CustomSourceTypeDef>,
+    pub update_files: Vec<UpdateFilesDef>,
     pub version_source: Vec<VersionSourceDef>,
     pub template: Vec<TemplateDef>,
 }
@@ -118,7 +155,9 @@ impl Default for VutConfig {
         Self {
             general: General::default(),
             authoritative_version_source: None,
+            custom_file_updaters: HashMap::new(),
             custom_source_types: HashMap::new(),
+            update_files: Vec::new(),
             version_source: Vec::new(),
             template: vec![TemplateDef {
                 pattern: Patterns::Single("**/*.vutemplate".to_owned()),
@@ -154,6 +193,34 @@ impl Patterns {
             .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
         Ok(globset)
+    }
+}
+
+impl Regexes {
+    pub fn build_regexes(&self) -> Result<Vec<regex::Regex>, VutError> {
+        let mut regexes: Vec<regex::Regex> = Vec::new();
+
+        fn build_regex(pattern: &str) -> Result<regex::Regex, VutError> {
+            let mut builder = regex::RegexBuilder::new(pattern);
+            builder.multi_line(true);
+
+            builder
+                .build()
+                .map_err(|err| VutError::Other(Cow::Owned(format!("Invalid regex '{}': {}", pattern, err.to_string()))))
+        }
+
+        match self {
+            Self::Single(pattern) => {
+                regexes.push(build_regex(pattern)?);
+            }
+            Self::Multiple(patterns) => {
+                for pattern in patterns.iter() {
+                    regexes.push(build_regex(pattern)?);
+                }
+            }
+        };
+
+        Ok(regexes)
     }
 }
 

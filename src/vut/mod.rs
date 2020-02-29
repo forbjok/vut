@@ -14,11 +14,13 @@ use crate::version_source::{self, VersionSource};
 pub mod config;
 mod error;
 mod generate_template;
+mod update_file;
 mod update_version_source;
 
 pub use config::VutConfig;
 pub use error::VutError;
 use generate_template::*;
+use update_file::*;
 use update_version_source::*;
 
 pub const VUT_CONFIG_FILENAME: &str = ".vutconfig.toml";
@@ -288,10 +290,15 @@ impl Vut {
             .filter_map(|entry| entry.ok())
             .collect();
 
+        // Update version sources.
         if !self.config.version_source.is_empty() {
             update_version_sources(&self.config, root_path, &version, &dir_entries)?;
         }
 
+        // Update files.
+        update_files(&self.config, root_path, &version, &dir_entries)?;
+
+        // Generate template output.
         generate_template_output(&self.config, root_path, &version, &dir_entries)?;
 
         Ok(())
