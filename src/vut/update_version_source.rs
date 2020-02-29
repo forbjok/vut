@@ -55,7 +55,7 @@ impl CustomSourceTypes {
             // Extract regex custom source type information from the enum.
             // Currently regex is the only type implemented.
             let regex_custom_source_type = match v {
-                config::CustomSourceType::Regex(v) => v,
+                config::CustomSourceTypeDef::Regex(v) => v,
             };
 
             // Try to parse regex string
@@ -113,12 +113,12 @@ struct VersionSourceSpec {
 
 impl VersionSourceSpec {
     pub fn from_config_vs(
-        cfg_vs: &config::VersionSource,
+        def: &config::VersionSourceDef,
         custom_source_types: Rc<CustomSourceTypes>,
     ) -> Result<Self, VutError> {
-        let (pattern, exclude_pattern, source_types) = match cfg_vs {
-            config::VersionSource::Simple(pattern) => (pattern, None, None),
-            config::VersionSource::Detailed(vs) => (&vs.pattern, vs.exclude_pattern.as_ref(), vs.types.as_ref()),
+        let (pattern, exclude_pattern, source_types) = match def {
+            config::VersionSourceDef::Simple(pattern) => (pattern, None, None),
+            config::VersionSourceDef::Detailed(vs) => (&vs.pattern, vs.exclude_pattern.as_ref(), vs.types.as_ref()),
         };
 
         let mut include_globset = globset::GlobSetBuilder::new();

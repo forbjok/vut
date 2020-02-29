@@ -14,12 +14,12 @@ use super::{config, VutConfig, VutError};
 #[derive(Debug)]
 struct TemplateSpec<'a> {
     include_globset: globset::GlobSet,
-    def: &'a config::Template,
+    def: &'a config::TemplateDef,
 }
 
 impl<'a> TemplateSpec<'a> {
-    pub fn from_config_template(cfg_t: &'a config::Template) -> Result<Self, VutError> {
-        let patterns = match &cfg_t.pattern {
+    pub fn from_config_template(def: &'a config::TemplateDef) -> Result<Self, VutError> {
+        let patterns = match &def.pattern {
             config::Patterns::Single(v) => vec![v],
             config::Patterns::Multiple(v) => v.iter().collect(),
         };
@@ -35,10 +35,7 @@ impl<'a> TemplateSpec<'a> {
             .build()
             .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
-        Ok(Self {
-            include_globset,
-            def: cfg_t,
-        })
+        Ok(Self { include_globset, def })
     }
 }
 

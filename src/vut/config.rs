@@ -20,7 +20,7 @@ pub enum Patterns {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct RegexCustomSourceType {
+pub struct RegexCustomSourceTypeDef {
     pub file_name: String,
     pub regex: String,
 }
@@ -28,8 +28,8 @@ pub struct RegexCustomSourceType {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 #[serde(tag = "type")]
-pub enum CustomSourceType {
-    Regex(RegexCustomSourceType),
+pub enum CustomSourceTypeDef {
+    Regex(RegexCustomSourceTypeDef),
 }
 
 /// One or more version source types
@@ -41,7 +41,7 @@ pub enum VersionSourceTypes {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Template {
+pub struct TemplateDef {
     pub pattern: Patterns,
     pub start_path: Option<PathBuf>,
     pub output_path: Option<PathBuf>,
@@ -58,7 +58,7 @@ pub struct VersionSourceDetail {
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
-pub enum VersionSource {
+pub enum VersionSourceDef {
     Simple(Patterns),
     Detailed(VersionSourceDetail),
 }
@@ -82,9 +82,9 @@ pub struct AuthoritativeVersionSource {
 pub struct VutConfig {
     pub general: General,
     pub authoritative_version_source: Option<AuthoritativeVersionSource>,
-    pub custom_source_types: HashMap<String, CustomSourceType>,
-    pub version_source: Vec<VersionSource>,
-    pub template: Vec<Template>,
+    pub custom_source_types: HashMap<String, CustomSourceTypeDef>,
+    pub version_source: Vec<VersionSourceDef>,
+    pub template: Vec<TemplateDef>,
 }
 
 impl VutConfig {
@@ -120,7 +120,7 @@ impl Default for VutConfig {
             authoritative_version_source: None,
             custom_source_types: HashMap::new(),
             version_source: Vec::new(),
-            template: vec![Template {
+            template: vec![TemplateDef {
                 pattern: Patterns::Single("**/*.vutemplate".to_owned()),
                 start_path: None,
                 output_path: None,
