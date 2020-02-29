@@ -15,13 +15,11 @@ use crate::version_source::{self, VersionSource};
 pub mod config;
 mod error;
 mod generate_template;
-mod ignore;
 mod update_version_source;
 
 pub use config::VutConfig;
 pub use error::VutError;
 use generate_template::*;
-use ignore::*;
 use update_version_source::*;
 
 pub const VUT_CONFIG_FILENAME: &str = ".vutconfig.toml";
@@ -247,7 +245,7 @@ impl Vut {
         let version = self.get_version()?;
 
         // Build ignore GlobSet from config
-        let ignore_globset = build_ignore_globset(&self.config)?;
+        let ignore_globset = self.config.general.ignore.build_globset()?;
 
         let dir_entries: Vec<walkdir::DirEntry> = walkdir::WalkDir::new(root_path)
             .into_iter()

@@ -116,52 +116,15 @@ impl VersionSourceSpec {
         def: &config::VersionSourceDef,
         custom_source_types: Rc<CustomSourceTypes>,
     ) -> Result<Self, VutError> {
-        let (pattern, exclude_pattern, source_types) = match def {
-            config::VersionSourceDef::Simple(pattern) => (pattern, None, None),
-            config::VersionSourceDef::Detailed(vs) => (&vs.pattern, vs.exclude_pattern.as_ref(), vs.types.as_ref()),
+        let detail = def.to_detail();
+
+        let include_globset = detail.pattern.build_globset()?;
+        let exclude_globset = match &detail.exclude_pattern {
+            Some(ep) => Some(ep.build_globset()?),
+            None => None,
         };
 
-        let mut include_globset = globset::GlobSetBuilder::new();
-
-        let patterns = match pattern {
-            config::Patterns::Single(v) => vec![v],
-            config::Patterns::Multiple(v) => v.iter().collect(),
-        };
-
-        for pattern in patterns {
-            let glob = globset::Glob::new(&pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
-
-            include_globset.add(glob);
-        }
-
-        let include_globset = include_globset
-            .build()
-            .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
-
-        let exclude_globset = if let Some(pattern) = exclude_pattern {
-            let patterns = match &pattern {
-                config::Patterns::Single(v) => vec![v],
-                config::Patterns::Multiple(v) => v.iter().collect(),
-            };
-
-            let mut exclude_globset = globset::GlobSetBuilder::new();
-
-            for pattern in patterns {
-                let glob = globset::Glob::new(&pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
-
-                exclude_globset.add(glob);
-            }
-
-            let exclude_globset = exclude_globset
-                .build()
-                .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
-
-            Some(exclude_globset)
-        } else {
-            None
-        };
-
-        let source_types = source_types.map(|v| match v {
+        let source_types = detail.types.as_ref().map(|v| match v {
             config::VersionSourceTypes::Single(name) => {
                 let mut set = HashSet::new();
                 set.insert(name.clone());
@@ -174,7 +137,7 @@ impl VersionSourceSpec {
         Ok(Self {
             include_globset,
             exclude_globset,
-            source_types: source_types.map(|v| v.clone()),
+            source_types,
             custom_source_types,
         })
     }

@@ -12,7 +12,7 @@ use crate::vut::VutError;
 pub const VUT_CONFIG_DEFAULT: &str = include_str!("default_config.toml");
 
 /// One or more glob patterns.
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
 pub enum Patterns {
     Single(String),
@@ -33,7 +33,7 @@ pub enum CustomSourceTypeDef {
 }
 
 /// One or more version source types
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
 pub enum VersionSourceTypes {
     Single(String),
@@ -49,7 +49,7 @@ pub struct TemplateDef {
     pub encoding: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct VersionSourceDetail {
     pub pattern: Patterns,
     pub exclude_pattern: Option<Patterns>,
@@ -66,7 +66,7 @@ pub enum VersionSourceDef {
 #[derive(Debug, Deserialize)]
 #[serde(default)]
 pub struct General {
-    pub ignore: Vec<String>,
+    pub ignore: Patterns,
 }
 
 #[derive(Debug, Deserialize)]
@@ -108,7 +108,7 @@ impl VutConfig {
 impl Default for General {
     fn default() -> Self {
         Self {
-            ignore: vec!["**/.git".to_owned()],
+            ignore: Patterns::Single("**/.git".to_owned()),
         }
     }
 }
@@ -127,6 +127,45 @@ impl Default for VutConfig {
                 processor: None,
                 encoding: None,
             }],
+        }
+    }
+}
+
+impl Patterns {
+    pub fn build_globset(&self) -> Result<globset::GlobSet, VutError> {
+        let mut builder = globset::GlobSetBuilder::new();
+
+        match self {
+            Self::Single(pattern) => {
+                let glob = globset::Glob::new(&pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+                builder.add(glob);
+            }
+            Self::Multiple(patterns) => {
+                for pattern in patterns.iter() {
+                    let glob =
+                        globset::Glob::new(&pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+                    builder.add(glob);
+                }
+            }
+        };
+
+        let globset = builder
+            .build()
+            .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+
+        Ok(globset)
+    }
+}
+
+impl VersionSourceDef {
+    pub fn to_detail(&self) -> Cow<VersionSourceDetail> {
+        match self {
+            Self::Simple(pattern) => Cow::Owned(VersionSourceDetail {
+                pattern: pattern.clone(),
+                exclude_pattern: None,
+                types: None,
+            }),
+            Self::Detailed(detail) => Cow::Borrowed(detail),
         }
     }
 }

@@ -19,21 +19,7 @@ struct TemplateSpec<'a> {
 
 impl<'a> TemplateSpec<'a> {
     pub fn from_config_template(def: &'a config::TemplateDef) -> Result<Self, VutError> {
-        let patterns = match &def.pattern {
-            config::Patterns::Single(v) => vec![v],
-            config::Patterns::Multiple(v) => v.iter().collect(),
-        };
-
-        let mut globset = globset::GlobSetBuilder::new();
-
-        for pattern in patterns {
-            let glob = globset::Glob::new(&pattern).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
-            globset.add(glob);
-        }
-
-        let include_globset = globset
-            .build()
-            .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+        let include_globset = def.pattern.build_globset()?;
 
         Ok(Self { include_globset, def })
     }
