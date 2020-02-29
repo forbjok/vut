@@ -1,11 +1,8 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt;
-use std::io::{self, Read, Write};
 use std::path::Path;
 
-use encoding::label::encoding_from_whatwg_label;
-use encoding::{DecoderTrap, EncoderTrap, EncodingRef};
 use log::info;
 
 use crate::util;
@@ -34,10 +31,8 @@ pub trait TemplateProcessor {
 #[derive(Debug)]
 pub enum RenderTemplateError {
     InvalidProcessor(Cow<'static, str>),
-    OpenTemplate(util::FileError),
-    OpenOutput(util::FileError),
-    ReadTemplate(io::Error),
-    WriteOutput(io::Error),
+    TemplateFile(util::TextFileError),
+    OutputFile(util::TextFileError),
     Other(Cow<'static, str>),
 }
 
@@ -47,10 +42,8 @@ impl fmt::Display for RenderTemplateError {
             RenderTemplateError::InvalidProcessor(processor_name) => {
                 write!(f, "Invalid template processor: {}", processor_name)
             }
-            RenderTemplateError::OpenTemplate(err) => write!(f, "Error opening template: {}", err),
-            RenderTemplateError::OpenOutput(err) => write!(f, "Error opening output: {}", err),
-            RenderTemplateError::ReadTemplate(err) => write!(f, "Error reading template: {}", err),
-            RenderTemplateError::WriteOutput(err) => write!(f, "Error writing output: {}", err),
+            RenderTemplateError::TemplateFile(err) => write!(f, "Template file: {}", err),
+            RenderTemplateError::OutputFile(err) => write!(f, "Output file: {}", err),
             RenderTemplateError::Other(err) => write!(f, "{}", err),
         }
     }
@@ -80,59 +73,14 @@ pub fn generate_template<TP: TemplateProcessor>(
 ) -> Result<(), RenderTemplateError> {
     info!("Generating template file {}", template_path.display());
 
-    // If an encoding was specified, try to get an implementation for it.
-    let encoding: Option<EncodingRef> =
-        encoding.map(|enc_name| encoding_from_whatwg_label(&enc_name).expect("Cannot get encoding!"));
+    // Read text from template
+    let text = util::read_text_file(template_path, encoding).map_err(RenderTemplateError::TemplateFile)?;
 
-    let text = {
-        // Open template file.
-        let mut file = util::open_file(template_path)
-            .map_err::<RenderTemplateError, _>(|err| RenderTemplateError::OpenTemplate(err))?;
-
-        // If an encoding was specified...
-        if let Some(encoding) = encoding {
-            // Create a buffer for raw template data.
-            let mut buffer: Vec<u8> = Vec::new();
-
-            // Read raw template data into buffer.
-            file.read_to_end(&mut buffer)
-                .map_err::<RenderTemplateError, _>(|err| RenderTemplateError::ReadTemplate(err))?;
-
-            // Decode the raw data to a string using the specified encoding.
-            encoding.decode(&buffer, DecoderTrap::Strict).expect("Error decoding!")
-        } else {
-            // Create an empty string.
-            let mut string: String = String::new();
-
-            // Read template data into the string, assuming it is valid UTF-8.
-            file.read_to_string(&mut string)
-                .map_err::<RenderTemplateError, _>(|err| RenderTemplateError::ReadTemplate(err))?;
-
-            string
-        }
-    };
-
+    // Render template
     let text = render_template::<TP>(&text, values)?;
 
-    // Create output file.
-    let mut output_file = util::create_file(&output_file_path)
-        .map_err::<RenderTemplateError, _>(|err| RenderTemplateError::OpenOutput(err))?;
-
-    // If an encoding was specified...
-    let output_data: Vec<u8> = if let Some(encoding) = encoding {
-        // Encode the template data using the specified encoding.
-        encoding
-            .encode(&text, EncoderTrap::Strict)
-            .map_err(RenderTemplateError::from_string)?
-    } else {
-        // If no encoding was specified, just convert the string directly into a UTF-8 byte vector.
-        text.into_bytes()
-    };
-
-    // Write data to output file
-    output_file
-        .write(&output_data)
-        .map_err::<RenderTemplateError, _>(|err| RenderTemplateError::WriteOutput(err))?;
+    // Write text to output file
+    util::write_text_file(output_file_path, text, encoding).map_err(RenderTemplateError::OutputFile)?;
 
     Ok(())
 }
