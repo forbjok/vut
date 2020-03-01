@@ -51,7 +51,7 @@ impl CustomSourceTypes {
         let mut regex_source_types: HashMap<String, version_source::CustomRegexSourceTemplate> = HashMap::new();
 
         // Construct custom source type templates
-        for (k, v) in config.custom_source_types.iter() {
+        for (k, v) in config.version_source_types.iter() {
             // Extract regex custom source type information from the enum.
             // Currently regex is the only type implemented.
             let regex_custom_source_type = match v {
@@ -113,7 +113,7 @@ struct VersionSourceSpec {
 
 impl VersionSourceSpec {
     pub fn from_config_vs(
-        def: &config::VersionSourceDef,
+        def: &config::UpdateVersionSourcesDef,
         custom_source_types: Rc<CustomSourceTypes>,
     ) -> Result<Self, VutError> {
         let detail = def.to_detail();
@@ -184,7 +184,7 @@ impl VersionSourceFinder {
 
         let mut specs: Vec<VersionSourceSpec> = Vec::new();
 
-        for cfg_vs in config.version_source.iter() {
+        for cfg_vs in config.update_version_sources.iter() {
             let spec = VersionSourceSpec::from_config_vs(cfg_vs, custom_source_types.clone())?;
 
             specs.push(spec);

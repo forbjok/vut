@@ -18,7 +18,7 @@ struct UpdateFilesSpec {
 impl UpdateFilesSpec {
     pub fn from_def(def: &config::UpdateFilesDef) -> Result<Self, VutError> {
         let include_globset = def.globs.build_globset()?;
-        let updater_type = def.updater_type.clone();
+        let updater_type = def.updater.clone();
 
         Ok(Self {
             include_globset,
@@ -82,10 +82,10 @@ pub fn update_files(
 fn build_custom_file_updaters(config: &VutConfig) -> Result<HashMap<String, Box<dyn FileUpdater>>, VutError> {
     let mut updaters: HashMap<String, Box<dyn FileUpdater>> = HashMap::new();
 
-    for (name, def) in config.custom_file_updaters.iter() {
+    for (name, def) in config.file_updaters.iter() {
         match def {
             config::CustomFileUpdaterTypeDef::Regex(def) => {
-                let regexes = def.regex.build_regexes()?;
+                let regexes = def.regexes.build_regexes()?;
                 let encoding = def.encoding.as_ref().map(|s| s.as_str());
 
                 let updater = CustomRegexFileUpdater::new(regexes, encoding);

@@ -61,10 +61,10 @@ pub struct AuthoritativeVersionSource {
 pub struct VutConfig {
     pub general: General,
     pub authoritative_version_source: Option<AuthoritativeVersionSource>,
-    pub custom_file_updaters: HashMap<String, CustomFileUpdaterTypeDef>,
-    pub custom_source_types: HashMap<String, CustomSourceTypeDef>,
+    pub file_updaters: HashMap<String, CustomFileUpdaterTypeDef>,
+    pub version_source_types: HashMap<String, CustomSourceTypeDef>,
     pub update_files: Vec<UpdateFilesDef>,
-    pub version_source: Vec<VersionSourceDef>,
+    pub update_version_sources: Vec<UpdateVersionSourcesDef>,
     pub template: Vec<TemplateDef>,
 }
 
@@ -99,10 +99,10 @@ impl Default for VutConfig {
         Self {
             general: General::default(),
             authoritative_version_source: None,
-            custom_file_updaters: HashMap::new(),
-            custom_source_types: HashMap::new(),
+            file_updaters: HashMap::new(),
+            version_source_types: HashMap::new(),
             update_files: Vec::new(),
-            version_source: Vec::new(),
+            update_version_sources: Vec::new(),
             template: vec![TemplateDef {
                 globs: Globs::Single("**/*.vutemplate".to_owned()),
                 start_path: None,
@@ -110,19 +110,6 @@ impl Default for VutConfig {
                 processor: None,
                 encoding: None,
             }],
-        }
-    }
-}
-
-impl VersionSourceDef {
-    pub fn to_detail(&self) -> Cow<VersionSourceDetail> {
-        match self {
-            Self::Simple(globs) => Cow::Owned(VersionSourceDetail {
-                globs: globs.clone(),
-                exclude_globs: None,
-                types: None,
-            }),
-            Self::Detailed(detail) => Cow::Borrowed(detail),
         }
     }
 }

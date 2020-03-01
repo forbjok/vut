@@ -291,7 +291,7 @@ impl Vut {
             .collect();
 
         // Update version sources.
-        if !self.config.version_source.is_empty() {
+        if !self.config.update_version_sources.is_empty() {
             update_version_sources(&self.config, root_path, &version, &dir_entries)?;
         }
 
