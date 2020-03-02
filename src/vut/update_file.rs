@@ -1,11 +1,12 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::path::Path;
 
 use walkdir;
 
 use crate::file_updater::*;
-use crate::version::Version;
+use crate::template::TemplateInput;
 
 use super::{config, VutConfig, VutError};
 
@@ -33,8 +34,8 @@ impl UpdateFilesSpec {
 pub fn update_files(
     config: &VutConfig,
     root_path: &Path,
-    version: &Version,
     dir_entries: &[walkdir::DirEntry],
+    template_input: &TemplateInput,
 ) -> Result<(), VutError> {
     let custom_file_updaters = build_custom_file_updaters(config)?;
 
@@ -76,7 +77,7 @@ pub fn update_files(
 
         // Iterate through the files, updating each one.
         for file_path in files_iter {
-            updater.update_file(file_path, encoding, version)?;
+            updater.update_file(file_path, encoding, template_input)?;
         }
     }
 
@@ -89,9 +90,7 @@ fn build_custom_file_updaters(config: &VutConfig) -> Result<HashMap<String, Box<
     for (name, def) in config.file_updaters.iter() {
         match def {
             config::CustomFileUpdaterTypeDef::Regex(def) => {
-                let regexes = def.regexes.build_regexes()?;
-
-                let updater = CustomRegexFileUpdater::new(regexes);
+                let updater = CustomRegexFileUpdater::try_from(def)?;
 
                 updaters.insert(name.to_owned(), Box::new(updater));
             }

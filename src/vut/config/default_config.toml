@@ -18,7 +18,10 @@
 # regex patterns with a version, but don't want to use it as a source.
 #[file_updaters.myfile]
 #type = "regex"
-#regexes = "(^Version = )(.*)(;)"
+#replacers = [
+#  { regexes = ["(^Version = )(.*)(;)", "(^FullVersion = )(.*)(;)"], template = '{{FullVersion}}' },
+#  { regexes = "(^ShortVersion = )(.*)(;)", template = '{{MajorMinor}}' },
+#]
 
 # Define a custom source type.
 # This may be used if you need to support a file format

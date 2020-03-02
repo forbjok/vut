@@ -290,16 +290,19 @@ impl Vut {
             .filter_map(|entry| entry.ok())
             .collect();
 
+        // Get template input
+        let template_input = generate_template_input(&version)?;
+
         // Update version sources.
         if !self.config.update_version_sources.is_empty() {
             update_version_sources(&self.config, root_path, &version, &dir_entries)?;
         }
 
         // Update files.
-        update_files(&self.config, root_path, &version, &dir_entries)?;
+        update_files(&self.config, root_path, &dir_entries, &template_input)?;
 
         // Generate template output.
-        generate_template_output(&self.config, root_path, &version, &dir_entries)?;
+        generate_template_output(&self.config, root_path, &dir_entries, &template_input)?;
 
         Ok(())
     }

@@ -28,12 +28,10 @@ impl<'a> TemplateSpec<'a> {
 pub fn generate_template_output(
     config: &VutConfig,
     root_path: &Path,
-    version: &Version,
     dir_entries: &[walkdir::DirEntry],
+    template_input: &TemplateInput,
 ) -> Result<(), VutError> {
     let specs = build_template_specs(config)?;
-
-    let template_input = generate_template_input(version)?;
 
     let mut processed_files: Vec<PathBuf> = Vec::new();
     let mut generated_files: Vec<PathBuf> = Vec::new();

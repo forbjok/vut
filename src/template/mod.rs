@@ -85,6 +85,19 @@ pub fn generate_template<TP: TemplateProcessor>(
     Ok(())
 }
 
+pub fn render_template_with_processor_name(
+    processor_name: &str,
+    text: &str,
+    values: &TemplateInput,
+) -> Result<String, RenderTemplateError> {
+    match processor_name {
+        "vut" => Ok(processor::VutProcessor::process(&text, &values).map_err(RenderTemplateError::from_string)?),
+        _ => Err(RenderTemplateError::InvalidProcessor(Cow::Owned(
+            processor_name.to_owned(),
+        ))),
+    }
+}
+
 pub fn generate_template_with_processor_name(
     processor_name: &str,
     template_path: &Path,
