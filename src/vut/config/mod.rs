@@ -28,11 +28,7 @@ pub const VUT_CONFIG_EXAMPLE: &str = include_str!("example_config.toml");
 
 /// One or more version source types
 #[derive(Clone, Debug, Deserialize)]
-#[serde(untagged)]
-pub enum VersionSourceTypes {
-    Single(String),
-    Multiple(HashSet<String>),
-}
+pub struct VersionSourceTypes(pub HashSet<String>);
 
 #[derive(Debug, Deserialize)]
 pub struct TemplateDef {
@@ -90,7 +86,7 @@ impl VutConfig {
 impl Default for General {
     fn default() -> Self {
         Self {
-            ignore: Globs::Single("**/.git".to_owned()),
+            ignore: Globs(vec!["**/.git".to_owned()]),
         }
     }
 }
@@ -105,7 +101,7 @@ impl Default for VutConfig {
             update_files: Vec::new(),
             update_version_sources: Vec::new(),
             template: vec![TemplateDef {
-                globs: Globs::Single("**/*.vutemplate".to_owned()),
+                globs: Globs(vec!["**/*.vutemplate".to_owned()]),
                 start_path: None,
                 output_path: None,
                 processor: None,

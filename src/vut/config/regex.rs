@@ -6,11 +6,7 @@ use crate::vut::VutError;
 
 /// One or more regexes
 #[derive(Clone, Debug, Deserialize)]
-#[serde(untagged)]
-pub enum Regexes {
-    Single(String),
-    Multiple(Vec<String>),
-}
+pub struct Regexes(pub Vec<String>);
 
 impl Regexes {
     pub fn build_regexes(&self) -> Result<Vec<regex::Regex>, VutError> {
@@ -25,16 +21,9 @@ impl Regexes {
                 .map_err(|err| VutError::Other(Cow::Owned(format!("Invalid regex '{}': {}", pattern, err.to_string()))))
         }
 
-        match self {
-            Self::Single(pattern) => {
-                regexes.push(build_regex(pattern)?);
-            }
-            Self::Multiple(patterns) => {
-                for pattern in patterns.iter() {
-                    regexes.push(build_regex(pattern)?);
-                }
-            }
-        };
+        for regex_str in self.0.iter() {
+            regexes.push(build_regex(regex_str)?);
+        }
 
         Ok(regexes)
     }

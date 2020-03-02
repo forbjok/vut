@@ -116,23 +116,13 @@ impl VersionSourceSpec {
         def: &config::UpdateVersionSourcesDef,
         custom_source_types: Rc<CustomSourceTypes>,
     ) -> Result<Self, VutError> {
-        let detail = def.to_detail();
-
-        let include_globset = detail.globs.build_globset()?;
-        let exclude_globset = match &detail.exclude_globs {
+        let include_globset = def.globs.build_globset()?;
+        let exclude_globset = match &def.exclude_globs {
             Some(ep) => Some(ep.build_globset()?),
             None => None,
         };
 
-        let source_types = detail.types.as_ref().map(|v| match v {
-            config::VersionSourceTypes::Single(name) => {
-                let mut set = HashSet::new();
-                set.insert(name.clone());
-
-                set
-            }
-            config::VersionSourceTypes::Multiple(set) => set.clone(),
-        });
+        let source_types = def.types.as_ref().map(|v| v.0.clone());
 
         Ok(Self {
             include_globset,
