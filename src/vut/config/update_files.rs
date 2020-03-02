@@ -6,6 +6,7 @@ use super::*;
 pub struct UpdateFilesDef {
     pub globs: Globs,
     pub updater: String,
+    pub encoding: Option<String>,
 }
 
 /// One or more file updater types

@@ -12,5 +12,4 @@ pub enum CustomFileUpdaterTypeDef {
 #[derive(Debug, Deserialize)]
 pub struct RegexFileUpdaterTypeDef {
     pub regexes: Regexes,
-    pub encoding: Option<String>,
 }

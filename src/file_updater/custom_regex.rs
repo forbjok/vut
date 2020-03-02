@@ -12,22 +12,18 @@ use super::FileUpdater;
 
 pub struct CustomRegexFileUpdater {
     regexes: Rc<Vec<Regex>>,
-    encoding: Option<String>,
 }
 
 impl CustomRegexFileUpdater {
-    pub fn new(regexes: Vec<Regex>, encoding: Option<&str>) -> Self {
+    pub fn new(regexes: Vec<Regex>) -> Self {
         Self {
             regexes: Rc::new(regexes),
-            encoding: encoding.map(|s| s.to_owned()),
         }
     }
 }
 
 impl FileUpdater for CustomRegexFileUpdater {
-    fn update_file(&self, file_path: &Path, version: &Version) -> Result<(), VutError> {
-        let encoding = self.encoding.as_ref().map(|s| s.as_str());
-
+    fn update_file(&self, file_path: &Path, encoding: Option<&str>, version: &Version) -> Result<(), VutError> {
         // Read text from file
         let mut text =
             util::read_text_file(file_path, encoding).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;

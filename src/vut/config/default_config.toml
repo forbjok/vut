@@ -39,6 +39,7 @@
 #[[update_files]]
 #globs = "**/*.myfile"
 #updater = "myfile"
+#encoding = "utf-8"
 
 # Update version sources.
 # There can be more than one of these.

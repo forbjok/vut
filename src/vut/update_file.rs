@@ -13,16 +13,19 @@ use super::{config, VutConfig, VutError};
 struct UpdateFilesSpec {
     include_globset: globset::GlobSet,
     updater_type: String,
+    encoding: Option<String>,
 }
 
 impl UpdateFilesSpec {
     pub fn from_def(def: &config::UpdateFilesDef) -> Result<Self, VutError> {
         let include_globset = def.globs.build_globset()?;
         let updater_type = def.updater.clone();
+        let encoding = def.encoding.clone();
 
         Ok(Self {
             include_globset,
             updater_type,
+            encoding,
         })
     }
 }
@@ -45,6 +48,7 @@ pub fn update_files(
 
     for spec in specs.iter() {
         let include_globset = &spec.include_globset;
+        let encoding = spec.encoding.as_ref().map(|s| s.as_str());
 
         // Get the updater for this spec
         let updater = custom_file_updaters.get(&spec.updater_type).ok_or_else(|| {
@@ -72,7 +76,7 @@ pub fn update_files(
 
         // Iterate through the files, updating each one.
         for file_path in files_iter {
-            updater.update_file(file_path, version)?;
+            updater.update_file(file_path, encoding, version)?;
         }
     }
 
@@ -86,9 +90,8 @@ fn build_custom_file_updaters(config: &VutConfig) -> Result<HashMap<String, Box<
         match def {
             config::CustomFileUpdaterTypeDef::Regex(def) => {
                 let regexes = def.regexes.build_regexes()?;
-                let encoding = def.encoding.as_ref().map(|s| s.as_str());
 
-                let updater = CustomRegexFileUpdater::new(regexes, encoding);
+                let updater = CustomRegexFileUpdater::new(regexes);
 
                 updaters.insert(name.to_owned(), Box::new(updater));
             }
