@@ -15,6 +15,7 @@ pub enum TextFileError {
     Write(io::Error),
     Encoding(Cow<'static, str>),
     Encode(Cow<'static, str>),
+    Decode(Cow<'static, str>),
 }
 
 impl fmt::Display for TextFileError {
@@ -25,6 +26,7 @@ impl fmt::Display for TextFileError {
             TextFileError::Write(err) => write!(f, "{}", err),
             TextFileError::Encoding(err) => write!(f, "{}", err),
             TextFileError::Encode(err) => write!(f, "{}", err),
+            TextFileError::Decode(err) => write!(f, "{}", err),
         }
     }
 }
@@ -45,7 +47,9 @@ pub fn read_text_file(file_path: &Path, encoding: Option<&str>) -> Result<String
         file.read_to_end(&mut buffer).map_err(|err| TextFileError::Read(err))?;
 
         // Decode the raw data to a string using the specified encoding.
-        encoding.decode(&buffer, DecoderTrap::Strict).expect("Error decoding!")
+        encoding
+            .decode(&buffer, DecoderTrap::Strict)
+            .map_err(|err| TextFileError::Decode(err))?
     } else {
         // Create an empty string.
         let mut string: String = String::new();
