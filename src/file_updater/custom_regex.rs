@@ -11,7 +11,7 @@ use super::FileUpdater;
 
 pub struct RegexReplacer {
     pub regexes: Vec<Regex>,
-    pub template: String,
+    pub template: Option<String>,
     pub template_processor: Option<String>,
 }
 
@@ -36,18 +36,26 @@ impl FileUpdater for CustomRegexFileUpdater {
         let mut text =
             util::read_text_file(file_path, encoding).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
+        let version_str = template_input.values.get("FullVersion").ok_or_else(|| {
+            VutError::Other(Cow::Borrowed(
+                "FullVersion not found in template input! This is almost certainly a bug.",
+            ))
+        })?;
+
         // Iterate through all regexes, performing replacements for each one.
         for replacer in self.replacers.iter() {
-            let template = &replacer.template;
-            let template_processor = replacer
-                .template_processor
-                .as_ref()
-                .map(|s| s.as_str())
-                .unwrap_or_else(|| "vut");
+            let replace_with: Cow<str> = if let Some(template) = &replacer.template {
+                let template_processor = replacer
+                    .template_processor
+                    .as_ref()
+                    .map(|s| s.as_str())
+                    .unwrap_or_else(|| "vut");
 
-            let replace_with =
                 template::render_template_with_processor_name(template_processor, template, template_input)
-                    .map_err(|err| VutError::TemplateGenerate(err))?;
+                    .map_err(|err| VutError::TemplateGenerate(err))?
+            } else {
+                Cow::Borrowed(version_str)
+            };
 
             for regex in replacer.regexes.iter() {
                 text = regex

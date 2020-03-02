@@ -19,7 +19,7 @@ ignore = [
 #[file_updaters.myfile]
 #type = "regex"
 #replacers = [
-#  { regexes = ["(^Version = )(.*)(;)", "(^FullVersion = )(.*)(;)"], template = '{{FullVersion}}' },
+#  { regexes = ["(^Version = )(.*)(;)", "(^FullVersion = )(.*)(;)"] },
 #  { regexes = ["(^ShortVersion = )(.*)(;)"], template = '{{MajorMinor}}' },
 #]
 
