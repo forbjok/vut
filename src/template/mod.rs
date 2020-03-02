@@ -25,7 +25,7 @@ impl TemplateInput {
 }
 
 pub trait TemplateProcessor {
-    fn process(template: &str, variables: &TemplateInput) -> Result<String, String>;
+    fn process<'a>(template: &'a str, variables: &TemplateInput) -> Result<Cow<'a, str>, String>;
 }
 
 #[derive(Debug)]
@@ -55,10 +55,10 @@ impl RenderTemplateError {
     }
 }
 
-pub fn render_template<TP: TemplateProcessor>(
-    text: &str,
+pub fn render_template<'a, TP: TemplateProcessor>(
+    text: &'a str,
     values: &TemplateInput,
-) -> Result<String, RenderTemplateError> {
+) -> Result<Cow<'a, str>, RenderTemplateError> {
     // Process the template using the specified template processor.
     let text = TP::process(&text, &values).map_err(RenderTemplateError::from_string)?;
 
@@ -85,11 +85,11 @@ pub fn generate_template<TP: TemplateProcessor>(
     Ok(())
 }
 
-pub fn render_template_with_processor_name(
+pub fn render_template_with_processor_name<'a>(
     processor_name: &str,
-    text: &str,
+    text: &'a str,
     values: &TemplateInput,
-) -> Result<String, RenderTemplateError> {
+) -> Result<Cow<'a, str>, RenderTemplateError> {
     match processor_name {
         "vut" => Ok(processor::VutProcessor::process(&text, &values).map_err(RenderTemplateError::from_string)?),
         _ => Err(RenderTemplateError::InvalidProcessor(Cow::Owned(
