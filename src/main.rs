@@ -26,6 +26,9 @@ struct Opt {
 enum Command {
     #[structopt(name = "init", about = "Initialize version file")]
     Init {
+        #[structopt(long = "example", help = "Create example configuration")]
+        example: bool,
+
         #[structopt(name = "version", about = "Specify initial version")]
         version: Option<String>,
     },
@@ -75,7 +78,7 @@ fn main() {
         Command::Bump { bump_version } => command::bump(bump_version),
         Command::Generate => command::generate(),
         Command::Get { format } => command::get(&format),
-        Command::Init { version } => command::init(version.as_ref().map(|v| v.as_str())),
+        Command::Init { example, version } => command::init(example, version.as_ref().map(|v| v.as_str())),
         Command::Set { version } => command::set(&version),
     };
 

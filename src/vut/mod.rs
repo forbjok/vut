@@ -65,6 +65,7 @@ impl Vut {
         path: impl AsRef<Path>,
         version: Option<&Version>,
         callbacks: Option<VutCallbacks>,
+        config_text: &str,
     ) -> Result<Self, VutError> {
         let path = path.as_ref();
         let callbacks = callbacks.unwrap_or_else(|| VutCallbacks::default());
@@ -88,7 +89,7 @@ impl Vut {
         let config_file_path = path.join(VUT_CONFIG_FILENAME);
 
         // Create configuration file with default content
-        config::create_default_config_file(&config_file_path)?;
+        let config = config::create_config_file(&config_file_path, config_text)?;
 
         let vut = if let Some(vut) = vut {
             // A version source was found, but no configuration file...
@@ -97,7 +98,7 @@ impl Vut {
 
             Self {
                 root_path: vut.root_path,
-                config: VutConfig::from_str(config::VUT_CONFIG_DEFAULT)?,
+                config,
                 authoritative_version_source: vut.authoritative_version_source,
                 callbacks,
             }
@@ -116,7 +117,7 @@ impl Vut {
 
             Self {
                 root_path: path.to_path_buf(),
-                config: VutConfig::default(),
+                config,
                 authoritative_version_source: Box::new(source),
                 callbacks,
             }

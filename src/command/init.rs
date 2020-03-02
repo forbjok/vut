@@ -1,11 +1,11 @@
 use std::env;
 
 use crate::version::Version;
-use crate::vut::Vut;
+use crate::vut::{config, Vut};
 
 use super::{stderr_vut_callbacks, CommandError, CommandErrorKind};
 
-pub fn init(version: Option<&str>) -> Result<(), CommandError> {
+pub fn init(example: bool, version: Option<&str>) -> Result<(), CommandError> {
     let current_dir = env::current_dir()?;
 
     let version: Option<Version> = match version {
@@ -16,7 +16,13 @@ pub fn init(version: Option<&str>) -> Result<(), CommandError> {
         None => None,
     };
 
-    let vut = Vut::init(current_dir, version.as_ref(), Some(stderr_vut_callbacks()))?;
+    let config_text = if example {
+        config::VUT_CONFIG_EXAMPLE
+    } else {
+        config::VUT_CONFIG_DEFAULT
+    };
+
+    let vut = Vut::init(current_dir, version.as_ref(), Some(stderr_vut_callbacks()), config_text)?;
 
     eprintln!(
         "Initialized Vut project with version {} at {}.",

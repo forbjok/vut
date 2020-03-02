@@ -24,6 +24,7 @@ pub use self::update_files::*;
 pub use self::update_version_sources::*;
 
 pub const VUT_CONFIG_DEFAULT: &str = include_str!("default_config.toml");
+pub const VUT_CONFIG_EXAMPLE: &str = include_str!("example_config.toml");
 
 /// One or more version source types
 #[derive(Clone, Debug, Deserialize)]
@@ -114,13 +115,11 @@ impl Default for VutConfig {
     }
 }
 
-pub fn create_default_config_file(path: &Path) -> Result<VutConfig, VutError> {
-    let default_config = VUT_CONFIG_DEFAULT.trim();
-
+pub fn create_config_file(path: &Path, text: &str) -> Result<VutConfig, VutError> {
     util::create_file(&path)
         .map_err(|err| VutError::OpenConfig(err))?
-        .write(default_config.as_bytes())
+        .write(text.as_bytes())
         .map_err(|err| VutError::WriteConfig(err))?;
 
-    VutConfig::from_str(default_config)
+    VutConfig::from_str(text)
 }
