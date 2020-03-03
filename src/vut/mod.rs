@@ -279,14 +279,27 @@ impl Vut {
 
         let dir_entries: Vec<walkdir::DirEntry> = walkdir::WalkDir::new(root_path)
             .into_iter()
-            // Filter known VCS metadata directories
+            // Filter ignored paths and paths containing
+            // other Vut configurations.
             .filter_entry(|entry| {
-                // Make path relative, as we only want to match on the path
-                // relative to the root.
-                let rel_path = entry.path().strip_prefix(root_path).unwrap();
+                if entry.file_type().is_dir() {
+                    let path = entry.path();
 
-                // Exclude paths matching any of the ignore glob patterns
-                !ignore_globset.is_match(rel_path)
+                    // Exclude directories containing a Vut configuration file,
+                    // unless it is our own root directory.
+                    if path.join(VUT_CONFIG_FILENAME).is_file() && path != root_path {
+                        return false;
+                    }
+
+                    // Make path relative, as we only want to match on the path
+                    // relative to the root.
+                    let rel_path = path.strip_prefix(root_path).unwrap();
+
+                    // Exclude paths matching any of the ignore glob patterns
+                    !ignore_globset.is_match(rel_path)
+                } else {
+                    true
+                }
             })
             .filter_map(|entry| entry.ok())
             .collect();
