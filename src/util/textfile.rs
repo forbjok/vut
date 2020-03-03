@@ -22,11 +22,11 @@ impl fmt::Display for TextFileError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self {
             TextFileError::Open(err) => write!(f, "{}", err),
-            TextFileError::Read(err) => write!(f, "{}", err),
-            TextFileError::Write(err) => write!(f, "{}", err),
-            TextFileError::Encoding(err) => write!(f, "{}", err),
-            TextFileError::Encode(err) => write!(f, "{}", err),
-            TextFileError::Decode(err) => write!(f, "{}", err),
+            TextFileError::Read(err) => write!(f, "Error reading text file: {}", err),
+            TextFileError::Write(err) => write!(f, "Error writing to text file: {}", err),
+            TextFileError::Encoding(err) => write!(f, "Invalid encoding: {}", err),
+            TextFileError::Encode(err) => write!(f, "Error encoding text file: {}", err),
+            TextFileError::Decode(err) => write!(f, "Error decoding text file: {}", err),
         }
     }
 }
