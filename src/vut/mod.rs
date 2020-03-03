@@ -66,6 +66,7 @@ impl Vut {
         version: Option<&Version>,
         callbacks: Option<VutCallbacks>,
         config_text: &str,
+        force: bool,
     ) -> Result<Self, VutError> {
         let path = path.as_ref();
         let callbacks = callbacks.unwrap_or_else(|| VutCallbacks::default());
@@ -75,8 +76,21 @@ impl Vut {
             Ok(vut) => {
                 let existing_root_path = vut.get_root_path();
 
-                if existing_root_path != path || existing_root_path.join(VUT_CONFIG_FILENAME).exists() {
-                    Err(VutError::AlreadyInit(vut.get_root_path().to_path_buf()))
+                // Construct the path to the existing project's configuration file (if it exists)
+                let existing_config_file_path = existing_root_path.join(VUT_CONFIG_FILENAME);
+
+                if existing_config_file_path.exists() {
+                    if force && existing_root_path != path {
+                        // If force is true and the path we are trying to initialize
+                        // is not the existing project's root directory, let it go through
+                        // as if no existing configuration or version source was present.
+                        Ok(None)
+                    } else {
+                        // If an existing config was found and force is not true,
+                        // or the existing configuration found is in the same directory
+                        // we are trying to initialize, return an error.
+                        Err(VutError::AlreadyInit(vut.get_root_path().to_path_buf()))
+                    }
                 } else {
                     Ok(Some(vut))
                 }

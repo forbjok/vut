@@ -29,6 +29,13 @@ enum Command {
         #[structopt(long = "example", help = "Create example configuration")]
         example: bool,
 
+        #[structopt(
+            short = "f",
+            long = "force",
+            help = "Proceed even if inside the scope of an existing Vut configuration"
+        )]
+        force: bool,
+
         #[structopt(name = "version", about = "Specify initial version")]
         version: Option<String>,
     },
@@ -78,7 +85,11 @@ fn main() {
         Command::Bump { bump_version } => command::bump(bump_version),
         Command::Generate => command::generate(),
         Command::Get { format } => command::get(&format),
-        Command::Init { example, version } => command::init(example, version.as_ref().map(|v| v.as_str())),
+        Command::Init {
+            example,
+            force,
+            version,
+        } => command::init(example, force, version.as_ref().map(|v| v.as_str())),
         Command::Set { version } => command::set(&version),
     };
 

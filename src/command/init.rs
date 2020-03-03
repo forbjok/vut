@@ -5,7 +5,7 @@ use crate::vut::{config, Vut};
 
 use super::{stderr_vut_callbacks, CommandError, CommandErrorKind};
 
-pub fn init(example: bool, version: Option<&str>) -> Result<(), CommandError> {
+pub fn init(example: bool, force: bool, version: Option<&str>) -> Result<(), CommandError> {
     let current_dir = env::current_dir()?;
 
     let version: Option<Version> = match version {
@@ -22,7 +22,13 @@ pub fn init(example: bool, version: Option<&str>) -> Result<(), CommandError> {
         config::VUT_CONFIG_DEFAULT
     };
 
-    let vut = Vut::init(current_dir, version.as_ref(), Some(stderr_vut_callbacks()), config_text)?;
+    let vut = Vut::init(
+        current_dir,
+        version.as_ref(),
+        Some(stderr_vut_callbacks()),
+        config_text,
+        force,
+    )?;
 
     eprintln!(
         "Initialized Vut project with version {} at {}.",
