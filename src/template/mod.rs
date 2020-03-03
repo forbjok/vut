@@ -85,30 +85,33 @@ pub fn generate_template<TP: TemplateProcessor>(
     Ok(())
 }
 
-pub fn render_template_with_processor_name<'a>(
-    processor_name: &str,
+#[derive(Debug, Clone)]
+pub enum ProcessorType {
+    Vut,
+}
+
+pub fn render_template_with_processor_type<'a>(
+    processor_type: &ProcessorType,
     text: &'a str,
     values: &TemplateInput,
 ) -> Result<Cow<'a, str>, RenderTemplateError> {
-    match processor_name {
-        "vut" => Ok(processor::VutProcessor::process(&text, &values).map_err(RenderTemplateError::from_string)?),
-        _ => Err(RenderTemplateError::InvalidProcessor(Cow::Owned(
-            processor_name.to_owned(),
-        ))),
+    match processor_type {
+        ProcessorType::Vut => {
+            Ok(processor::VutProcessor::process(&text, &values).map_err(RenderTemplateError::from_string)?)
+        }
     }
 }
 
-pub fn generate_template_with_processor_name(
-    processor_name: &str,
+pub fn generate_template_with_processor_type(
+    processor_type: &ProcessorType,
     template_path: &Path,
     output_file_path: &Path,
     values: &TemplateInput,
     encoding: Option<&str>,
 ) -> Result<(), RenderTemplateError> {
-    match processor_name {
-        "vut" => generate_template::<processor::VutProcessor>(template_path, output_file_path, values, encoding),
-        _ => Err(RenderTemplateError::InvalidProcessor(Cow::Owned(
-            processor_name.to_owned(),
-        ))),
+    match processor_type {
+        ProcessorType::Vut => {
+            generate_template::<processor::VutProcessor>(template_path, output_file_path, values, encoding)
+        }
     }
 }

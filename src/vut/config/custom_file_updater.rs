@@ -18,7 +18,7 @@ pub enum CustomFileUpdaterTypeDef {
 pub struct RegexReplacerDef {
     pub regexes: Regexes,
     pub template: Option<String>,
-    pub template_processor: Option<String>,
+    pub template_processor: Option<TemplateProcessorType>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -33,7 +33,7 @@ impl TryFrom<&RegexReplacerDef> for RegexReplacer {
         Ok(Self {
             regexes: def.regexes.build_regexes()?,
             template: def.template.as_ref().map(|s| s.clone()),
-            template_processor: def.template_processor.clone(),
+            template_processor: def.template_processor.as_ref().map(|pt| pt.to_processor_type()),
         })
     }
 }

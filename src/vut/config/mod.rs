@@ -13,6 +13,7 @@ mod custom_file_updater;
 mod custom_source_type;
 mod glob;
 mod regex;
+mod template_processor;
 mod update_files;
 mod update_version_sources;
 
@@ -20,6 +21,7 @@ pub use self::custom_file_updater::*;
 pub use self::custom_source_type::*;
 pub use self::glob::*;
 pub use self::regex::*;
+pub use self::template_processor::*;
 pub use self::update_files::*;
 pub use self::update_version_sources::*;
 
@@ -35,7 +37,7 @@ pub struct TemplateDef {
     pub globs: Globs,
     pub start_path: Option<PathBuf>,
     pub output_path: Option<PathBuf>,
-    pub processor: Option<String>,
+    pub processor: Option<TemplateProcessorType>,
     pub encoding: Option<String>,
 }
 

@@ -52,7 +52,11 @@ pub fn generate_template_output(
             None => start_path.clone(),
         };
 
-        let processor = def.processor.as_ref().map(|s| s.as_str()).unwrap_or("vut");
+        let processor = def
+            .processor
+            .as_ref()
+            .map(|pt| pt.to_processor_type())
+            .unwrap_or_else(|| template::ProcessorType::Vut);
         let encoding = def.encoding.as_ref().map(|s| s.as_str());
 
         let template_files_iter = dir_entries
@@ -79,8 +83,8 @@ pub fn generate_template_output(
             let output_file_name: &OsStr = path.file_stem().unwrap();
             let output_file_path = output_path.join(rel_path.with_file_name(output_file_name));
 
-            template::generate_template_with_processor_name(
-                processor,
+            template::generate_template_with_processor_type(
+                &processor,
                 path,
                 &output_file_path,
                 &template_input,

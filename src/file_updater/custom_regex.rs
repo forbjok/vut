@@ -12,7 +12,7 @@ use super::FileUpdater;
 pub struct RegexReplacer {
     pub regexes: Vec<Regex>,
     pub template: Option<String>,
-    pub template_processor: Option<String>,
+    pub template_processor: Option<template::ProcessorType>,
 }
 
 pub struct CustomRegexFileUpdater {
@@ -48,10 +48,10 @@ impl FileUpdater for CustomRegexFileUpdater {
                 let template_processor = replacer
                     .template_processor
                     .as_ref()
-                    .map(|s| s.as_str())
-                    .unwrap_or_else(|| "vut");
+                    .map(|pt| pt.clone())
+                    .unwrap_or_else(|| template::ProcessorType::Vut);
 
-                template::render_template_with_processor_name(template_processor, template, template_input)
+                template::render_template_with_processor_type(&template_processor, template, template_input)
                     .map_err(|err| VutError::TemplateGenerate(err))?
             } else {
                 Cow::Borrowed(version_str)
