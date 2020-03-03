@@ -98,6 +98,7 @@ pub fn generate_template_output(
 
 pub fn generate_template_input(version: &Version) -> Result<TemplateInput, VutError> {
     let mut template_input = TemplateInput::new();
+    let values = &mut template_input.values;
 
     let split_prerelease = version
         .prerelease
@@ -108,10 +109,8 @@ pub fn generate_template_input(version: &Version) -> Result<TemplateInput, VutEr
         .as_ref()
         .map_or(None, |b| version::split_numbered_prerelease(b));
 
-    template_input
-        .values
-        .insert("FullVersion".to_owned(), version.to_string());
-    template_input.values.insert(
+    values.insert("FullVersion".to_owned(), version.to_string());
+    values.insert(
         "Version".to_owned(),
         Version {
             build: None,
@@ -119,48 +118,38 @@ pub fn generate_template_input(version: &Version) -> Result<TemplateInput, VutEr
         }
         .to_string(),
     );
-    template_input.values.insert(
+    values.insert(
         "MajorMinorPatch".to_owned(),
         format!("{}.{}.{}", version.major, version.minor, version.patch),
     );
-    template_input
-        .values
-        .insert("MajorMinor".to_owned(), format!("{}.{}", version.major, version.minor));
-    template_input
-        .values
-        .insert("Major".to_owned(), format!("{}", version.major));
-    template_input
-        .values
-        .insert("Minor".to_owned(), format!("{}", version.minor));
-    template_input
-        .values
-        .insert("Patch".to_owned(), format!("{}", version.patch));
-    template_input.values.insert(
+    values.insert("MajorMinor".to_owned(), format!("{}.{}", version.major, version.minor));
+    values.insert("Major".to_owned(), format!("{}", version.major));
+    values.insert("Minor".to_owned(), format!("{}", version.minor));
+    values.insert("Patch".to_owned(), format!("{}", version.patch));
+    values.insert(
         "Prerelease".to_owned(),
         version.prerelease.as_ref().map_or("", |p| p).to_owned(),
     );
-    template_input.values.insert(
+    values.insert(
         "PrereleasePrefix".to_owned(),
         split_prerelease
             .and_then(|sp| Some(sp.0.to_owned()))
             .unwrap_or_else(|| "".to_owned()),
     );
-    template_input.values.insert(
+    values.insert(
         "PrereleaseNumber".to_owned(),
         split_prerelease
             .and_then(|sp| Some(format!("{}", sp.1)))
             .unwrap_or_else(|| "".to_owned()),
     );
-    template_input
-        .values
-        .insert("Build".to_owned(), version.build.as_ref().map_or("", |b| b).to_owned());
-    template_input.values.insert(
+    values.insert("Build".to_owned(), version.build.as_ref().map_or("", |b| b).to_owned());
+    values.insert(
         "BuildPrefix".to_owned(),
         split_build
             .and_then(|sp| Some(sp.0.to_owned()))
             .unwrap_or_else(|| "".to_owned()),
     );
-    template_input.values.insert(
+    values.insert(
         "BuildNumber".to_owned(),
         split_build
             .and_then(|sp| Some(format!("{}", sp.1)))
