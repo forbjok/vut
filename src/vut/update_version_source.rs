@@ -2,12 +2,13 @@ use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::rc::Rc;
+use std::str::FromStr;
 
 use globset;
 use walkdir;
 
 use crate::version::Version;
-use crate::version_source::{self, VersionSource};
+use crate::version_source::{self, VersionSource, VersionSourceType};
 
 use super::{config, VutConfig, VutError};
 
@@ -42,13 +43,29 @@ pub fn update_version_sources(
     Ok(())
 }
 
+enum VersionSourceTemplate {
+    Builtin(VersionSourceType),
+    CustomRegex(Rc<version_source::CustomRegexSourceTemplate>),
+}
+
+impl VersionSourceTemplate {
+    pub fn version_source_from_path(&self, path: &Path) -> Option<Box<dyn VersionSource>> {
+        match self {
+            VersionSourceTemplate::Builtin(vst) => vst.from_path(path),
+            VersionSourceTemplate::CustomRegex(template) => template
+                .instance_from_path(path)
+                .map(|vs| Box::new(vs) as Box<dyn VersionSource>),
+        }
+    }
+}
+
 pub struct CustomSourceTypes {
-    regex_source_types: HashMap<String, version_source::CustomRegexSourceTemplate>,
+    regex_source_types: HashMap<String, Rc<version_source::CustomRegexSourceTemplate>>,
 }
 
 impl CustomSourceTypes {
     pub fn from_config(config: &VutConfig) -> Result<Self, VutError> {
-        let mut regex_source_types: HashMap<String, version_source::CustomRegexSourceTemplate> = HashMap::new();
+        let mut regex_source_types: HashMap<String, Rc<version_source::CustomRegexSourceTemplate>> = HashMap::new();
 
         // Construct custom source type templates
         for (k, v) in config.version_source_types.iter() {
@@ -79,10 +96,14 @@ impl CustomSourceTypes {
             let source = version_source::CustomRegexSourceTemplate::new(&regex_custom_source_type.file_name, regex);
 
             // Add source to hashmap for later use
-            regex_source_types.insert(k.clone(), source);
+            regex_source_types.insert(k.clone(), Rc::new(source));
         }
 
         Ok(Self { regex_source_types })
+    }
+
+    pub fn get_template(&self, name: &str) -> Option<Rc<version_source::CustomRegexSourceTemplate>> {
+        self.regex_source_types.get(name).map(|t| t.clone())
     }
 
     pub fn version_sources_from_path(
@@ -107,14 +128,13 @@ impl CustomSourceTypes {
 struct VersionSourceSpec {
     include_globset: globset::GlobSet,
     exclude_globset: Option<globset::GlobSet>,
-    source_types: Option<HashSet<String>>,
-    custom_source_types: Rc<CustomSourceTypes>,
+    source_templates: Option<Vec<VersionSourceTemplate>>,
 }
 
 impl VersionSourceSpec {
     pub fn from_config_vs(
         def: &config::UpdateVersionSourcesDef,
-        custom_source_types: Rc<CustomSourceTypes>,
+        custom_source_types: &CustomSourceTypes,
     ) -> Result<Self, VutError> {
         let include_globset = def.globs.build_globset()?;
         let exclude_globset = match &def.exclude_globs {
@@ -122,13 +142,37 @@ impl VersionSourceSpec {
             None => None,
         };
 
-        let source_types = def.types.as_ref().map(|v| v.0.clone());
+        let source_templates = if let Some(vst) = def.types.as_ref() {
+            let type_names = &vst.0;
+
+            let mut source_templates: Vec<VersionSourceTemplate> = Vec::with_capacity(type_names.len());
+
+            for name in type_names.iter() {
+                // Check for built-in version source type first...
+                match VersionSourceType::from_str(&name) {
+                    Ok(vst) => {
+                        source_templates.push(VersionSourceTemplate::Builtin(vst));
+                        continue;
+                    }
+                    Err(_) => {}
+                };
+
+                // ... then check for custom source type.
+                if let Some(custom_source_template) = custom_source_types.get_template(&name) {
+                    source_templates.push(VersionSourceTemplate::CustomRegex(custom_source_template.clone()));
+                    continue;
+                }
+            }
+
+            Some(source_templates)
+        } else {
+            None
+        };
 
         Ok(Self {
             include_globset,
             exclude_globset,
-            source_types,
-            custom_source_types,
+            source_templates,
         })
     }
 
@@ -144,12 +188,12 @@ impl VersionSourceSpec {
             }
 
             // Check for built-in version sources at this path
-            let mut new_sources = if let Some(source_types) = &self.source_types {
+            let mut new_sources = if let Some(source_templates) = &self.source_templates {
                 // Find built-in sources
-                let mut new_sources = version_source::specific_version_sources_from_path(path, source_types);
-
-                // Find custom sources
-                new_sources.append(&mut self.custom_source_types.version_sources_from_path(path, source_types));
+                let new_sources = source_templates
+                    .iter()
+                    .filter_map(|st| st.version_source_from_path(&path))
+                    .collect();
 
                 new_sources
             } else {
@@ -170,12 +214,12 @@ pub struct VersionSourceFinder {
 
 impl VersionSourceFinder {
     pub fn from_config(config: &VutConfig) -> Result<Self, VutError> {
-        let custom_source_types = Rc::new(CustomSourceTypes::from_config(config)?);
+        let custom_source_types = CustomSourceTypes::from_config(config)?;
 
         let mut specs: Vec<VersionSourceSpec> = Vec::new();
 
         for cfg_vs in config.update_version_sources.iter() {
-            let spec = VersionSourceSpec::from_config_vs(cfg_vs, custom_source_types.clone())?;
+            let spec = VersionSourceSpec::from_config_vs(cfg_vs, &custom_source_types)?;
 
             specs.push(spec);
         }

@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 use std::path::Path;
 
+use strum_macros::EnumString;
+
 use crate::util;
 use crate::version::Version;
 use crate::vut::VutError;
@@ -21,6 +23,24 @@ pub trait VersionSource {
     fn exists(&self) -> bool;
     fn get_version(&self) -> Result<Version, VutError>;
     fn set_version(&mut self, version: &Version) -> Result<(), VutError>;
+}
+
+#[derive(Debug, Clone, EnumString, Eq, Hash, PartialEq)]
+#[strum(serialize_all = "lowercase")]
+pub enum VersionSourceType {
+    Vut,
+    Cargo,
+    Npm,
+}
+
+impl VersionSourceType {
+    pub fn from_path(&self, path: &Path) -> Option<Box<dyn VersionSource>> {
+        match self {
+            Self::Vut => VersionFileSource::from_path(path).map(|vs| Box::new(vs) as Box<dyn VersionSource>),
+            Self::Cargo => CargoSource::from_path(path).map(|vs| Box::new(vs) as Box<dyn VersionSource>),
+            Self::Npm => NpmSource::from_path(path).map(|vs| Box::new(vs) as Box<dyn VersionSource>),
+        }
+    }
 }
 
 pub fn first_version_source_from_path(path: &Path) -> Option<Box<dyn VersionSource>> {
@@ -44,7 +64,7 @@ pub fn locate_first_version_source_from(start_path: &Path) -> Option<Box<dyn Ver
 /// Macro to avoid manual boilerplate for each version source type
 macro_rules! generate_version_sources_from_path {
     (
-        $( $src_name:expr => $src_type:ty ),* $(,)*
+        $( $src_type:ty ),* $(,)*
     ) => {
         /// Return all version sources found at the specified path.
         pub fn version_sources_from_path(path: &Path) -> Vec<Box<dyn VersionSource>> {
@@ -58,27 +78,27 @@ macro_rules! generate_version_sources_from_path {
 
             sources
         }
-
-        /// Return all version sources of the types specified in source_types found at the specified path.
-        pub fn specific_version_sources_from_path(path: &Path, source_types: &HashSet<String>) -> Vec<Box<dyn VersionSource>>
-        {
-            let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
-
-            $(
-                if source_types.contains($src_name) {
-                    if let Some(source) = <$src_type>::from_path(path) {
-                        sources.push(Box::new(source));
-                    }
-                }
-            )*
-
-            sources
-        }
     };
 }
 
 generate_version_sources_from_path! {
-    "vut" => VersionFileSource,
-    "cargo" => CargoSource,
-    "npm" => NpmSource,
+    VersionFileSource,
+    CargoSource,
+    NpmSource,
+}
+
+/// Return all version sources of the types specified in source_types found at the specified path.
+pub fn specific_version_sources_from_path(
+    path: &Path,
+    source_types: &HashSet<VersionSourceType>,
+) -> Vec<Box<dyn VersionSource>> {
+    let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
+
+    for vs_type in source_types {
+        if let Some(source) = vs_type.from_path(path) {
+            sources.push(source);
+        }
+    }
+
+    sources
 }

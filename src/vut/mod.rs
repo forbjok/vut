@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use std::collections::HashSet;
 use std::env;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
 use strum_macros::EnumString;
 use walkdir;
@@ -9,7 +10,7 @@ use walkdir;
 use crate::template::TemplateInput;
 use crate::util;
 use crate::version::Version;
-use crate::version_source::{self, VersionSource};
+use crate::version_source::{self, VersionSource, VersionSourceType};
 
 pub mod config;
 mod error;
@@ -178,17 +179,20 @@ impl Vut {
 
                 let auth_vs_type = &auth_vs_config._type;
 
-                // Build HashSet containing only a single type name - the one specified in the configuration.
-                // We need this to pass to the version source function below.
-                let source_types: HashSet<String> = vec![auth_vs_type.clone()].into_iter().collect();
-
                 // Try to get built-in version source.
-                let mut version_sources =
-                    version_source::specific_version_sources_from_path(&auth_vs_path, &source_types);
+                let mut version_sources = Vec::new();
+
+                if let Some(vst) = VersionSourceType::from_str(auth_vs_type).ok() {
+                    vst.from_path(&auth_vs_path);
+                }
 
                 // If no version source was found, try custom version sources.
                 if version_sources.is_empty() {
                     let custom_source_types = CustomSourceTypes::from_config(&config)?;
+
+                    // Build HashSet containing only a single type name - the one specified in the configuration.
+                    // We need this to pass to the version source function below.
+                    let source_types: HashSet<String> = vec![auth_vs_type.clone()].into_iter().collect();
 
                     if let Some(source) = custom_source_types
                         .version_sources_from_path(&auth_vs_path, &source_types)
