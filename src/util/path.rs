@@ -2,7 +2,9 @@ use std::borrow::Cow;
 use std::env;
 use std::path::{Component, Path, PathBuf};
 
-pub fn normalize_path(path: &Path) -> PathBuf {
+pub fn normalize_path<P: AsRef<Path>>(path: P) -> PathBuf {
+    let path = path.as_ref();
+
     let path = if path.is_absolute() {
         Cow::Borrowed(path)
     } else {

@@ -7,6 +7,7 @@ use log::debug;
 use walkdir;
 
 use crate::template::{self, TemplateInput};
+use crate::util;
 use crate::version::{self, Version};
 
 use super::{config, VutConfig, VutError};
@@ -42,14 +43,38 @@ pub fn generate_template_output(
         let include_globset = &spec.include_globset;
         let def = spec.def;
 
-        let start_path: Cow<Path> = match &def.start_path {
-            Some(p) => Cow::Owned(root_path.join(p)),
-            None => Cow::Borrowed(root_path),
+        let start_path: Cow<Path> = if let Some(start_path) = &def.start_path {
+            if start_path.is_absolute() {
+                return Err(VutError::Config(Cow::Borrowed("Start path must be relative!")));
+            }
+
+            let start_path = util::normalize_path(root_path.join(start_path));
+            if !start_path.starts_with(root_path) {
+                return Err(VutError::Config(Cow::Borrowed(
+                    "Start path must be inside the root directory!",
+                )));
+            }
+
+            Cow::Owned(start_path)
+        } else {
+            Cow::Borrowed(root_path)
         };
 
-        let output_path = match &def.output_path {
-            Some(p) => Cow::Owned(root_path.join(p)),
-            None => start_path.clone(),
+        let output_path: Cow<Path> = if let Some(output_path) = &def.output_path {
+            if output_path.is_absolute() {
+                return Err(VutError::Config(Cow::Borrowed("Output path must be relative!")));
+            }
+
+            let output_path = util::normalize_path(root_path.join(output_path));
+            if !output_path.starts_with(root_path) {
+                return Err(VutError::Config(Cow::Borrowed(
+                    "Output path must be inside the root directory!",
+                )));
+            }
+
+            Cow::Owned(output_path)
+        } else {
+            start_path.clone()
         };
 
         let processor = def
