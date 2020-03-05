@@ -8,13 +8,14 @@ use crate::vut::VutError;
 use super::*;
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case")]
 #[serde(tag = "type")]
 pub enum CustomFileUpdaterTypeDef {
     Regex(RegexFileUpdaterTypeDef),
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct RegexReplacerDef {
     pub regexes: Regexes,
     pub template: Option<String>,
@@ -22,6 +23,7 @@ pub struct RegexReplacerDef {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct RegexFileUpdaterTypeDef {
     pub replacers: Vec<RegexReplacerDef>,
 }

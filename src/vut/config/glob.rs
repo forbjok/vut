@@ -6,6 +6,7 @@ use crate::vut::VutError;
 
 /// One or more glob patterns.
 #[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct Globs(pub Vec<String>);
 
 impl Globs {

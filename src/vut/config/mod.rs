@@ -32,15 +32,18 @@ pub const VUT_CONFIG_EXAMPLE: &str = include_str!("example_config.toml");
 
 /// One or more version source types
 #[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct VersionSourceTypes(pub HashSet<String>);
 
 #[derive(Debug, Deserialize)]
 #[serde(default)]
+#[serde(rename_all = "kebab-case")]
 pub struct General {
     pub ignore: Globs,
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct AuthoritativeVersionSource {
     pub path: PathBuf,
 
@@ -50,6 +53,7 @@ pub struct AuthoritativeVersionSource {
 
 #[derive(Debug, Deserialize)]
 #[serde(default)]
+#[serde(rename_all = "kebab-case")]
 pub struct VutConfig {
     pub general: General,
     pub authoritative_version_source: Option<AuthoritativeVersionSource>,

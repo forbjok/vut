@@ -6,6 +6,7 @@ use crate::vut::VutError;
 
 /// One or more regexes
 #[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct Regexes(pub Vec<String>);
 
 impl Regexes {

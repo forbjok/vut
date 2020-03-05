@@ -1,7 +1,7 @@
 [general]
 ignore = ["**/.git"]
 
-[[update_version_sources]]
+[[update-version-sources]]
 globs = ["**"]
 
 [[templates]]
