@@ -4,5 +4,5 @@ ignore = ["**/.git"]
 [[update_version_sources]]
 globs = ["**"]
 
-[[template]]
+[[templates]]
 globs = ["**/*.vutemplate"]

@@ -14,6 +14,7 @@ mod custom_source_type;
 mod glob;
 mod regex;
 mod template_processor;
+mod templates;
 mod update_files;
 mod update_version_sources;
 
@@ -22,6 +23,7 @@ pub use self::custom_source_type::*;
 pub use self::glob::*;
 pub use self::regex::*;
 pub use self::template_processor::*;
+pub use self::templates::*;
 pub use self::update_files::*;
 pub use self::update_version_sources::*;
 
@@ -31,15 +33,6 @@ pub const VUT_CONFIG_EXAMPLE: &str = include_str!("example_config.toml");
 /// One or more version source types
 #[derive(Clone, Debug, Deserialize)]
 pub struct VersionSourceTypes(pub HashSet<String>);
-
-#[derive(Debug, Deserialize)]
-pub struct TemplateDef {
-    pub globs: Globs,
-    pub start_path: Option<PathBuf>,
-    pub output_path: Option<PathBuf>,
-    pub processor: Option<TemplateProcessorType>,
-    pub encoding: Option<String>,
-}
 
 #[derive(Debug, Deserialize)]
 #[serde(default)]
@@ -64,7 +57,7 @@ pub struct VutConfig {
     pub version_source_types: HashMap<String, CustomSourceTypeDef>,
     pub update_files: Vec<UpdateFilesDef>,
     pub update_version_sources: Vec<UpdateVersionSourcesDef>,
-    pub template: Vec<TemplateDef>,
+    pub templates: Vec<TemplatesDef>,
 }
 
 impl VutConfig {
@@ -102,7 +95,7 @@ impl Default for VutConfig {
             version_source_types: HashMap::new(),
             update_files: Vec::new(),
             update_version_sources: Vec::new(),
-            template: vec![TemplateDef {
+            templates: vec![TemplatesDef {
                 globs: Globs(vec!["**/*.vutemplate".to_owned()]),
                 start_path: None,
                 output_path: None,

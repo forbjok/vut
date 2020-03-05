@@ -58,7 +58,7 @@ globs = ["**"]
 
 # Define template pattern.
 # There can be more than one of these.
-[[template]]
+[[templates]]
 globs = ["**/*.vutemplate"]
 
 # Directory to start scanning from.

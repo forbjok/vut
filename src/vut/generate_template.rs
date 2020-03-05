@@ -14,11 +14,11 @@ use super::{config, VutConfig, VutError};
 #[derive(Debug)]
 struct TemplateSpec<'a> {
     include_globset: globset::GlobSet,
-    def: &'a config::TemplateDef,
+    def: &'a config::TemplatesDef,
 }
 
 impl<'a> TemplateSpec<'a> {
-    pub fn from_config_template(def: &'a config::TemplateDef) -> Result<Self, VutError> {
+    pub fn from_config_template(def: &'a config::TemplatesDef) -> Result<Self, VutError> {
         let include_globset = def.globs.build_globset()?;
 
         Ok(Self { include_globset, def })
@@ -166,7 +166,7 @@ pub fn generate_template_input(version: &Version) -> Result<TemplateInput, VutEr
 fn build_template_specs(config: &VutConfig) -> Result<Vec<TemplateSpec>, VutError> {
     let mut specs: Vec<TemplateSpec> = Vec::new();
 
-    for cfg_t in config.template.iter() {
+    for cfg_t in config.templates.iter() {
         let spec = TemplateSpec::from_config_template(cfg_t)?;
 
         specs.push(spec);
