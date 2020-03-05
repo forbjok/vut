@@ -20,7 +20,7 @@ ignore = [
 #type = "regex"
 #replacers = [
 #  { regexes = ["(^Version = )(.*)(;)", "(^FullVersion = )(.*)(;)"] },
-#  { regexes = ["(^ShortVersion = )(.*)(;)"], template = '{{MajorMinor}}' },
+#  { regexes = "(^ShortVersion = )(.*)(;)", template = '{{MajorMinor}}' },
 #]
 
 # Define a custom source type.
@@ -40,14 +40,14 @@ ignore = [
 # Update files using a file updater. (see [file-updaters.myfile] above)
 # There can be more than one of these.
 #[[update-files]]
-#globs = ["**/*.myfile"]
+#globs = "**/*.myfile"
 #updater = "myfile"
 #encoding = "utf-8"
 
 # Update version sources.
 # There can be more than one of these.
 [[update-version-sources]]
-globs = ["**"]
+globs = "**"
 
 # Uncomment if you want to exclude one or more patterns that would otherwise be included.
 #exclude-globs = "some_dir/**"
@@ -59,7 +59,7 @@ globs = ["**"]
 # Define template pattern.
 # There can be more than one of these.
 [[templates]]
-globs = ["**/*.vutemplate"]
+globs = "**/*.vutemplate"
 
 # Directory to start scanning from.
 # If not specified, the root directory will be used.

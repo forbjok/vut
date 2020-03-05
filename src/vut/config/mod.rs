@@ -85,7 +85,7 @@ impl VutConfig {
 impl Default for General {
     fn default() -> Self {
         Self {
-            ignore: Globs(vec!["**/.git".to_owned()]),
+            ignore: Globs::Single("**/.git".to_owned()),
         }
     }
 }
@@ -100,7 +100,7 @@ impl Default for VutConfig {
             update_files: Vec::new(),
             update_version_sources: Vec::new(),
             templates: vec![TemplatesDef {
-                globs: Globs(vec!["**/*.vutemplate".to_owned()]),
+                globs: Globs::Single("**/*.vutemplate".to_owned()),
                 start_path: None,
                 output_path: None,
                 processor: None,

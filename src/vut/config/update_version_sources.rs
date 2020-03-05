@@ -9,13 +9,3 @@ pub struct UpdateVersionSourcesDef {
     pub exclude_globs: Option<Globs>,
     pub types: Option<VersionSourceTypes>,
 }
-
-impl Default for UpdateVersionSourcesDef {
-    fn default() -> Self {
-        Self {
-            globs: Globs(Vec::new()),
-            exclude_globs: None,
-            types: None,
-        }
-    }
-}

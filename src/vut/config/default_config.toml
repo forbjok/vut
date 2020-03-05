@@ -1,8 +1,8 @@
 [general]
-ignore = ["**/.git"]
+ignore = "**/.git"
 
 [[update-version-sources]]
-globs = ["**"]
+globs = "**"
 
 [[templates]]
-globs = ["**/*.vutemplate"]
+globs = "**/*.vutemplate"

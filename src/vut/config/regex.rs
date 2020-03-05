@@ -7,9 +7,20 @@ use crate::vut::VutError;
 /// One or more regexes
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct Regexes(pub Vec<String>);
+#[serde(untagged)]
+pub enum Regexes {
+    Single(String),
+    Multiple(Vec<String>),
+}
 
 impl Regexes {
+    pub fn to_vec(&self) -> Vec<String> {
+        match self {
+            Self::Single(value) => vec![value.clone()],
+            Self::Multiple(values) => values.clone(),
+        }
+    }
+
     pub fn build_regexes(&self) -> Result<Vec<regex::Regex>, VutError> {
         let mut regexes: Vec<regex::Regex> = Vec::new();
 
@@ -22,7 +33,9 @@ impl Regexes {
                 .map_err(|err| VutError::Other(Cow::Owned(format!("Invalid regex '{}': {}", pattern, err.to_string()))))
         }
 
-        for regex_str in self.0.iter() {
+        let regex_strings = self.to_vec();
+
+        for regex_str in regex_strings.iter() {
             regexes.push(build_regex(regex_str)?);
         }
 
