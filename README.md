@@ -1,4 +1,4 @@
-# Vut [![Build Status](https://travis-ci.org/forbjok/vut.svg?branch=master)](https://travis-ci.org/forbjok/vut)
+# Vut [![Build Status](https://travis-ci.org/forbjok/vut.svg?branch=master)](https://travis-ci.org/forbjok/vut) [![Build status](https://ci.appveyor.com/api/projects/status/s0q9a75v34r8kjb9/branch/master?svg=true)](https://ci.appveyor.com/project/forbjok/vut/branch/master)
 
 ## Introduction
 Vut is a versioning utility.
