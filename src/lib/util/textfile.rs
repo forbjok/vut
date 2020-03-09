@@ -36,7 +36,7 @@ pub fn read_text_file(file_path: &Path, encoding: Option<&str>) -> Result<String
     let encoding = get_encoding(encoding)?;
 
     // Open template file.
-    let mut file = util::open_file(file_path).map_err(|err| TextFileError::Open(err))?;
+    let mut file = util::open_file(file_path).map_err(TextFileError::Open)?;
 
     // If an encoding was specified...
     Ok(if let Some(encoding) = encoding {
@@ -44,19 +44,18 @@ pub fn read_text_file(file_path: &Path, encoding: Option<&str>) -> Result<String
         let mut buffer: Vec<u8> = Vec::new();
 
         // Read raw template data into buffer.
-        file.read_to_end(&mut buffer).map_err(|err| TextFileError::Read(err))?;
+        file.read_to_end(&mut buffer).map_err(TextFileError::Read)?;
 
         // Decode the raw data to a string using the specified encoding.
         encoding
             .decode(&buffer, DecoderTrap::Strict)
-            .map_err(|err| TextFileError::Decode(err))?
+            .map_err(TextFileError::Decode)?
     } else {
         // Create an empty string.
         let mut string: String = String::new();
 
         // Read template data into the string, assuming it is valid UTF-8.
-        file.read_to_string(&mut string)
-            .map_err(|err| TextFileError::Read(err))?;
+        file.read_to_string(&mut string).map_err(TextFileError::Read)?;
 
         string
     })
@@ -68,7 +67,7 @@ pub fn write_text_file(
     encoding: Option<&str>,
 ) -> Result<usize, TextFileError> {
     // Create file
-    let mut file = util::create_file(&file_path).map_err(|err| TextFileError::Open(err))?;
+    let mut file = util::create_file(&file_path).map_err(TextFileError::Open)?;
 
     // Write text to it
     write_text(&mut file, text, encoding)
@@ -92,14 +91,12 @@ pub fn write_text(
             .map_err(TextFileError::Encode)?;
 
         // Write bytes
-        let bytes_written = writable.write(&enc_bytes).map_err(|err| TextFileError::Write(err))?;
+        let bytes_written = writable.write(&enc_bytes).map_err(TextFileError::Write)?;
 
         Ok(bytes_written)
     } else {
         // If no encoding was specified, write the text directly as bytes.
-        let bytes_written = writable
-            .write(text.as_bytes())
-            .map_err(|err| TextFileError::Write(err))?;
+        let bytes_written = writable.write(text.as_bytes()).map_err(TextFileError::Write)?;
 
         Ok(bytes_written)
     }

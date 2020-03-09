@@ -9,14 +9,14 @@ use crate::util;
 
 pub mod processor;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct TemplateInput {
     pub values: HashMap<String, String>,
 }
 
 impl TemplateInput {
     pub fn new() -> Self {
-        Self { values: HashMap::new() }
+        Default::default()
     }
 
     pub fn merge_from(&mut self, other: Self) {

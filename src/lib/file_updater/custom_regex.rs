@@ -48,11 +48,11 @@ impl FileUpdater for CustomRegexFileUpdater {
                 let template_processor = replacer
                     .template_processor
                     .as_ref()
-                    .map(|pt| pt.clone())
+                    .cloned()
                     .unwrap_or_else(|| template::ProcessorType::Vut);
 
                 template::render_template_with_processor_type(&template_processor, template, template_input)
-                    .map_err(|err| VutError::TemplateGenerate(err))?
+                    .map_err(VutError::TemplateGenerate)?
             } else {
                 Cow::Borrowed(version_str)
             };

@@ -71,7 +71,7 @@ impl Vut {
         force: bool,
     ) -> Result<Self, VutError> {
         let path = path.as_ref();
-        let callbacks = callbacks.unwrap_or_else(|| VutCallbacks::default());
+        let callbacks = callbacks.unwrap_or_else(VutCallbacks::default);
 
         // Check if there is an existing Vut configuration for this path
         let vut: Option<Vut> = match Self::from_path(path, None) {
@@ -144,7 +144,7 @@ impl Vut {
 
     pub fn from_path(path: impl AsRef<Path>, callbacks: Option<VutCallbacks>) -> Result<Self, VutError> {
         let path = path.as_ref();
-        let callbacks = callbacks.unwrap_or_else(|| VutCallbacks::default());
+        let callbacks = callbacks.unwrap_or_else(VutCallbacks::default);
 
         let config_file_path = util::locate_config_file(path, VUT_CONFIG_FILENAME);
 
@@ -183,7 +183,7 @@ impl Vut {
                 // Try to get built-in version source.
                 let mut version_sources = Vec::new();
 
-                if let Some(vst) = VersionSourceType::from_str(auth_vs_type).ok() {
+                if let Ok(vst) = VersionSourceType::from_str(auth_vs_type) {
                     vst.from_path(&auth_vs_path);
                 }
 

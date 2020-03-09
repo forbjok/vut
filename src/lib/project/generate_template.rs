@@ -115,7 +115,7 @@ pub fn generate_template_output(
                 &template_input,
                 encoding,
             )
-            .map_err(|err| VutError::TemplateGenerate(err))?;
+            .map_err(VutError::TemplateGenerate)?;
 
             processed_files.push(path.to_path_buf());
             generated_files.push(output_file_path);
@@ -132,11 +132,11 @@ pub fn generate_template_input(version: &Version) -> Result<TemplateInput, VutEr
     let split_prerelease = version
         .prerelease
         .as_ref()
-        .map_or(None, |p| version::split_numbered_prerelease(p));
+        .and_then(|p| version::split_numbered_prerelease(p));
     let split_build = version
         .build
         .as_ref()
-        .map_or(None, |b| version::split_numbered_prerelease(b));
+        .and_then(|b| version::split_numbered_prerelease(b));
 
     values.insert("FullVersion".to_owned(), version.to_string());
     values.insert(
@@ -162,26 +162,24 @@ pub fn generate_template_input(version: &Version) -> Result<TemplateInput, VutEr
     values.insert(
         "PrereleasePrefix".to_owned(),
         split_prerelease
-            .and_then(|sp| Some(sp.0.to_owned()))
+            .map(|sp| sp.0.to_owned())
             .unwrap_or_else(|| "".to_owned()),
     );
     values.insert(
         "PrereleaseNumber".to_owned(),
         split_prerelease
-            .and_then(|sp| Some(format!("{}", sp.1)))
+            .map(|sp| format!("{}", sp.1))
             .unwrap_or_else(|| "".to_owned()),
     );
     values.insert("Build".to_owned(), version.build.as_ref().map_or("", |b| b).to_owned());
     values.insert(
         "BuildPrefix".to_owned(),
-        split_build
-            .and_then(|sp| Some(sp.0.to_owned()))
-            .unwrap_or_else(|| "".to_owned()),
+        split_build.map(|sp| sp.0.to_owned()).unwrap_or_else(|| "".to_owned()),
     );
     values.insert(
         "BuildNumber".to_owned(),
         split_build
-            .and_then(|sp| Some(format!("{}", sp.1)))
+            .map(|sp| format!("{}", sp.1))
             .unwrap_or_else(|| "".to_owned()),
     );
 

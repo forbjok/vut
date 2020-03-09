@@ -46,21 +46,19 @@ impl CustomRegexSourceTemplate {
 
 impl<'a> CustomRegexSource {
     fn read_file(&self) -> Result<String, VutError> {
-        let mut file = util::open_file(&self.file_path).map_err(|err| VutError::VersionFileOpen(err))?;
+        let mut file = util::open_file(&self.file_path).map_err(VutError::VersionFileOpen)?;
 
         let mut text = String::new();
 
-        file.read_to_string(&mut text)
-            .map_err(|err| VutError::VersionFileRead(err))?;
+        file.read_to_string(&mut text).map_err(VutError::VersionFileRead)?;
 
         Ok(text)
     }
 
     fn write_file(&mut self, text: &str) -> Result<(), VutError> {
-        let mut file = util::create_file(&self.file_path).map_err(|err| VutError::VersionFileOpen(err))?;
+        let mut file = util::create_file(&self.file_path).map_err(VutError::VersionFileOpen)?;
 
-        file.write(text.as_bytes())
-            .map_err(|err| VutError::VersionFileWrite(err))?;
+        file.write(text.as_bytes()).map_err(VutError::VersionFileWrite)?;
 
         Ok(())
     }
@@ -81,13 +79,11 @@ impl<'a> VersionSource for CustomRegexSource {
             let text = self.read_file()?;
 
             // Get version string using regex
-            let version_str = if let Some(caps) = self.regex.captures(&text) {
+            if let Some(caps) = self.regex.captures(&text) {
                 caps[2].to_owned()
             } else {
                 return Err(VutError::Other(Cow::Borrowed("Error parsing file using custom regex!")));
-            };
-
-            version_str
+            }
         };
 
         // Parse version string

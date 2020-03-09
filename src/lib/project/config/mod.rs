@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
 use serde_derive::Deserialize;
 use toml;
@@ -65,20 +66,23 @@ pub struct VutConfig {
 }
 
 impl VutConfig {
-    pub fn from_str(s: &str) -> Result<Self, VutError> {
+    pub fn from_file(path: &Path) -> Result<Self, VutError> {
+        let mut file = util::open_file(path).map_err(VutError::OpenConfig)?;
+
+        let mut toml_str = String::new();
+        file.read_to_string(&mut toml_str).map_err(VutError::ReadConfig)?;
+
+        Self::from_str(&toml_str)
+    }
+}
+
+impl FromStr for VutConfig {
+    type Err = VutError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         let config: VutConfig = toml::from_str(s).map_err(|err| VutError::ParseConfig(Cow::Owned(err.to_string())))?;
 
         Ok(config)
-    }
-
-    pub fn from_file(path: &Path) -> Result<Self, VutError> {
-        let mut file = util::open_file(path).map_err(|err| VutError::OpenConfig(err))?;
-
-        let mut toml_str = String::new();
-        file.read_to_string(&mut toml_str)
-            .map_err(|err| VutError::ReadConfig(err))?;
-
-        Self::from_str(&toml_str)
     }
 }
 
@@ -112,9 +116,9 @@ impl Default for VutConfig {
 
 pub fn create_config_file(path: &Path, text: &str) -> Result<VutConfig, VutError> {
     util::create_file(&path)
-        .map_err(|err| VutError::OpenConfig(err))?
+        .map_err(VutError::OpenConfig)?
         .write(text.as_bytes())
-        .map_err(|err| VutError::WriteConfig(err))?;
+        .map_err(VutError::WriteConfig)?;
 
     VutConfig::from_str(text)
 }

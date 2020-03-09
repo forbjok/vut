@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-const VERSION_FILENAME: &'static str = "VERSION";
+const VERSION_FILENAME: &str = "VERSION";
 
 use crate::project::VutError;
 use crate::util;
@@ -49,12 +49,12 @@ impl VersionSource for VersionFileSource {
 
     fn get_version(&self) -> Result<Version, VutError> {
         let version_str = {
-            let mut file = util::open_file(&self.version_file_path).map_err(|err| VutError::VersionFileOpen(err))?;
+            let mut file = util::open_file(&self.version_file_path).map_err(VutError::VersionFileOpen)?;
 
             let mut version_str = String::new();
 
             file.read_to_string(&mut version_str)
-                .map_err(|err| VutError::VersionFileRead(err))?;
+                .map_err(VutError::VersionFileRead)?;
 
             version_str
         };
@@ -65,10 +65,10 @@ impl VersionSource for VersionFileSource {
     }
 
     fn set_version(&mut self, version: &Version) -> Result<(), VutError> {
-        let mut file = util::create_file(&self.version_file_path).map_err(|err| VutError::VersionFileOpen(err))?;
+        let mut file = util::create_file(&self.version_file_path).map_err(VutError::VersionFileOpen)?;
 
         file.write(version.to_string().as_bytes())
-            .map_err(|err| VutError::VersionFileWrite(err))?;
+            .map_err(VutError::VersionFileWrite)?;
 
         Ok(())
     }

@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-const CARGO_FILE_NAME: &'static str = "Cargo.toml";
+const CARGO_FILE_NAME: &str = "Cargo.toml";
 
 use crate::project::VutError;
 use crate::util;
@@ -31,21 +31,19 @@ impl CargoSource {
     }
 
     fn read_cargo_file(&self) -> Result<String, VutError> {
-        let mut file = util::open_file(&self.cargo_file_path).map_err(|err| VutError::VersionFileOpen(err))?;
+        let mut file = util::open_file(&self.cargo_file_path).map_err(VutError::VersionFileOpen)?;
 
         let mut toml_str = String::new();
 
-        file.read_to_string(&mut toml_str)
-            .map_err(|err| VutError::VersionFileRead(err))?;
+        file.read_to_string(&mut toml_str).map_err(VutError::VersionFileRead)?;
 
         Ok(toml_str)
     }
 
     fn write_cargo_file(&mut self, toml_str: &str) -> Result<(), VutError> {
-        let mut file = util::create_file(&self.cargo_file_path).map_err(|err| VutError::VersionFileOpen(err))?;
+        let mut file = util::create_file(&self.cargo_file_path).map_err(VutError::VersionFileOpen)?;
 
-        file.write(toml_str.as_bytes())
-            .map_err(|err| VutError::VersionFileWrite(err))?;
+        file.write(toml_str.as_bytes()).map_err(VutError::VersionFileWrite)?;
 
         Ok(())
     }

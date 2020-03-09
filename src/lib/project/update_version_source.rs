@@ -71,9 +71,7 @@ impl CustomSourceTypes {
         for (k, v) in config.version_source_types.iter() {
             // Extract regex custom source type information from the enum.
             // Currently regex is the only type implemented.
-            let regex_custom_source_type = match v {
-                config::CustomSourceTypeDef::Regex(v) => v,
-            };
+            let config::CustomSourceTypeDef::Regex(regex_custom_source_type) = v;
 
             // Try to parse regex string
             let regex = {
@@ -103,7 +101,7 @@ impl CustomSourceTypes {
     }
 
     pub fn get_template(&self, name: &str) -> Option<Rc<version_source::CustomRegexSourceTemplate>> {
-        self.regex_source_types.get(name).map(|t| t.clone())
+        self.regex_source_types.get(name).cloned()
     }
 
     pub fn version_sources_from_path(
@@ -149,13 +147,10 @@ impl VersionSourceSpec {
 
             for name in type_names.iter() {
                 // Check for built-in version source type first...
-                match VersionSourceType::from_str(&name) {
-                    Ok(vst) => {
-                        source_templates.push(VersionSourceTemplate::Builtin(vst));
-                        continue;
-                    }
-                    Err(_) => {}
-                };
+                if let Ok(vst) = VersionSourceType::from_str(&name) {
+                    source_templates.push(VersionSourceTemplate::Builtin(vst));
+                    continue;
+                }
 
                 // ... then check for custom source type.
                 if let Some(custom_source_template) = custom_source_types.get_template(&name) {
@@ -190,12 +185,10 @@ impl VersionSourceSpec {
             // Check for built-in version sources at this path
             let mut new_sources = if let Some(source_templates) = &self.source_templates {
                 // Find built-in sources
-                let new_sources = source_templates
+                source_templates
                     .iter()
                     .filter_map(|st| st.version_source_from_path(&path))
-                    .collect();
-
-                new_sources
+                    .collect()
             } else {
                 version_source::version_sources_from_path(&path)
             };
@@ -228,12 +221,9 @@ impl VersionSourceFinder {
     }
 
     pub fn find_version_sources(&self, path: &Path, rel_path: &Path) -> Vec<Box<dyn VersionSource>> {
-        let version_sources = self
-            .specs
+        self.specs
             .iter()
             .flat_map(|spec| spec.find_version_sources(path, rel_path).into_iter())
-            .collect();
-
-        version_sources
+            .collect()
     }
 }

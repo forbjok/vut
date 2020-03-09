@@ -63,16 +63,12 @@ pub fn update_files(
             .iter()
             .map(|entry| entry.path())
             // Only include template files
-            .filter_map(|path| {
+            .filter(|path| {
                 // Make path relative, as we only want to match on the path
                 // relative to the start path.
                 let rel_path = path.strip_prefix(root_path).unwrap();
 
-                if include_globset.is_match(rel_path) {
-                    Some(path)
-                } else {
-                    None
-                }
+                include_globset.is_match(rel_path)
             });
 
         // Iterate through the files, updating each one.

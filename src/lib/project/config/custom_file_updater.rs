@@ -34,7 +34,7 @@ impl TryFrom<&RegexReplacerDef> for RegexReplacer {
     fn try_from(def: &RegexReplacerDef) -> Result<Self, Self::Error> {
         Ok(Self {
             regexes: def.regexes.build_regexes()?,
-            template: def.template.as_ref().map(|s| s.clone()),
+            template: def.template.as_ref().cloned(),
             template_processor: def.template_processor.as_ref().map(|pt| pt.to_processor_type()),
         })
     }

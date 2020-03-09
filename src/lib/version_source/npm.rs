@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-const PACKAGE_FILE_NAME: &'static str = "package.json";
+const PACKAGE_FILE_NAME: &str = "package.json";
 
 use crate::project::VutError;
 use crate::util;
@@ -31,21 +31,19 @@ impl NpmSource {
     }
 
     fn read_package_file(&self) -> Result<String, VutError> {
-        let mut file = util::open_file(&self.package_file_path).map_err(|err| VutError::VersionFileOpen(err))?;
+        let mut file = util::open_file(&self.package_file_path).map_err(VutError::VersionFileOpen)?;
 
         let mut json_str = String::new();
 
-        file.read_to_string(&mut json_str)
-            .map_err(|err| VutError::VersionFileRead(err))?;
+        file.read_to_string(&mut json_str).map_err(VutError::VersionFileRead)?;
 
         Ok(json_str)
     }
 
     fn write_package_file(&mut self, json_str: &str) -> Result<(), VutError> {
-        let mut file = util::create_file(&self.package_file_path).map_err(|err| VutError::VersionFileOpen(err))?;
+        let mut file = util::create_file(&self.package_file_path).map_err(VutError::VersionFileOpen)?;
 
-        file.write(json_str.as_bytes())
-            .map_err(|err| VutError::VersionFileWrite(err))?;
+        file.write(json_str.as_bytes()).map_err(VutError::VersionFileWrite)?;
 
         Ok(())
     }

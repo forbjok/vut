@@ -114,8 +114,8 @@ impl FromStr for Version {
             major: (&cap[1]).parse().unwrap(),
             minor: (&cap[2]).parse().unwrap(),
             patch: (&cap[3]).parse().unwrap(),
-            prerelease: cap.get(4).map_or(None, |m| Some(m.as_str().to_owned())),
-            build: cap.get(5).map_or(None, |m| Some(m.as_str().to_owned())),
+            prerelease: cap.get(4).map(|m| m.as_str().to_owned()),
+            build: cap.get(5).map(|m| m.as_str().to_owned()),
         })
     }
 }
