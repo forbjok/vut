@@ -1,0 +1,12 @@
+[general]
+ignore = "**/.git"
+
+[file-updaters.nuspec]
+type = "regex"
+replacers = [
+  { regexes = "(<version>)(.*)(</version>)" },
+]
+
+[[update-files]]
+globs = "**/*.nuspec"
+updater = "nuspec"
