@@ -24,7 +24,7 @@ use generate_template::*;
 use update_file::*;
 use update_version_source::*;
 
-pub const VUT_CONFIG_FILENAME: &str = ".vutconfig.toml";
+pub const VUT_CONFIG_FILENAME: &str = "vut.toml";
 
 #[derive(Debug, EnumString)]
 #[strum(serialize_all = "lowercase")]
