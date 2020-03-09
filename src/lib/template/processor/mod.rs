@@ -1,3 +1,3 @@
 mod vut;
 
-pub use vut::VutProcessor;
+pub use self::vut::VutProcessor;
