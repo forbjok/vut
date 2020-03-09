@@ -3,9 +3,9 @@ use std::path::Path;
 
 use strum_macros::EnumString;
 
+use crate::project::VutError;
 use crate::util;
 use crate::version::Version;
-use crate::vut::VutError;
 
 mod cargo;
 mod custom_regex;

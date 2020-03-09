@@ -1,7 +1,7 @@
 use std::path::Path;
 
+use crate::project::VutError;
 use crate::template;
-use crate::vut::VutError;
 
 mod custom_regex;
 

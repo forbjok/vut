@@ -1,17 +1,9 @@
-#![allow(dead_code)]
-
 use log::{debug, LevelFilter};
 use structopt::StructOpt;
 
 mod command;
-mod file_updater;
-mod template;
-mod util;
-mod version;
-mod version_source;
-mod vut;
 
-use vut::BumpVersion;
+use vut::project::BumpVersion;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Vut", version = env!("CARGO_PKG_VERSION"), author = env!("CARGO_PKG_AUTHORS"))]

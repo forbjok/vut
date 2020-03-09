@@ -1,4 +1,4 @@
-use crate::vut::Vut;
+use vut::project::Vut;
 
 use super::{stderr_vut_callbacks, CommandError};
 

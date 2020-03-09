@@ -1,7 +1,7 @@
 use std::env;
 
-use crate::version::Version;
-use crate::vut::{config, Vut};
+use vut::project::{config, Vut};
+use vut::Version;
 
 use super::{stderr_vut_callbacks, CommandError, CommandErrorKind};
 

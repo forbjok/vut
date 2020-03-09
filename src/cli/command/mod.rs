@@ -1,8 +1,8 @@
 use std::borrow::Cow;
 use std::io;
 
-use crate::util;
-use crate::vut::{VutCallbacks, VutError};
+use vut::project::{VutCallbacks, VutError};
+use vut::util;
 
 mod bump;
 mod generate;

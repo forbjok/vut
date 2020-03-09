@@ -3,7 +3,7 @@ use std::convert::{TryFrom, TryInto};
 use serde_derive::Deserialize;
 
 use crate::file_updater::*;
-use crate::vut::VutError;
+use crate::project::VutError;
 
 use super::*;
 

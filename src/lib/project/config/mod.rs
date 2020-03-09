@@ -6,8 +6,8 @@ use std::path::{Path, PathBuf};
 use serde_derive::Deserialize;
 use toml;
 
+use crate::project::VutError;
 use crate::util;
-use crate::vut::VutError;
 
 mod custom_file_updater;
 mod custom_source_type;

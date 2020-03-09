@@ -5,10 +5,10 @@ use std::rc::Rc;
 
 use regex::Regex;
 
+use crate::project::VutError;
 use crate::util;
 use crate::version::Version;
 use crate::version_source::VersionSource;
-use crate::vut::VutError;
 
 pub struct CustomRegexSourceTemplate {
     file_name: String,

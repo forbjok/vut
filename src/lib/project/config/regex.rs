@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use serde_derive::Deserialize;
 
-use crate::vut::VutError;
+use crate::project::VutError;
 
 /// One or more regexes
 #[derive(Clone, Debug, Deserialize)]

@@ -4,10 +4,10 @@ use std::path::{Path, PathBuf};
 
 const CARGO_FILE_NAME: &'static str = "Cargo.toml";
 
+use crate::project::VutError;
 use crate::util;
 use crate::version::Version;
 use crate::version_source::VersionSource;
-use crate::vut::VutError;
 
 use toml_edit;
 

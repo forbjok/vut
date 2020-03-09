@@ -4,10 +4,10 @@ use std::path::{Path, PathBuf};
 
 const PACKAGE_FILE_NAME: &'static str = "package.json";
 
+use crate::project::VutError;
 use crate::util;
 use crate::version::Version;
 use crate::version_source::VersionSource;
-use crate::vut::VutError;
 
 use serde_json;
 

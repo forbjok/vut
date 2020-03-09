@@ -4,10 +4,10 @@ use std::path::{Path, PathBuf};
 
 const VERSION_FILENAME: &'static str = "VERSION";
 
+use crate::project::VutError;
 use crate::util;
 use crate::version::Version;
 use crate::version_source::VersionSource;
-use crate::vut::VutError;
 
 pub struct VersionFileSource {
     pub path: PathBuf,

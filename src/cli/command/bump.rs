@@ -1,5 +1,5 @@
-use crate::version::Version;
-use crate::vut::{BumpVersion, Vut};
+use vut::project::{BumpVersion, Vut};
+use vut::Version;
 
 use super::{stderr_vut_callbacks, CommandError};
 

@@ -3,9 +3,9 @@ use std::path::Path;
 
 use regex::Regex;
 
+use crate::project::VutError;
 use crate::template;
 use crate::util;
-use crate::vut::VutError;
 
 use super::FileUpdater;
 
