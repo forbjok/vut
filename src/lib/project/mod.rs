@@ -58,6 +58,7 @@ pub struct Vut {
     root_path: PathBuf,
     config: VutConfig,
     authoritative_version_source: Box<dyn VersionSource>,
+    #[allow(dead_code)]
     callbacks: VutCallbacks,
 }
 

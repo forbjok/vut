@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::path::Path;
 
 use strum_macros::EnumString;
@@ -85,20 +84,4 @@ generate_version_sources_from_path! {
     VersionFileSource,
     CargoSource,
     NpmSource,
-}
-
-/// Return all version sources of the types specified in source_types found at the specified path.
-pub fn specific_version_sources_from_path(
-    path: &Path,
-    source_types: &HashSet<VersionSourceType>,
-) -> Vec<Box<dyn VersionSource>> {
-    let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
-
-    for vs_type in source_types {
-        if let Some(source) = vs_type.from_path(path) {
-            sources.push(source);
-        }
-    }
-
-    sources
 }
