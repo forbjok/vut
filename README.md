@@ -1,13 +1,21 @@
 # Vut [![Build Status](https://travis-ci.org/forbjok/vut.svg?branch=master)](https://travis-ci.org/forbjok/vut) [![Build status](https://ci.appveyor.com/api/projects/status/s0q9a75v34r8kjb9/branch/master?svg=true)](https://ci.appveyor.com/project/forbjok/vut/branch/master)
 
 ## Introduction
-Vut is a versioning utility.
-It lets you easily keep track of a project's version and do things like bump its individual parts, including prerelease or build strings that end in numbers.
-Its main strength, however is in the way it propagates version numbers to where they are needed - using templates.
 
-Ideally, it would be sufficient to store the one true version number in only a single place, and every other place that requires it would just read it from that one place.
-Unfortunately, realistically that's just not always possible.
-Rather than rely on inflexible and specific code for generating files containing the version in specific formats or languages, or having to write equally specific scripts, Vut allows propagation of versions by using templates.
+Vut is a utility for propagating version numbers.
+
+**Scenario:** You have a repository containing a number of projects and files that are part of a single unit of distribution. Maybe there's a C project in which you want to access the version from code to display it to the user. Maybe there's a NuGet or Chocolatey .nuspec file. Maybe there's a web front-end that uses NPM.
+
+You want everything in this repository to have the same version number. But... in order to do this, you need to update it in multiple files every time you change it. And then one time you forget, and suddenly the version is wrong in some obscure place.
+
+This is a pain. And it's where Vut comes in.
+
+By setting the version using Vut, the process of propagating it to every other file in which it is needed can be completely automated.
+
+It has a few different mechanisms for accomplishing this:
+* Templates -- Generate files containing version numbers from a template.
+* Version sources -- Update inner version sources to match the authoritative version source.
+* File updaters -- Replace version numbers within existing files using *regular expressions* to find and replace them.
 
 ## Installing
 For Windows, there is a [Chocolatey](https://chocolatey.org/) [package](https://chocolatey.org/packages/vut) available.
@@ -26,27 +34,43 @@ $ cargo build --release
 
 Voila! You should now have a usable executable in the `target/release` subdirectory.
 
+## Configuration
+
+While it is possible (for backward-compatibility reasons) to use Vut without a configuration file, it is recommended to have one, and it is required in order to take advantage of the more advanced functionality, such as updating version sources or updating files.
+
+A basic minimal configuration file can be created by running:
+```
+$ vut init
+```
+in the root directory of the project. If no version source is present, this will create a `vut.toml` file and a `VERSION` file. If a version source is found, only a `vut.toml` file will be created and the existing version source will be used.
+
+For a detailed overview and explanation of all existing configuration options, an example configuration can be created by running:
+```
+$ vut init --example
+```
+This configuration file contains examples and explanatory comments for all existing configuration options.
+
 ## Authoritative Version Source
-In order to do its work, Vut requires a supported version source to be present in the project.
-Currently supported version sources are: **VERSION file**, **Cargo.toml** (Rust) and **package.json** (NPM).
+In order to do its work, Vut requires an authoritative version source, which will typically be located in the same directory as the configuration file.
 
-### VERSION file
-At its simplest, this can be a file called VERSION.
-It's a plain UTF-8 encoded text file containing the full SemVer string, with no newline at the end.
+The authoritative version source can be of any supported version source type.
 
-The recommended way of creating one is to run the following command in the root of your repository (or wherever the root of the versioned content is):
-```
-$ vut init 1.0.0
-```
-... where 1.0.0 can be substituted with any SemVer 2.0 compatible version string that will be used as the initial version.
+## Version sources
 
-### Cargo.toml (Rust)
+Version sources are systems that support getting and setting a version number to a particular file format. These are primarily used for the **authoritative version source**, but can also be used to update additional (non-authoritative) version sources within the project directory.
+
+The currently supported built-in version sources are: **vut**, **cargo** and **npm**.
+
+### **vut** -- Vut VERSION file
+The default Vut version source.
+It's a plain UTF-8 encoded text file called `VERSION`, containing the full SemVer string, with no newline at the end.
+This should generally be used for any project type that doesn't have its own package manifest containing a version.
+
+### **cargo** -- Cargo.toml (Rust)
 Cargo.toml is the package manifesto file used by Rust's package manager Cargo.
-If Vut is executed within a Cargo project, Cargo.toml should be automatically detected and used as the authoritative version source.
 
-### package.json (NPM)
+### **npm** -- package.json (NPM)
 package.json is the package description format used by the NPM package manager.
-If Vut is executed within an NPM project, package.json should be automatically detected and used as the authoritative version source.
 
 ## Bumping a version
 To bump a version component, use any one of:
@@ -63,7 +87,7 @@ Bumping any version component will increase it by one and cause all lesser ones 
 Bumping prerelease or build requires that component to be present and end in a number.
 
 ## Using templates
-Simply write a template file manually, in whatever language or format you need it to be in and place it anywhere within your project structure naming it whatever you need the generated file to be called with the extension .vutemplate appended to the end.
+Simply write a template file manually, in whatever language or format you need it to be in and place it anywhere within your project structure naming it whatever you need the generated file to be called with the extension .vutemplate (by default - this is configurable) appended to the end.
 
 For example, if you need the version number to be directly accessible in a C# program, you can create a file called **AppVersion.cs.vutemplate** somewhere in your project structure.
 ```C#
@@ -81,6 +105,29 @@ Any time a version change is performed through Vut, or `vut generate` is run, Vu
 
 Just like with most revision control systems, discovery of the VERSION file for the current working directory works by traversing the current path outward until a directory containing a VERSION file is found, meaning you can run Vut from anywhere within the versioned project structure.
 
+## File updaters
+
+In cases where it is not possible or desirable to use templates, you can use a file updater to replace a version number in any text file as long as it is possible to locate using a regular expression.
+
+Each file updater can contain multiple replacers, each with their own regexes and template string. By default, if no template string is specified, the full version string (`{{FullVersion}}`) will be used.
+
+Example configuration:
+
+```toml
+# Define a custom file updater.
+[file-updaters.myfile]
+type = "regex"
+replacers = [
+  { regexes = ["(^Version = )(.*)(;)", "(^FullVersion = )(.*)(;)"] },
+  { regexes = "(^ShortVersion = )(.*)(;)", template = '{{MajorMinor}}' },
+]
+
+# Update files using a file updater.
+[[update-files]]
+globs = "**/*.myfile"
+updater = "myfile"
+encoding = "utf-8"
+```
 
 ## Setting the version
 The version number can be set at any time by using `vut set` like this:
@@ -113,8 +160,9 @@ will output all the available variables in json format:
 }
 ```
 
-## Regenerating templates without changing the version
-Sometimes you may want to regenerate all templates even though the version hasn't changed. For example, if you've changed or added a template.
+## Re-propagating versions without changing the version
+Sometimes you may want to re-propagate versions and regenerate all templates even though the version hasn't changed. For example, if you've changed or added a template.
+
 You can do that by using:
 ```
 $ vut generate
