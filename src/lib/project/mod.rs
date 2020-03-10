@@ -73,33 +73,21 @@ impl Vut {
         let path = path.as_ref();
         let callbacks = callbacks.unwrap_or_else(VutCallbacks::default);
 
-        // Check if there is an existing Vut configuration for this path
-        let vut: Option<Vut> = match Self::from_path(path, None) {
-            Ok(vut) => {
-                let existing_root_path = vut.get_root_path();
+        // Check if there is an existing Vut configuration for this path.
+        if let Some(existing_config_file_path) = util::locate_config_file(path, VUT_CONFIG_FILENAME) {
+            // An existing configuration file was found...
 
-                // Construct the path to the existing project's configuration file (if it exists)
-                let existing_config_file_path = existing_root_path.join(VUT_CONFIG_FILENAME);
+            let existing_root_path = existing_config_file_path.parent().unwrap();
 
-                if existing_config_file_path.exists() {
-                    if force && existing_root_path != path {
-                        // If force is true and the path we are trying to initialize
-                        // is not the existing project's root directory, let it go through
-                        // as if no existing configuration or version source was present.
-                        Ok(None)
-                    } else {
-                        // If an existing config was found and force is not true,
-                        // or the existing configuration found is in the same directory
-                        // we are trying to initialize, return an error.
-                        Err(VutError::AlreadyInit(vut.get_root_path().to_path_buf()))
-                    }
-                } else {
-                    Ok(Some(vut))
-                }
+            if force && existing_root_path != path {
+                // Force is enabled, and the config found is not in the same directory we are
+                // trying to initialize.
+                // This is allowed.
+            } else {
+                // Otherwise, disallow and fail.
+                return Err(VutError::AlreadyInit(existing_root_path.to_path_buf()));
             }
-            Err(VutError::NoVersionSource) => Ok(None),
-            Err(err) => Err(err),
-        }?;
+        }
 
         // Construct config file path
         let config_file_path = path.join(VUT_CONFIG_FILENAME);
@@ -107,17 +95,9 @@ impl Vut {
         // Create configuration file with default content
         let config = config::create_config_file(&config_file_path, config_text)?;
 
-        let vut = if let Some(vut) = vut {
-            // A version source was found, but no configuration file...
-            // We need to support this in order to create a configuration file
-            // for existing sources.
-
-            Self {
-                root_path: vut.root_path,
-                config,
-                authoritative_version_source: vut.authoritative_version_source,
-                callbacks,
-            }
+        let authoritative_version_source = if let Some(source) = version_source::first_version_source_from_path(path) {
+            // A version source was found at the current directory. Use it.
+            source
         } else {
             // No version source was found...
 
@@ -131,15 +111,15 @@ impl Vut {
             // Set initial version
             source.set_version(&version)?;
 
-            Self {
-                root_path: path.to_path_buf(),
-                config,
-                authoritative_version_source: Box::new(source),
-                callbacks,
-            }
+            Box::new(source)
         };
 
-        Ok(vut)
+        Ok(Self {
+            root_path: path.to_path_buf(),
+            config,
+            authoritative_version_source,
+            callbacks,
+        })
     }
 
     pub fn from_path(path: impl AsRef<Path>, callbacks: Option<VutCallbacks>) -> Result<Self, VutError> {
