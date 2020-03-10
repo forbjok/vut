@@ -43,13 +43,12 @@ pub struct General {
     pub ignore: Option<Globs>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct AuthoritativeVersionSource {
-    pub path: PathBuf,
-
     #[serde(rename = "type")]
-    pub _type: String,
+    pub _type: Option<String>,
+    pub path: Option<PathBuf>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -57,7 +56,7 @@ pub struct AuthoritativeVersionSource {
 #[serde(rename_all = "kebab-case")]
 pub struct VutConfig {
     pub general: General,
-    pub authoritative_version_source: Option<AuthoritativeVersionSource>,
+    pub authoritative_version_source: AuthoritativeVersionSource,
     pub file_updaters: HashMap<String, CustomFileUpdaterTypeDef>,
     pub version_source_types: HashMap<String, CustomSourceTypeDef>,
     pub update_files: Vec<UpdateFilesDef>,
@@ -80,7 +79,7 @@ impl VutConfig {
             general: General {
                 ignore: Some(Globs::Single("**/.git".to_owned())),
             },
-            authoritative_version_source: None,
+            authoritative_version_source: Default::default(),
             file_updaters: HashMap::new(),
             version_source_types: HashMap::new(),
             update_files: Vec::new(),

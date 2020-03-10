@@ -6,12 +6,10 @@ ignore = [
   "**/.git",
 ]
 
-# Specify path and type of the authoritative version source.
-# By default, if this is not configured, it will use the first
-# version source found in the root path.
-#[authoritative-version-source]
+# Specify the type and, optionally, path of the authoritative version source.
+[authoritative-version-source]
+type = "vut"
 #path = "."
-#type = "vut"
 
 # Define a custom file updater.
 # This is useful if you want to update all occurrences of specific

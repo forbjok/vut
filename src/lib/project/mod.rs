@@ -1,5 +1,4 @@
 use std::borrow::Cow;
-use std::collections::HashSet;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -92,26 +91,40 @@ impl Vut {
         // Construct config file path
         let config_file_path = path.join(VUT_CONFIG_FILENAME);
 
-        // Create configuration file with default content
-        let config = config::create_config_file(&config_file_path, config_text)?;
+        let (avs_type, authoritative_version_source) =
+            if let Some((source_type, source)) = version_source::first_version_source_from_path(path) {
+                // A version source was found at the current directory. Use it.
+                (source_type, source)
+            } else {
+                // No version source was found...
 
-        let authoritative_version_source = if let Some(source) = version_source::first_version_source_from_path(path) {
-            // A version source was found at the current directory. Use it.
-            source
-        } else {
-            // No version source was found...
+                let version = version
+                    .map(|v| Cow::Borrowed(v))
+                    .unwrap_or_else(|| Cow::Owned(Version::new(0, 0, 0, None, None)));
 
-            let version = version
-                .map(|v| Cow::Borrowed(v))
-                .unwrap_or_else(|| Cow::Owned(Version::new(0, 0, 0, None, None)));
+                // Create a new version file source
+                let mut source = version_source::VersionFileSource::new(path);
 
-            // Create a new version file source
-            let mut source = version_source::VersionFileSource::new(path);
+                // Set initial version
+                source.set_version(&version)?;
 
-            // Set initial version
-            source.set_version(&version)?;
+                (VersionSourceType::Vut, Box::new(source) as Box<dyn VersionSource>)
+            };
 
-            Box::new(source)
+        // Customize and create initial config
+        let config = {
+            let mut doc = config_text
+                .parse::<toml_edit::Document>()
+                .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
+
+            // Set authoritative version source type
+            doc["authoritative-version-source"]["type"] = toml_edit::value(avs_type.as_ref());
+
+            // Serialize updated document to string
+            let toml_str = doc.to_string();
+
+            // Create configuration file
+            config::create_config_file(&config_file_path, &toml_str)?
         };
 
         Ok(Self {
@@ -137,18 +150,25 @@ impl Vut {
         let (root_path, authoritative_version_source) = if let Some(config_file_path) = config_file_path.as_ref() {
             let root_path = config_file_path.parent().unwrap().to_path_buf();
 
-            let source = if let Some(auth_vs_config) = &config.authoritative_version_source {
+            let auth_vs_type = config
+                .authoritative_version_source
+                ._type
+                .as_ref()
+                .map(|s| s.as_str())
+                .unwrap_or_else(|| VersionSourceType::Vut.as_ref());
+
+            let auth_vs_path: Cow<Path> = if let Some(auth_vs_path) = &config.authoritative_version_source.path {
                 // Authoritative version source configuration preset...
 
                 // Path must be relative to the root path.
-                if auth_vs_config.path.is_absolute() {
+                if auth_vs_path.is_absolute() {
                     return Err(VutError::Config(Cow::Borrowed(
                         "Authoritative version source path must be relative!",
                     )));
                 }
 
                 // Construct absolute path.
-                let auth_vs_path = root_path.join(&auth_vs_config.path);
+                let auth_vs_path = root_path.join(auth_vs_path);
                 let auth_vs_path = util::normalize_path(&auth_vs_path);
 
                 // If the specified path is outside the root path, return an error.
@@ -158,31 +178,34 @@ impl Vut {
                     )));
                 }
 
-                let auth_vs_type = &auth_vs_config._type;
+                Cow::Owned(auth_vs_path)
+            } else {
+                // No authoritative version source configuration specified, use root path.
+                Cow::Borrowed(&root_path)
+            };
 
+            let source = {
                 // Try to get built-in version source.
                 let mut version_sources = Vec::new();
 
                 if let Ok(vst) = VersionSourceType::from_str(auth_vs_type) {
-                    vst.from_path(&auth_vs_path);
-                }
-
-                // If no version source was found, try custom version sources.
-                if version_sources.is_empty() {
+                    if let Some(source) = vst.from_path(&auth_vs_path) {
+                        version_sources.push(source);
+                    }
+                } else {
                     let custom_source_types = CustomSourceTypes::from_config(&config)?;
 
-                    // Build HashSet containing only a single type name - the one specified in the configuration.
-                    // We need this to pass to the version source function below.
-                    let source_types: HashSet<String> = vec![auth_vs_type.clone()].into_iter().collect();
-
                     if let Some(source) = custom_source_types
-                        .version_sources_from_path(&auth_vs_path, &source_types)
+                        .version_source_from_path(&auth_vs_path, auth_vs_type)
                         .into_iter()
                         .next()
                     {
                         version_sources.push(source);
                     }
                 }
+
+                // If no version source was found, try custom version sources.
+                if version_sources.is_empty() {}
 
                 if version_sources.is_empty() {
                     // If still no version source was found, return an error.
@@ -195,9 +218,6 @@ impl Vut {
 
                 // Return the first (and only) version source.
                 version_sources.remove(0)
-            } else {
-                // No authoritative version source configuration specified, use root path.
-                version_source::first_version_source_from_path(&root_path).ok_or_else(|| VutError::NoVersionSource)?
             };
 
             (root_path, source)

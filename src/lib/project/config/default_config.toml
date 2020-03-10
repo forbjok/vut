@@ -1,6 +1,9 @@
 [general]
 ignore = "**/.git"
 
+[authoritative-version-source]
+type = "vut"
+
 [[update-version-sources]]
 globs = "**"
 

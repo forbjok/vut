@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
 use std::str::FromStr;
@@ -104,22 +104,14 @@ impl CustomSourceTypes {
         self.regex_source_types.get(name).cloned()
     }
 
-    pub fn version_sources_from_path(
-        &self,
-        path: &Path,
-        source_types: &HashSet<String>,
-    ) -> Vec<Box<dyn VersionSource>> {
-        let mut version_sources: Vec<Box<dyn VersionSource>> = Vec::new();
-
-        for source_type in source_types {
-            if let Some(custom_source_type_template) = self.regex_source_types.get(source_type.as_str()) {
-                if let Some(source) = custom_source_type_template.instance_from_path(&path) {
-                    version_sources.push(Box::new(source));
-                }
+    pub fn version_source_from_path(&self, path: &Path, source_type: &str) -> Option<Box<dyn VersionSource>> {
+        if let Some(custom_source_type_template) = self.regex_source_types.get(source_type) {
+            if let Some(source) = custom_source_type_template.instance_from_path(&path) {
+                return Some(Box::new(source));
             }
         }
 
-        version_sources
+        None
     }
 }
 
