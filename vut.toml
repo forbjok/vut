@@ -1,6 +1,9 @@
 [general]
 ignore = "**/.git"
 
+[authoritative-version-source]
+type = "cargo"
+
 [file-updaters.nuspec]
 type = "regex"
 replacers = [
