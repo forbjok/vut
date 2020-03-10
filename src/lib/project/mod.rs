@@ -151,7 +151,7 @@ impl Vut {
         let config = if let Some(path) = config_file_path.as_ref() {
             config::VutConfig::from_file(path)?
         } else {
-            config::VutConfig::default()
+            config::VutConfig::legacy()
         };
 
         let (root_path, authoritative_version_source) = if let Some(config_file_path) = config_file_path.as_ref() {
@@ -294,7 +294,11 @@ impl Vut {
         let version = self.get_version()?;
 
         // Build ignore GlobSet from config
-        let ignore_globset = self.config.general.ignore.build_globset()?;
+        let ignore_globset = if let Some(ignore) = &self.config.general.ignore {
+            ignore.build_globset()?
+        } else {
+            globset::GlobSet::empty()
+        };
 
         let dir_entries: Vec<walkdir::DirEntry> = walkdir::WalkDir::new(root_path)
             .into_iter()

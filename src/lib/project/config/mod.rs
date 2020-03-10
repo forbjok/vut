@@ -36,11 +36,11 @@ pub const VUT_CONFIG_EXAMPLE: &str = include_str!("example_config.toml");
 #[serde(rename_all = "kebab-case")]
 pub struct VersionSourceTypes(pub HashSet<String>);
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 #[serde(default)]
 #[serde(rename_all = "kebab-case")]
 pub struct General {
-    pub ignore: Globs,
+    pub ignore: Option<Globs>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -52,7 +52,7 @@ pub struct AuthoritativeVersionSource {
     pub _type: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 #[serde(default)]
 #[serde(rename_all = "kebab-case")]
 pub struct VutConfig {
@@ -74,30 +74,12 @@ impl VutConfig {
 
         Self::from_str(&toml_str)
     }
-}
 
-impl FromStr for VutConfig {
-    type Err = VutError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let config: VutConfig = toml::from_str(s).map_err(|err| VutError::ParseConfig(Cow::Owned(err.to_string())))?;
-
-        Ok(config)
-    }
-}
-
-impl Default for General {
-    fn default() -> Self {
+    pub fn legacy() -> Self {
         Self {
-            ignore: Globs::Single("**/.git".to_owned()),
-        }
-    }
-}
-
-impl Default for VutConfig {
-    fn default() -> Self {
-        Self {
-            general: General::default(),
+            general: General {
+                ignore: Some(Globs::Single("**/.git".to_owned())),
+            },
             authoritative_version_source: None,
             file_updaters: HashMap::new(),
             version_source_types: HashMap::new(),
@@ -111,6 +93,16 @@ impl Default for VutConfig {
                 encoding: None,
             }],
         }
+    }
+}
+
+impl FromStr for VutConfig {
+    type Err = VutError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let config: VutConfig = toml::from_str(s).map_err(|err| VutError::ParseConfig(Cow::Owned(err.to_string())))?;
+
+        Ok(config)
     }
 }
 
