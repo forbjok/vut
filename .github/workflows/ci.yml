@@ -50,4 +50,4 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: ${{ matrix.build }}
-        path: target/${{ matrix.target }}/release/vut.exe
+        path: target/${{ matrix.target }}/debug/vut.exe
