@@ -20,24 +20,31 @@ jobs:
         include:
         - build: stable
           os: ubuntu-latest
-          rust: stable
+          toolchain: stable
 
         - build: nightly
           os: ubuntu-latest
-          rust: nightly
+          toolchain: nightly
 
         - build: windows-msvc-x86
           os: windows-latest
-          rust: stable
+          toolchain: stable
           target: i686-pc-windows-msvc
 
         - build: windows-msvc-x86_64
           os: windows-latest
-          rust: stable
+          toolchain: stable
           target: x86_64-pc-windows-msvc
 
     steps:
     - uses: actions/checkout@v2
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.toolchain }}
+        profile: minimal
+        override: true
 
     - name: Build
       run: cargo build --verbose
