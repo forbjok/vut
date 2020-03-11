@@ -16,6 +16,8 @@ jobs:
         - nightly
         - windows-msvc-x86
         - windows-msvc-x86_64
+        - windows-release-x86
+        - windows-release-x86_64
 
         include:
         - build: stable
@@ -41,12 +43,14 @@ jobs:
           toolchain: stable
           target: i686-pc-windows-msvc
           options: --release
+          upload: true
 
         - build: windows-release-x86_64
           os: windows-latest
           toolchain: stable
           target: x86_64-pc-windows-msvc
           options: --release
+          upload: true
 
     steps:
     - uses: actions/checkout@v2
@@ -66,7 +70,7 @@ jobs:
       run: cargo test ${{ matrix.options }} --verbose
 
     - name: Upload artifacts
-      if: matrix.os == 'windows-latest'
+      if: matrix.upload == true
       uses: actions/upload-artifact@v1
       with:
         name: ${{ matrix.build }}
