@@ -14,7 +14,8 @@ jobs:
         build:
         - stable
         - nightly
-        - windows-msvc
+        - windows-msvc-x86
+        - windows-msvc-x86_64
 
         include:
         - build: stable
@@ -25,9 +26,15 @@ jobs:
           os: ubuntu-latest
           rust: nightly
 
-        - build: windows-msvc
+        - build: windows-msvc-x86
           os: windows-latest
           rust: stable
+          target: i686-pc-windows-msvc
+
+        - build: windows-msvc-x86_64
+          os: windows-latest
+          rust: stable
+          target: x86_64-pc-windows-msvc
 
     steps:
     - uses: actions/checkout@v2
@@ -37,3 +44,10 @@ jobs:
 
     - name: Run tests
       run: cargo test --verbose
+
+    - name: Upload artifacts
+      if: matrix.os == 'windows-latest'
+      uses: actions/upload-artifact@v1
+      with:
+        name: ${{ matrix.build }}
+        path: target/${{ matrix.target }}/release/vut.exe
