@@ -5,7 +5,7 @@
     <!-- Read this before publishing packages to chocolatey.org: https://github.com/chocolatey/chocolatey/wiki/CreatePackages -->
     <id>vut</id>
     <title>Vut</title>
-    <version>0.0.1</version>
+    <version>0.1.0</version>
     <authors>Kjartan F. Kvamme</authors>
     <owners>Kjartan F. Kvamme</owners>
     <summary>Utility for managing versioning of a project and propagating it using templates.</summary>
@@ -22,6 +22,6 @@ Uses the Semantic Versioning 2.0.0 specification. (http://semver.org/)
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
   </metadata>
   <files>
-    <file src="..\vut.exe" target="tools" />
+    <file src="..\target\i686-pc-windows-msvc\release\vut.exe" target="tools" />
   </files>
 </package>

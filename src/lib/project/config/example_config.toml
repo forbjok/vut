@@ -1,0 +1,80 @@
+[general]
+# Directories to ignore completely along with all their content.
+# Typically used to avoid wasting time on scanning VCS directories.
+ignore = [
+  # Ignore Git directories
+  "**/.git",
+]
+
+# Specify the type and, optionally, path of the authoritative version source.
+[authoritative-version-source]
+type = "vut"
+#path = "."
+
+# Define a custom file updater.
+# This is useful if you want to update all occurrences of specific
+# regex patterns with a version, but don't want to use it as a source.
+#[file-updaters.myfile]
+#type = "regex"
+#replacers = [
+#  { regexes = ["(^Version = )(.*)(;)", "(^FullVersion = )(.*)(;)"] },
+#  { regexes = "(^ShortVersion = )(.*)(;)", template = '{{MajorMinor}}' },
+#]
+
+# Define a custom source type.
+# This may be used if you need to support a file format
+# that does not have a built-in version source.
+# The example below defines a type named "example" that
+# expects a file called "example.file" in which the version
+# is on a line starting with "Version = ", followed by the version
+# and a semicolon.
+# In regex, there must always be exactly 3 capture groups,
+# and the second (middle) one must be the version string.
+#[version-source-types.example]
+#type = "regex"
+#file-name = "example.file"
+#regex = '(^Version = )(.*)(;.*)'
+
+# Update files using a file updater. (see [file-updaters.myfile] above)
+# There can be more than one of these.
+#[[update-files]]
+#globs = "**/*.myfile"
+#updater = "myfile"
+#encoding = "utf-8"
+
+# Update version sources.
+# There can be more than one of these.
+[[update-version-sources]]
+globs = "**"
+
+# Uncomment if you want to exclude one or more patterns that would otherwise be included.
+#exclude-globs = "some_dir/**"
+
+# Specify which source types to update.
+# By default, all source types will be updated.
+#types = ["vut", "cargo", "npm"]
+
+# Define template pattern.
+# There can be more than one of these.
+[[templates]]
+globs = "**/*.vutemplate"
+
+# Directory to start scanning from.
+# If not specified, the root directory will be used.
+#start-path = "."
+
+# Directory to use as the root for output files.
+# If specified, this will cause output files to be generated in this directory,
+# in the template's subdirectory relative to the start path
+# instead of in the same directory as the template.
+# This should generally only be used if for some reason templates cannot exist
+# within a particular directory, as it makes it less obvious where files will be generated.
+#output-path = "."
+
+# Template processor to use.
+# The default, and currently only supported processor is "vut".
+#processor = "vut"
+
+# Encoding to use for these templates.
+# The default is "utf-8".
+#encoding = "utf-8"

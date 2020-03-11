@@ -1,0 +1,15 @@
+[general]
+ignore = "**/.git"
+
+[authoritative-version-source]
+type = "cargo"
+
+[file-updaters.nuspec]
+type = "regex"
+replacers = [
+  { regexes = "(<version>)(.*)(</version>)" },
+]
+
+[[update-files]]
+globs = "**/*.nuspec"
+updater = "nuspec"
