@@ -121,8 +121,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: release-artifacts
-        asset_name: vut-windows-x86.zip
+        asset_path: release-artifacts/vut-windows-x86
+        asset_name: vut-windows-x86
         asset_content_type: application/zip
 
     - name: Upload windows-x86_64
@@ -131,6 +131,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: release-artifacts
-        asset_name: vut-windows-x86_64.zip
+        asset_path: release-artifacts/vut-windows-x86_64
+        asset_name: vut-windows-x86_64
         asset_content_type: application/zip
