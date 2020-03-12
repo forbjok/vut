@@ -82,11 +82,16 @@ jobs:
     - name: Run tests
       run: cargo test --release --target ${{ matrix.target }} --verbose
 
+    - name: Compress
+      run: |
+        mkdir dist
+        7z a -mx9 "dist/exe-${{ matrix.target }}.7z" "target/${{ matrix.target }}/release/vut.exe"
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v1
       with:
         name: exe-${{ matrix.build }}
-        path: target/${{ matrix.target }}/release/vut.exe
+        path: dist/exe-${{ matrix.target }}.7z
 
   release:
     runs-on: ubuntu-latest
@@ -108,31 +113,31 @@ jobs:
     - uses: actions/download-artifact@v1
       with:
         name: exe-windows-x86
-        path: release-artifacts/exe-windows-x86
+        path: release-artifacts
 
     - uses: actions/download-artifact@v1
       with:
         name: exe-windows-x86_64
-        path: release-artifacts/exe-windows-x86_64
+        path: release-artifacts
 
     - run: ls -al release-artifacts
 
-    - name: Upload windows-x86
+    - name: Upload exe-windows-x86
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: release-artifacts/exe-windows-x86/vut.exe
-        asset_name: exe-windows-x86
-        asset_content_type: application/octet-stream
+        asset_path: release-artifacts/exe-windows-x86.7z
+        asset_name: exe-windows-x86.7z
+        asset_content_type: application/x-7z-compressed
 
-    - name: Upload windows-x86_64
+    - name: Upload exe-windows-x86_64
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: release-artifacts/exe-windows-x86_64/vut.exe
-        asset_name: exe-windows-x86_64
-        asset_content_type: application/octet-stream
+        asset_path: release-artifacts/exe-windows-x86_64.7z
+        asset_name: exe-windows-x86_64.7z
+        asset_content_type: application/x-7z-compressed
