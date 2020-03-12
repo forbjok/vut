@@ -77,10 +77,10 @@ jobs:
         override: true
 
     - name: Build
-      run: cargo build --release --verbose
+      run: cargo build --release --target ${{ matrix.target }} --verbose
 
     - name: Run tests
-      run: cargo test --release --verbose
+      run: cargo test --release --target ${{ matrix.target }} --verbose
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v1
