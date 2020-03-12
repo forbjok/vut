@@ -108,12 +108,12 @@ jobs:
     - uses: actions/download-artifact@v1
       with:
         name: vut-windows-x86
-        path: release-artifacts/vut-windows-x86.zip
+        path: release-artifacts
 
     - uses: actions/download-artifact@v1
       with:
         name: vut-windows-x86_64
-        path: release-artifacts/vut-windows-x86_64.zip
+        path: release-artifacts
 
     - name: Upload windows-x86
       uses: actions/upload-release-asset@v1
@@ -121,7 +121,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: release-artifacts/vut-windows-x86.zip
+        asset_path: release-artifacts
         asset_name: vut-windows-x86.zip
         asset_content_type: application/zip
 
@@ -131,6 +131,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: release-artifacts/vut-windows-x86_64.zip
+        asset_path: release-artifacts
         asset_name: vut-windows-x86_64.zip
         asset_content_type: application/zip
