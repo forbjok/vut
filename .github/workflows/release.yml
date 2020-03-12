@@ -25,16 +25,16 @@ jobs:
       run: .\build.ps1
       shell: pwsh
 
-    - name: Upload exe-windows-x86
+    - name: Upload bin-windows-x86
       uses: actions/upload-artifact@v1
       with:
-        name: exe-windows-x86
+        name: bin-windows-x86
         path: dist/bin-windows-x86.7z
 
-    - name: Upload exe-windows-x86_64
+    - name: Upload bin-windows-x86_64
       uses: actions/upload-artifact@v1
       with:
-        name: exe-windows-x86_64
+        name: bin-windows-x86_64
         path: dist/bin-windows-x86_64.7z
 
   release:
