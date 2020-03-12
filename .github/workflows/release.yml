@@ -22,7 +22,8 @@ jobs:
         override: true
 
     - name: Build
-      run: build.cmd
+      run: build
+      shell: pwsh
 
     - name: Upload exe-windows-x86
       uses: actions/upload-artifact@v1
