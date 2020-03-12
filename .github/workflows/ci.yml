@@ -108,12 +108,12 @@ jobs:
     - uses: actions/download-artifact@v1
       with:
         name: vut-windows-x86
-        path: release-artifacts
+        path: release-artifacts/vut-windows-x86.zip
 
     - uses: actions/download-artifact@v1
       with:
         name: vut-windows-x86_64
-        path: release-artifacts
+        path: release-artifacts/vut-windows-x86_64.zip
 
     - name: Upload windows-x86
       uses: actions/upload-release-asset@v1
