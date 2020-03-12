@@ -8,6 +8,9 @@ function Remove-Dir([string] $Path) {
 $DistDir = Join-Path $PSScriptRoot "dist"
 $TargetDir = Join-Path $PSScriptRoot "target"
 
+Write-Host "DistDir: $DistDir"
+Write-Host "TargetDir: $TargetDir"
+
 function Compress-Target([string] $ArchiveName, [string] $Target) {
   Push-Location Join-Path $TargetDir "$Target\release"
   try {
@@ -18,15 +21,15 @@ function Compress-Target([string] $ArchiveName, [string] $Target) {
 }
 
 # Delete old "dist" directory
-Write-Information "-- CLEAN --"
+Write-Host "-- CLEAN --"
 Remove-Dir "$DistDir"
 
 # Build executables
-Write-Information "-- BUILD --"
+Write-Host "-- BUILD --"
 cargo build --release --target i686-pc-windows-msvc
 cargo build --release --target x86_64-pc-windows-msvc
 
-Write-Information "-- PACKAGE --"
+Write-Host "-- PACKAGE --"
 
 # Create dist directory
 New-Item "$DistDir" -ItemType Directory -Force
@@ -36,4 +39,4 @@ Compress-Target "bin-windows-x86" "i686-pc-windows-msvc"
 Compress-Target "bin-windows-x86_64" "x86_64-pc-windows-msvc"
 
 # Build Chocolatey package
-choco pack chocolatey\package.nuspec --outputdirectory "dist"
+choco pack "chocolatey\package.nuspec" --outputdirectory "$DistDir"
