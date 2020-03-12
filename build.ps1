@@ -12,7 +12,7 @@ Write-Host "DistDir: $DistDir"
 Write-Host "TargetDir: $TargetDir"
 
 function Compress-Target([string] $ArchiveName, [string] $Target) {
-  Push-Location Join-Path $TargetDir "$Target\release"
+  Push-Location (Join-Path $TargetDir "$Target\release")
   try {
     7z a -mx9 "$DistDir\$ArchiveName.7z" "vut.exe"
   } finally {
