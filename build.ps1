@@ -1,13 +1,25 @@
 <# Delete a file or directory and all its conents #>
-function Clean-Item([string] $Path) {
+function Remove-Dir([string] $Path) {
   if (Test-Path $Path) {
     Remove-Item $Path -Force -Recurse
   }
 }
 
+$DistDir = Join-Path $PSScriptRoot "dist"
+$TargetDir = Join-Path $PSScriptRoot "target"
+
+function Compress-Target([string] $ArchiveName, [string] $Target) {
+  Push-Location Join-Path $TargetDir "$Target\release"
+  try {
+    7z a -mx9 "$DistDir\$ArchiveName.7z" "vut.exe"
+  } finally {
+    Pop-Location
+  }
+}
+
 # Delete old "dist" directory
 Write-Information "-- CLEAN --"
-Clean-Item "dist"
+Remove-Dir "$DistDir"
 
 # Build executables
 Write-Information "-- BUILD --"
@@ -17,11 +29,11 @@ cargo build --release --target x86_64-pc-windows-msvc
 Write-Information "-- PACKAGE --"
 
 # Create dist directory
-New-Item "dist" -ItemType Directory -Force
+New-Item "$DistDir" -ItemType Directory -Force
 
 # Create executable archives
-7z a -mx9 "dist\bin-windows-x86.7z" "target/i686-pc-windows-msvc/release/vut.exe"
-7z a -mx9 "dist\bin-windows-x86_64.7z" "target/x86_64-pc-windows-msvc/release/vut.exe"
+Compress-Target "bin-windows-x86" "i686-pc-windows-msvc"
+Compress-Target "bin-windows-x86_64" "x86_64-pc-windows-msvc"
 
 # Build Chocolatey package
 choco pack chocolatey\package.nuspec --outputdirectory "dist"

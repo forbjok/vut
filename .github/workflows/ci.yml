@@ -40,8 +40,5 @@ jobs:
         profile: minimal
         override: true
 
-    - name: Build
-      run: cargo build ${{ matrix.options }} --verbose
-
     - name: Run tests
       run: cargo test ${{ matrix.options }} --verbose
