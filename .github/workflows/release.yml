@@ -22,7 +22,7 @@ jobs:
         override: true
 
     - name: Build
-      run: build.ps1
+      run: .\build.ps1
       shell: pwsh
 
     - name: Upload exe-windows-x86
