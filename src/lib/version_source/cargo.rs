@@ -2,6 +2,8 @@ use std::borrow::Cow;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
+use log::info;
+
 const CARGO_FILE_NAME: &str = "Cargo.toml";
 
 use crate::project::VutError;
@@ -69,9 +71,12 @@ impl VersionSource for CargoSource {
                 .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
             // Get version string
-            let version_str = doc["package"]["version"].as_str().unwrap();
-
-            version_str.to_owned()
+            if let Some(version_str) = doc["package"]["version"].as_str() {
+                version_str.to_owned()
+            } else {
+                info!("No version number found in '{}'. This Cargo.toml may be a workspace, and cannot be used as a version source.", self.cargo_file_path.display());
+                return Err(VutError::VersionNotFound);
+            }
         };
 
         // Parse version string

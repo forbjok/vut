@@ -95,6 +95,10 @@ impl From<VutError> for CommandError {
             VutError::NoVersionSource => {
                 CommandError::new(CommandErrorKind::NoVersionSource, "No version source found.")
             }
+            VutError::VersionNotFound => CommandError::new(
+                CommandErrorKind::NoVersionSource,
+                "Version not found in version source.",
+            ),
             VutError::VersionFileOpen(err) => CommandError::new(
                 CommandErrorKind::Other,
                 format!("Error opening version file: {}", err.to_string()),

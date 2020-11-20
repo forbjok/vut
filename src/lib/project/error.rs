@@ -13,6 +13,7 @@ pub enum VutError {
     Config(Cow<'static, str>),
     WriteConfig(io::Error),
     NoVersionSource,
+    VersionNotFound,
     VersionFileOpen(util::FileError),
     VersionFileRead(io::Error),
     VersionFileWrite(io::Error),
