@@ -89,6 +89,12 @@ impl VersionSource for CargoSource {
             .parse::<toml_edit::Document>()
             .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
+        // If the file does not contain a [package] section, don't try to update version.
+        // This will typically be the case if the Cargo.toml is a workspace.
+        if !doc.as_table().contains_key("package") {
+            return Ok(());
+        }
+
         // Replace version number
         doc["package"]["version"] = toml_edit::value(version.to_string());
 
