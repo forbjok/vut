@@ -11,6 +11,9 @@ replacers = [
   { regexes = "(<version>)(.*)(</version>)" },
 ]
 
+[[update-version-sources]]
+globs = "**"
+
 [[update-files]]
 globs = "**/*.nuspec"
 updater = "nuspec"
