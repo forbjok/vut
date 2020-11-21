@@ -3,6 +3,7 @@ ignore = "**/.git"
 
 [authoritative-version-source]
 type = "cargo"
+path = "lib"
 
 [file-updaters.nuspec]
 type = "regex"
