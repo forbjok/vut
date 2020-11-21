@@ -8,8 +8,8 @@
     <version>0.1.1</version>
     <authors>Kjartan F. Kvamme</authors>
     <owners>Kjartan F. Kvamme</owners>
-    <summary>Utility for managing versioning of a project and propagating it using templates.</summary>
-    <description>Utility for managing versioning of a project and propagating the version to wherever it is needed and in whatever form it is needed by leveraging the power of templates.
+    <summary>Vut is a utility for propagating version numbers using methods such as regex replacement in files and templates.</summary>
+    <description>Vut is a utility for propagating version numbers using methods such as regex replacement in files and templates.
 Uses the Semantic Versioning 2.0.0 specification. (http://semver.org/)
     </description>
     <projectUrl>https://github.com/forbjok/vut</projectUrl>
@@ -17,7 +17,7 @@ Uses the Semantic Versioning 2.0.0 specification. (http://semver.org/)
     <projectSourceUrl>https://github.com/forbjok/vut</projectSourceUrl>
     <docsUrl>https://github.com/forbjok/vut</docsUrl>
     <bugTrackerUrl>https://github.com/forbjok/vut/issues</bugTrackerUrl>
-    <tags>vut version versioning template semver semantic</tags>
+    <tags>vut version versioning regex template semver semantic</tags>
     <licenseUrl>https://github.com/forbjok/vut/blob/master/LICENSE.md</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
   </metadata>
