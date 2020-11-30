@@ -5,21 +5,23 @@ use serde_json;
 
 use vut::project::Vut;
 
-use super::{stderr_vut_callbacks, CommandError, CommandErrorKind};
+use crate::error::*;
 
-pub fn get(format: &str) -> Result<(), CommandError> {
+use super::*;
+
+pub fn get(format: &str) -> Result<(), CliError> {
     let vut = Vut::from_current_dir(Some(stderr_vut_callbacks()))?;
 
     match format {
         "json" => get_json(&vut),
-        _ => Err(CommandError::new(
-            CommandErrorKind::Arguments,
+        _ => Err(CliError::new(
+            CliErrorKind::Arguments,
             format!("Invalid format: {}!", format),
         )),
     }
 }
 
-fn get_json(vut: &Vut) -> Result<(), CommandError> {
+fn get_json(vut: &Vut) -> Result<(), CliError> {
     let stdout = io::stdout();
 
     let template_input = vut.generate_template_input()?;
@@ -32,8 +34,8 @@ fn get_json(vut: &Vut) -> Result<(), CommandError> {
 
     // Serialize pretty JSON to stdout
     serde_json::to_writer_pretty(stdout, &values).map_err(|err| {
-        CommandError::new(
-            CommandErrorKind::Other,
+        CliError::new(
+            CliErrorKind::Other,
             format!("Error serializing values to JSON: {}", err.to_string()),
         )
     })?;

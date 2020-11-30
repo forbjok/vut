@@ -1,9 +1,11 @@
 use vut::project::{BumpVersion, Vut};
 use vut::Version;
 
-use super::{stderr_vut_callbacks, CommandError};
+use crate::error::*;
 
-pub fn bump(bump_version: BumpVersion) -> Result<(), CommandError> {
+use super::*;
+
+pub fn bump(bump_version: BumpVersion) -> Result<(), CliError> {
     let mut vut = Vut::from_current_dir(Some(stderr_vut_callbacks()))?;
 
     let new_version: Version = vut.bump_version(bump_version)?;

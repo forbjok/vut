@@ -1,8 +1,10 @@
 use vut::project::Vut;
 
-use super::{stderr_vut_callbacks, CommandError};
+use crate::error::*;
 
-pub fn generate() -> Result<(), CommandError> {
+use super::*;
+
+pub fn generate() -> Result<(), CliError> {
     let vut = Vut::from_current_dir(Some(stderr_vut_callbacks()))?;
 
     eprint!("Generating output... ");

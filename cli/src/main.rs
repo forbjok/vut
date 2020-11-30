@@ -2,6 +2,7 @@ use log::{debug, LevelFilter};
 use structopt::StructOpt;
 
 mod command;
+mod error;
 
 use vut::project::BumpVersion;
 
