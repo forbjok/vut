@@ -3,6 +3,7 @@ use structopt::StructOpt;
 
 mod command;
 mod error;
+mod ui;
 
 use vut::project::BumpVersion;
 

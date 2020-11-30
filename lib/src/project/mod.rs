@@ -16,6 +16,8 @@ mod generate_template;
 mod update_file;
 mod update_version_source;
 
+use crate::ui::{UiEvent, VutUiHandler};
+
 pub use config::VutConfig;
 pub use error::VutError;
 use generate_template::*;
@@ -34,42 +36,21 @@ pub enum BumpVersion {
     Build,
 }
 
-pub struct VutCallbacks {
-    pub deprecated: Option<Box<dyn Fn(&str)>>,
-}
-
-impl Default for VutCallbacks {
-    fn default() -> Self {
-        Self { deprecated: None }
-    }
-}
-
-impl VutCallbacks {
-    fn deprecated(&self, message: impl AsRef<str>) {
-        if let Some(callback) = &self.deprecated {
-            callback(message.as_ref());
-        }
-    }
-}
-
 pub struct Vut {
     root_path: PathBuf,
     config: VutConfig,
     authoritative_version_source: Box<dyn VersionSource>,
-    #[allow(dead_code)]
-    callbacks: VutCallbacks,
 }
 
 impl Vut {
     pub fn init(
         path: impl AsRef<Path>,
         version: Option<&Version>,
-        callbacks: Option<VutCallbacks>,
         config_text: &str,
         force: bool,
+        _ui: &mut dyn VutUiHandler,
     ) -> Result<Self, VutError> {
         let path = path.as_ref();
-        let callbacks = callbacks.unwrap_or_else(VutCallbacks::default);
 
         // Check if there is an existing Vut configuration for this path.
         if let Some(existing_config_file_path) = util::locate_config_file(path, VUT_CONFIG_FILENAME) {
@@ -130,13 +111,11 @@ impl Vut {
             root_path: path.to_path_buf(),
             config,
             authoritative_version_source,
-            callbacks,
         })
     }
 
-    pub fn from_path(path: impl AsRef<Path>, callbacks: Option<VutCallbacks>) -> Result<Self, VutError> {
+    pub fn from_path(path: impl AsRef<Path>, ui: &mut dyn VutUiHandler) -> Result<Self, VutError> {
         let path = path.as_ref();
-        let callbacks = callbacks.unwrap_or_else(VutCallbacks::default);
 
         let config_file_path = util::locate_config_file(path, VUT_CONFIG_FILENAME);
 
@@ -226,7 +205,7 @@ impl Vut {
             let source = version_source::locate_first_version_source_from(path).ok_or(VutError::NoVersionSource)?;
 
             // Display deprecation warning.
-            callbacks.deprecated("Authoritative version source present with no config file. Use 'vut init' to create a configuration file in the project root.");
+            ui.event(&UiEvent::DeprecationWarning("Authoritative version source present with no config file. Use 'vut init' to create a configuration file in the project root.".into()));
 
             let root_path = source.get_path().to_path_buf();
 
@@ -237,14 +216,13 @@ impl Vut {
             root_path,
             config,
             authoritative_version_source,
-            callbacks,
         })
     }
 
-    pub fn from_current_dir(callbacks: Option<VutCallbacks>) -> Result<Self, VutError> {
+    pub fn from_current_dir(ui: &mut dyn VutUiHandler) -> Result<Self, VutError> {
         let current_dir = env::current_dir().unwrap();
 
-        Self::from_path(current_dir, callbacks)
+        Self::from_path(current_dir, ui)
     }
 
     pub fn exists(&self) -> bool {
@@ -255,16 +233,16 @@ impl Vut {
         &self.root_path
     }
 
-    pub fn get_version(&self) -> Result<Version, VutError> {
+    pub fn get_version(&self, _ui: &mut dyn VutUiHandler) -> Result<Version, VutError> {
         self.authoritative_version_source.get_version()
     }
 
-    pub fn set_version(&mut self, version: &Version) -> Result<(), VutError> {
+    pub fn set_version(&mut self, version: &Version, _ui: &mut dyn VutUiHandler) -> Result<(), VutError> {
         self.authoritative_version_source.set_version(version)
     }
 
-    pub fn bump_version(&mut self, bump_version: BumpVersion) -> Result<Version, VutError> {
-        let version = self.get_version()?;
+    pub fn bump_version(&mut self, bump_version: BumpVersion, ui: &mut dyn VutUiHandler) -> Result<Version, VutError> {
+        let version = self.get_version(ui)?;
 
         let version = match bump_version {
             BumpVersion::Major => version.bump_major(),
@@ -279,16 +257,16 @@ impl Vut {
         Ok(version)
     }
 
-    pub fn generate_template_input(&self) -> Result<TemplateInput, VutError> {
-        let version = self.get_version()?;
+    pub fn generate_template_input(&self, ui: &mut dyn VutUiHandler) -> Result<TemplateInput, VutError> {
+        let version = self.get_version(ui)?;
 
         generate_template_input(&version)
     }
 
-    pub fn generate_output(&self) -> Result<(), VutError> {
+    pub fn generate_output(&self, ui: &mut dyn VutUiHandler) -> Result<(), VutError> {
         let root_path = &self.root_path;
 
-        let version = self.get_version()?;
+        let version = self.get_version(ui)?;
 
         // Build ignore GlobSet from config
         let ignore_globset = if let Some(ignore) = &self.config.general.ignore {
