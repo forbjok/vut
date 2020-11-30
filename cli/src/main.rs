@@ -66,7 +66,7 @@ fn main() {
         2 => LevelFilter::Warn,
         3 => LevelFilter::Info,
         4 => LevelFilter::Debug,
-        5 | _ => LevelFilter::Trace,
+        _ => LevelFilter::Trace,
     };
 
     // Initialize logging
@@ -82,7 +82,7 @@ fn main() {
             example,
             force,
             version,
-        } => command::init(example, force, version.as_ref().map(|v| v.as_str())),
+        } => command::init(example, force, version.as_deref()),
         Command::Set { version } => command::set(&version),
     };
 

@@ -4,7 +4,6 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use strum_macros::EnumString;
-use walkdir;
 
 use crate::template::TemplateInput;
 use crate::util;
@@ -153,8 +152,7 @@ impl Vut {
             let auth_vs_type = config
                 .authoritative_version_source
                 ._type
-                .as_ref()
-                .map(|s| s.as_str())
+                .as_deref()
                 .unwrap_or_else(|| VersionSourceType::Vut.as_ref());
 
             let auth_vs_path: Cow<Path> = if let Some(auth_vs_path) = &config.authoritative_version_source.path {
@@ -225,8 +223,7 @@ impl Vut {
             // No config file found.
             // Fall back to trying to locate a version source instead.
 
-            let source =
-                version_source::locate_first_version_source_from(path).ok_or_else(|| VutError::NoVersionSource)?;
+            let source = version_source::locate_first_version_source_from(path).ok_or(VutError::NoVersionSource)?;
 
             // Display deprecation warning.
             callbacks.deprecated("Authoritative version source present with no config file. Use 'vut init' to create a configuration file in the project root.");
@@ -237,7 +234,7 @@ impl Vut {
         };
 
         Ok(Self {
-            root_path: root_path.to_path_buf(),
+            root_path,
             config,
             authoritative_version_source,
             callbacks,

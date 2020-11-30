@@ -3,8 +3,6 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::path::Path;
 
-use walkdir;
-
 use crate::file_updater::*;
 use crate::template::TemplateInput;
 
@@ -49,7 +47,7 @@ pub fn update_files(
 
     for spec in specs.iter() {
         let include_globset = &spec.include_globset;
-        let encoding = spec.encoding.as_ref().map(|s| s.as_str());
+        let encoding = spec.encoding.as_deref();
 
         // Get the updater for this spec
         let updater = custom_file_updaters.get(&spec.updater_type).ok_or_else(|| {

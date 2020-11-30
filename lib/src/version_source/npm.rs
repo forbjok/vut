@@ -9,8 +9,6 @@ use crate::util;
 use crate::version::Version;
 use crate::version_source::VersionSource;
 
-use serde_json;
-
 pub struct NpmSource {
     pub path: PathBuf,
     pub package_file_path: PathBuf,
@@ -70,7 +68,7 @@ impl VersionSource for NpmSource {
             // Get version string
             let version_str = package["version"]
                 .as_str()
-                .ok_or_else(|| VutError::Other(Cow::Borrowed("No version property found!")))?;
+                .ok_or(VutError::Other("No version property found!".into()))?;
 
             version_str.to_owned()
         };

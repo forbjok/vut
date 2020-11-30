@@ -2,9 +2,7 @@ use std::borrow::Cow;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
-use globset;
 use log::debug;
-use walkdir;
 
 use crate::template::{self, TemplateInput};
 use crate::util;
@@ -82,7 +80,7 @@ pub fn generate_template_output(
             .as_ref()
             .map(|pt| pt.to_processor_type())
             .unwrap_or_else(|| template::ProcessorType::Vut);
-        let encoding = def.encoding.as_ref().map(|s| s.as_str());
+        let encoding = def.encoding.as_deref();
 
         let template_files_iter = dir_entries
             .iter()

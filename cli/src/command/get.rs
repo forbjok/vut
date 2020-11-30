@@ -1,8 +1,6 @@
 use std::collections::BTreeMap;
 use std::io;
 
-use serde_json;
-
 use vut::project::Vut;
 
 use crate::error::*;

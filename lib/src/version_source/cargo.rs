@@ -11,8 +11,6 @@ use crate::util;
 use crate::version::Version;
 use crate::version_source::VersionSource;
 
-use toml_edit;
-
 pub struct CargoSource {
     pub path: PathBuf,
     pub cargo_file_path: PathBuf,

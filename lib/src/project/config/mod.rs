@@ -5,7 +5,6 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use serde_derive::Deserialize;
-use toml;
 
 use crate::project::VutError;
 use crate::util;

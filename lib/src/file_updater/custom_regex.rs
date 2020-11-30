@@ -37,9 +37,7 @@ impl FileUpdater for CustomRegexFileUpdater {
             util::read_text_file(file_path, encoding).map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
         let version_str = template_input.values.get("FullVersion").ok_or_else(|| {
-            VutError::Other(Cow::Borrowed(
-                "FullVersion not found in template input! This is almost certainly a bug.",
-            ))
+            VutError::Other("FullVersion not found in template input! This is almost certainly a bug.".into())
         })?;
 
         // Iterate through all regexes, performing replacements for each one.
@@ -49,7 +47,7 @@ impl FileUpdater for CustomRegexFileUpdater {
                     .template_processor
                     .as_ref()
                     .cloned()
-                    .unwrap_or_else(|| template::ProcessorType::Vut);
+                    .unwrap_or(template::ProcessorType::Vut);
 
                 template::render_template_with_processor_type(&template_processor, template, template_input)
                     .map_err(VutError::TemplateGenerate)?

@@ -107,7 +107,7 @@ fn get_encoding(encoding: Option<&str>) -> Result<Option<EncodingRef>, TextFileE
     Ok(match encoding {
         Some(enc_name) => Some(
             encoding_from_whatwg_label(enc_name)
-                .ok_or_else(|| TextFileError::Encoding(Cow::Borrowed("Cannot get encoding!")))?,
+                .ok_or_else(|| TextFileError::Encoding("Cannot get encoding!".into()))?,
         ),
         None => None,
     })

@@ -4,9 +4,6 @@ use std::path::Path;
 use std::rc::Rc;
 use std::str::FromStr;
 
-use globset;
-use walkdir;
-
 use crate::version::Version;
 use crate::version_source::{self, VersionSource, VersionSourceType};
 
