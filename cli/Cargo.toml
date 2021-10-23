@@ -13,7 +13,7 @@ path = "src/main.rs"
 [dependencies]
 chrono = "0.4.19"
 fern = "0.6.0"
-log = "0.4.11"
-serde_json = { version = "1.0.59", features = ["preserve_order"] }
-structopt = "0.3.20"
+log = "0.4.14"
+serde_json = { version = "1.0.68", features = ["preserve_order"] }
+structopt = "0.3.25"
 vut = { path = "../lib" }
