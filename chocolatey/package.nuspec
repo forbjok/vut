@@ -23,6 +23,5 @@ Uses the Semantic Versioning 2.0.0 specification. (http://semver.org/)
   </metadata>
   <files>
     <file src="tools\*" target="tools" />
-    <file src="..\target\i686-pc-windows-msvc\release\vut.exe" target="tools" />
   </files>
 </package>
