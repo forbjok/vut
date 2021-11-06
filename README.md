@@ -3,6 +3,7 @@ Vut
 
 [![CI](https://github.com/forbjok/vut/actions/workflows/ci.yml/badge.svg)](https://github.com/forbjok/vut/actions/workflows/ci.yml)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/forbjok/vut)
+![Chocolatey Version](https://img.shields.io/chocolatey/v/vut)
 
 ## Introduction
 
