@@ -5,7 +5,7 @@
     <!-- Read this before publishing packages to chocolatey.org: https://github.com/chocolatey/chocolatey/wiki/CreatePackages -->
     <id>vut</id>
     <title>Vut</title>
-    <version>0.1.2</version>
+    <version>$version$</version>
     <authors>Kjartan F. Kvamme</authors>
     <owners>Kjartan F. Kvamme</owners>
     <summary>Vut is a utility for propagating version numbers using methods such as regex replacement in files and templates.</summary>
@@ -23,5 +23,8 @@ Uses the Semantic Versioning 2.0.0 specification. (http://semver.org/)
   </metadata>
   <files>
     <file src="tools\*" target="tools" />
+    <file src="..\dist\VERSION.txt" target="tools" />
+    <file src="..\dist\vut-$version$-windows-i686.zip.sha256.txt" target="tools" />
+    <file src="..\dist\vut-$version$-windows-x86_64.zip.sha256.txt" target="tools" />
   </files>
 </package>
