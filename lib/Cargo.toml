@@ -1,6 +1,6 @@
 [package]
 name = "vut"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Kjartan F. Kvamme <forbjok@gmail.com>"]
 edition = "2021"
 
