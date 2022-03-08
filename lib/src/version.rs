@@ -1,13 +1,11 @@
 use std::str::FromStr;
 
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use regex::Regex;
 
-lazy_static! {
-    static ref REGEX_PARSE_SEMVER: Regex =
-        Regex::new(r#"^(\d+)\.(\d+)\.(\d+)(?:-([\w\d\-\.]+))?(?:\+([\w\d\-\.]+))?"#).unwrap();
-    static ref REGEX_SPLIT_NUMBERED_PRERELEASE: Regex = regex::Regex::new(r#"([\w\-\.]*?)(\d+)"#).unwrap();
-}
+static REGEX_PARSE_SEMVER: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r#"^(\d+)\.(\d+)\.(\d+)(?:-([\w\d\-\.]+))?(?:\+([\w\d\-\.]+))?"#).unwrap());
+static REGEX_SPLIT_NUMBERED_PRERELEASE: Lazy<Regex> = Lazy::new(|| Regex::new(r#"([\w\-\.]*?)(\d+)"#).unwrap());
 
 /// Structure representing a SemVer compliant version.
 #[derive(Clone, Debug)]

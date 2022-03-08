@@ -15,6 +15,6 @@ path = "src/main.rs"
 chrono = "0.4.19"
 fern = "0.6.0"
 log = "0.4.14"
-serde_json = { version = "1.0.68", features = ["preserve_order"] }
-structopt = "0.3.25"
+serde_json = { version = "1.0.79", features = ["preserve_order"] }
+structopt = "0.3.26"
 vut = { path = "../lib" }
