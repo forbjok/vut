@@ -30,7 +30,7 @@ impl Regexes {
 
             builder
                 .build()
-                .map_err(|err| VutError::Other(Cow::Owned(format!("Invalid regex '{}': {}", pattern, err.to_string()))))
+                .map_err(|err| VutError::Other(Cow::Owned(format!("Invalid regex '{pattern}': {err}"))))
         }
 
         let regex_strings = self.to_vec();

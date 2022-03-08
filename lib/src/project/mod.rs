@@ -79,7 +79,7 @@ impl Vut {
                 // No version source was found...
 
                 let version = version
-                    .map(|v| Cow::Borrowed(v))
+                    .map(Cow::Borrowed)
                     .unwrap_or_else(|| Cow::Owned(Version::new(0, 0, 0, None, None)));
 
                 // Create a new version file source

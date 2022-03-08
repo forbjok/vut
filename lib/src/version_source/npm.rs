@@ -68,7 +68,7 @@ impl VersionSource for NpmSource {
             // Get version string
             let version_str = package["version"]
                 .as_str()
-                .ok_or(VutError::Other("No version property found!".into()))?;
+                .ok_or_else(|| VutError::Other("No version property found!".into()))?;
 
             version_str.to_owned()
         };

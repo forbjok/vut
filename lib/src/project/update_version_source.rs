@@ -34,7 +34,7 @@ pub fn update_version_sources(
     }
 
     for mut vs in version_sources {
-        vs.set_version(&version)?;
+        vs.set_version(version)?;
     }
 
     Ok(())
@@ -79,9 +79,8 @@ impl CustomSourceTypes {
                     Ok(v) => v,
                     Err(err) => {
                         return Err(VutError::Other(Cow::Owned(format!(
-                            "Invalid regex '{}': {}",
-                            &regex_custom_source_type.regex,
-                            err.to_string()
+                            "Invalid regex '{}': {err}",
+                            &regex_custom_source_type.regex
                         ))))
                     }
                 }
@@ -103,7 +102,7 @@ impl CustomSourceTypes {
 
     pub fn version_source_from_path(&self, path: &Path, source_type: &str) -> Option<Box<dyn VersionSource>> {
         if let Some(custom_source_type_template) = self.regex_source_types.get(source_type) {
-            if let Some(source) = custom_source_type_template.instance_from_path(&path) {
+            if let Some(source) = custom_source_type_template.instance_from_path(path) {
                 return Some(Box::new(source));
             }
         }
@@ -136,13 +135,13 @@ impl VersionSourceSpec {
 
             for name in type_names.iter() {
                 // Check for built-in version source type first...
-                if let Ok(vst) = VersionSourceType::from_str(&name) {
+                if let Ok(vst) = VersionSourceType::from_str(name) {
                     source_templates.push(VersionSourceTemplate::Builtin(vst));
                     continue;
                 }
 
                 // ... then check for custom source type.
-                if let Some(custom_source_template) = custom_source_types.get_template(&name) {
+                if let Some(custom_source_template) = custom_source_types.get_template(name) {
                     source_templates.push(VersionSourceTemplate::CustomRegex(custom_source_template.clone()));
                     continue;
                 }
@@ -176,10 +175,10 @@ impl VersionSourceSpec {
                 // Find built-in sources
                 source_templates
                     .iter()
-                    .filter_map(|st| st.version_source_from_path(&path))
+                    .filter_map(|st| st.version_source_from_path(path))
                     .collect()
             } else {
-                version_source::version_sources_from_path(&path)
+                version_source::version_sources_from_path(path)
             };
 
             // Append all found sources to the main list of sources

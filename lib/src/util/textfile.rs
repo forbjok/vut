@@ -87,7 +87,7 @@ pub fn write_text(
     if let Some(encoding) = encoding {
         // Encode the template data using the specified encoding.
         let enc_bytes = encoding
-            .encode(&text, EncoderTrap::Strict)
+            .encode(text, EncoderTrap::Strict)
             .map_err(TextFileError::Encode)?;
 
         // Write bytes

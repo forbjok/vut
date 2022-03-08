@@ -60,7 +60,7 @@ pub fn render_template<'a, TP: TemplateProcessor>(
     values: &TemplateInput,
 ) -> Result<Cow<'a, str>, RenderTemplateError> {
     // Process the template using the specified template processor.
-    let text = TP::process(&text, &values).map_err(RenderTemplateError::from_string)?;
+    let text = TP::process(text, values).map_err(RenderTemplateError::from_string)?;
 
     Ok(text)
 }
@@ -97,7 +97,7 @@ pub fn render_template_with_processor_type<'a>(
 ) -> Result<Cow<'a, str>, RenderTemplateError> {
     match processor_type {
         ProcessorType::Vut => {
-            Ok(processor::VutProcessor::process(&text, &values).map_err(RenderTemplateError::from_string)?)
+            Ok(processor::VutProcessor::process(text, values).map_err(RenderTemplateError::from_string)?)
         }
     }
 }

@@ -33,12 +33,8 @@ fn get_json(vut: &Vut, ui: &mut dyn VutUiHandler) -> Result<(), CliError> {
     }
 
     // Serialize pretty JSON to stdout
-    serde_json::to_writer_pretty(stdout, &values).map_err(|err| {
-        CliError::new(
-            CliErrorKind::Other,
-            format!("Error serializing values to JSON: {}", err.to_string()),
-        )
-    })?;
+    serde_json::to_writer_pretty(stdout, &values)
+        .map_err(|err| CliError::new(CliErrorKind::Other, format!("Error serializing values to JSON: {err}")))?;
 
     Ok(())
 }

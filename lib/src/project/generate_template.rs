@@ -110,7 +110,7 @@ pub fn generate_template_output(
                 &processor,
                 path,
                 &output_file_path,
-                &template_input,
+                template_input,
                 encoding,
             )
             .map_err(VutError::TemplateGenerate)?;

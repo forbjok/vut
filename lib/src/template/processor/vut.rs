@@ -16,7 +16,7 @@ impl TemplateProcessor for VutProcessor {
 
         let mut variables_not_found: Vec<String> = Vec::new();
 
-        let output = REGEX_FIND_TEMPLATE_VARS.replace_all(&template, |captures: &regex::Captures| {
+        let output = REGEX_FIND_TEMPLATE_VARS.replace_all(template, |captures: &regex::Captures| {
             let prefix = captures.get(1).map(|v| v.as_str()).unwrap_or("");
             let variable_name = &captures[2];
             let suffix = captures.get(3).map(|v| v.as_str()).unwrap_or("");
