@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::path::Path;
 
-use log::info;
+use tracing::info;
 
 use crate::util;
 

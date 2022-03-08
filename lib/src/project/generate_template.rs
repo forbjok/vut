@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
-use log::debug;
+use tracing::debug;
 
 use crate::template::{self, TemplateInput};
 use crate::util;

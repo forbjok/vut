@@ -2,9 +2,9 @@ use std::borrow::Cow;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-use log::info;
-
 const CARGO_FILE_NAME: &str = "Cargo.toml";
+
+use tracing::info;
 
 use crate::project::VutError;
 use crate::util;

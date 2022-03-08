@@ -12,9 +12,8 @@ name = "vut"
 path = "src/main.rs"
 
 [dependencies]
-chrono = "0.4.19"
 clap = { version = "3.1.6", features = ["derive"] }
-fern = "0.6.0"
-log = "0.4.14"
 serde_json = { version = "1.0.79", features = ["preserve_order"] }
+tracing = "0.1.31"
+tracing-subscriber = { version = "0.3.9", features = ["env-filter"] }
 vut = { path = "../lib" }
