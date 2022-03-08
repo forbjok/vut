@@ -1,5 +1,5 @@
+use clap::Parser;
 use log::{debug, LevelFilter};
-use structopt::StructOpt;
 
 mod command;
 mod error;
@@ -7,57 +7,57 @@ mod ui;
 
 use vut::project::BumpVersion;
 
-#[derive(StructOpt, Debug)]
-#[structopt(name = "Vut", version = env!("CARGO_PKG_VERSION"), author = env!("CARGO_PKG_AUTHORS"))]
+#[derive(Debug, Parser)]
+#[clap(name = "Vut", version = env!("CARGO_PKG_VERSION"), author = env!("CARGO_PKG_AUTHORS"))]
 struct Opt {
-    #[structopt(short = "v", parse(from_occurrences), help = "Verbosity")]
+    #[clap(short = 'v', parse(from_occurrences), help = "Verbosity")]
     verbosity: u8,
-    #[structopt(subcommand)]
+    #[clap(subcommand)]
     command: Command,
 }
 
-#[derive(StructOpt, Debug)]
+#[derive(Debug, Parser)]
 enum Command {
-    #[structopt(name = "init", about = "Initialize version file")]
+    #[clap(name = "init", about = "Initialize version file")]
     Init {
-        #[structopt(long = "example", help = "Create example configuration")]
+        #[clap(long = "example", help = "Create example configuration")]
         example: bool,
 
-        #[structopt(
-            short = "f",
+        #[clap(
+            short = 'f',
             long = "force",
             help = "Proceed even if inside the scope of an existing Vut configuration"
         )]
         force: bool,
 
-        #[structopt(name = "version", about = "Specify initial version")]
+        #[clap(name = "version", help = "Specify initial version")]
         version: Option<String>,
     },
 
-    #[structopt(name = "get", about = "Get version")]
+    #[clap(name = "get", about = "Get version")]
     Get {
-        #[structopt(name = "format", about = "Output format (json)")]
+        #[structopt(name = "format", help = "Output format (json)")]
         format: String,
     },
 
-    #[structopt(name = "set", about = "Set version")]
+    #[clap(name = "set", about = "Set version")]
     Set {
-        #[structopt(name = "version", about = "Version to set")]
+        #[structopt(name = "version", help = "Version to set")]
         version: String,
     },
 
-    #[structopt(name = "bump", about = "Bump version")]
+    #[clap(name = "bump", about = "Bump version")]
     Bump {
         #[structopt(help = "Version to bump (major|minor|prerelease|build)")]
         bump_version: BumpVersion,
     },
 
-    #[structopt(name = "generate", alias = "gen", about = "Generate template output")]
+    #[clap(name = "generate", alias = "gen", about = "Generate template output")]
     Generate,
 }
 
 fn main() {
-    let opt = Opt::from_args();
+    let opt = Opt::parse();
 
     // Vary the output based on how many times the user used the "verbose" flag
     // (i.e. 'myprog -v -v -v' or 'myprog -vvv' vs 'myprog -v'
