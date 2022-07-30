@@ -35,19 +35,19 @@ enum Command {
 
     #[clap(name = "get", about = "Get version")]
     Get {
-        #[structopt(name = "format", help = "Output format (json)")]
+        #[clap(name = "format", help = "Output format (json)")]
         format: String,
     },
 
     #[clap(name = "set", about = "Set version")]
     Set {
-        #[structopt(name = "version", help = "Version to set")]
+        #[clap(name = "version", help = "Version to set")]
         version: String,
     },
 
     #[clap(name = "bump", about = "Bump version")]
     Bump {
-        #[structopt(help = "Version to bump (major|minor|prerelease|build)")]
+        #[clap(help = "Version to bump (major|minor|prerelease|build)")]
         bump_version: BumpVersion,
     },
 
