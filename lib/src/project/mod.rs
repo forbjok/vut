@@ -166,7 +166,7 @@ impl Vut {
                 let mut version_sources = Vec::new();
 
                 if let Ok(vst) = VersionSourceType::from_str(auth_vs_type) {
-                    if let Some(source) = vst.from_path(&auth_vs_path) {
+                    if let Some(source) = vst.create_from_path(&auth_vs_path) {
                         version_sources.push(source);
                     }
                 } else {

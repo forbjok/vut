@@ -44,7 +44,7 @@ impl CustomRegexSourceTemplate {
     }
 }
 
-impl<'a> CustomRegexSource {
+impl CustomRegexSource {
     fn read_file(&self) -> Result<String, VutError> {
         let mut file = util::open_file(&self.file_path).map_err(VutError::VersionFileOpen)?;
 
@@ -64,7 +64,7 @@ impl<'a> CustomRegexSource {
     }
 }
 
-impl<'a> VersionSource for CustomRegexSource {
+impl VersionSource for CustomRegexSource {
     fn get_path(&self) -> &Path {
         &self.path
     }

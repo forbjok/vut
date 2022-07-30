@@ -48,7 +48,7 @@ enum VersionSourceTemplate {
 impl VersionSourceTemplate {
     pub fn version_source_from_path(&self, path: &Path) -> Option<Box<dyn VersionSource>> {
         match self {
-            VersionSourceTemplate::Builtin(vst) => vst.from_path(path),
+            VersionSourceTemplate::Builtin(vst) => vst.create_from_path(path),
             VersionSourceTemplate::CustomRegex(template) => template
                 .instance_from_path(path)
                 .map(|vs| Box::new(vs) as Box<dyn VersionSource>),

@@ -34,7 +34,7 @@ pub enum VersionSourceType {
 }
 
 impl VersionSourceType {
-    pub fn from_path(&self, path: &Path) -> Option<Box<dyn VersionSource>> {
+    pub fn create_from_path(&self, path: &Path) -> Option<Box<dyn VersionSource>> {
         match self {
             Self::Vut => VersionFileSource::from_path(path).map(|vs| Box::new(vs) as Box<dyn VersionSource>),
             Self::Cargo => CargoSource::from_path(path).map(|vs| Box::new(vs) as Box<dyn VersionSource>),
@@ -45,7 +45,7 @@ impl VersionSourceType {
 
 pub fn first_version_source_from_path(path: &Path) -> Option<(VersionSourceType, Box<dyn VersionSource>)> {
     for st in VersionSourceType::iter() {
-        if let Some(source) = st.from_path(path) {
+        if let Some(source) = st.create_from_path(path) {
             return Some((st, source));
         }
     }
@@ -62,7 +62,7 @@ pub fn version_sources_from_path(path: &Path) -> Vec<Box<dyn VersionSource>> {
     let mut sources: Vec<Box<dyn VersionSource>> = Vec::new();
 
     for st in VersionSourceType::iter() {
-        if let Some(source) = st.from_path(path) {
+        if let Some(source) = st.create_from_path(path) {
             sources.push(source);
         }
     }
