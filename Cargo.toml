@@ -4,6 +4,8 @@ lto = true
 opt-level = "z"
 
 [workspace]
+resolver = "2"
+
 members = [
   "cli",
   "lib",
