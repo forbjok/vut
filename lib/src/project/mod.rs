@@ -146,7 +146,7 @@ impl Vut {
 
                 // Construct absolute path.
                 let auth_vs_path = root_path.join(auth_vs_path);
-                let auth_vs_path = util::normalize_path(&auth_vs_path);
+                let auth_vs_path = util::normalize_path(auth_vs_path);
 
                 // If the specified path is outside the root path, return an error.
                 if !auth_vs_path.starts_with(&root_path) {
@@ -180,9 +180,6 @@ impl Vut {
                         version_sources.push(source);
                     }
                 }
-
-                // If no version source was found, try custom version sources.
-                if version_sources.is_empty() {}
 
                 if version_sources.is_empty() {
                     // If still no version source was found, return an error.

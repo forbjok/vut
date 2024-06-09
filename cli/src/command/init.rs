@@ -26,7 +26,7 @@ pub fn init(example: bool, force: bool, version: Option<&str>) -> Result<(), Cli
 
     eprintln!(
         "Initialized Vut project with version {} at {}.",
-        vut.get_version(&mut ui)?.to_string(),
+        vut.get_version(&mut ui)?,
         vut.get_root_path().display()
     );
 

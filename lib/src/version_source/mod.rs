@@ -54,7 +54,7 @@ pub fn first_version_source_from_path(path: &Path) -> Option<(VersionSourceType,
 }
 
 pub fn locate_first_version_source_from(start_path: &Path) -> Option<Box<dyn VersionSource>> {
-    util::find_outwards(start_path, |path| first_version_source_from_path(path)).map(|(_, (_, source))| source)
+    util::find_outwards(start_path, first_version_source_from_path).map(|(_, (_, source))| source)
 }
 
 /// Return all version sources found at the specified path.

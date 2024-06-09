@@ -162,9 +162,9 @@ impl VersionSourceSpec {
     pub fn find_version_sources(&self, path: &Path, rel_path: &Path) -> Vec<Box<dyn VersionSource>> {
         let mut version_sources = Vec::new();
 
-        if self.include_globset.is_match(&rel_path) {
+        if self.include_globset.is_match(rel_path) {
             if let Some(exclude_globset) = &self.exclude_globset {
-                if exclude_globset.is_match(&rel_path) {
+                if exclude_globset.is_match(rel_path) {
                     // If path is matched by the exclude globset, immediately return the empty list.
                     return version_sources;
                 }

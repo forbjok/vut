@@ -109,18 +109,19 @@ impl FromStr for Version {
             .ok_or_else(|| format!("Invalid version string: {}", s))?;
 
         Ok(Self {
-            major: (&cap[1]).parse().unwrap(),
-            minor: (&cap[2]).parse().unwrap(),
-            patch: (&cap[3]).parse().unwrap(),
+            major: cap[1].parse().unwrap(),
+            minor: cap[2].parse().unwrap(),
+            patch: cap[3].parse().unwrap(),
             prerelease: cap.get(4).map(|m| m.as_str().to_owned()),
             build: cap.get(5).map(|m| m.as_str().to_owned()),
         })
     }
 }
 
-impl ToString for Version {
-    fn to_string(&self) -> String {
-        format!(
+impl std::fmt::Display for Version {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
             "{}.{}.{}{}{}",
             self.major,
             self.minor,

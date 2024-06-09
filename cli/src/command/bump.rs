@@ -11,7 +11,7 @@ pub fn bump(bump_version: BumpVersion) -> Result<(), CliError> {
 
     let new_version: Version = vut.bump_version(bump_version, &mut ui)?;
 
-    eprintln!("Version bumped to {}.", new_version.to_string());
+    eprintln!("Version bumped to {}.", new_version);
 
     // Regenerate template output
     vut.generate_output(&mut ui)?;

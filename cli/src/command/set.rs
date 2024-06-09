@@ -13,7 +13,7 @@ pub fn set(version: &str) -> Result<(), CliError> {
 
     vut.set_version(&new_version, &mut ui)?;
 
-    eprintln!("Version set to {}.", new_version.to_string());
+    eprintln!("Version set to {}.", new_version);
 
     // Regenerate template output
     vut.generate_output(&mut ui)?;

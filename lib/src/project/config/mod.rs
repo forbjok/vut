@@ -105,7 +105,7 @@ impl FromStr for VutConfig {
 }
 
 pub fn create_config_file(path: &Path, text: &str) -> Result<VutConfig, VutError> {
-    util::create_file(&path)
+    util::create_file(path)
         .map_err(VutError::OpenConfig)?
         .write(text.as_bytes())
         .map_err(VutError::WriteConfig)?;

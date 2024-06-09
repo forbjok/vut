@@ -67,7 +67,7 @@ pub fn write_text_file(
     encoding: Option<&str>,
 ) -> Result<usize, TextFileError> {
     // Create file
-    let mut file = util::create_file(&file_path).map_err(TextFileError::Open)?;
+    let mut file = util::create_file(file_path).map_err(TextFileError::Open)?;
 
     // Write text to it
     write_text(&mut file, text, encoding)
