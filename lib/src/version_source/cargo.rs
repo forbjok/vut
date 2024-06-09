@@ -65,7 +65,7 @@ impl VersionSource for CargoSource {
 
             // Parse as document
             let doc = toml_str
-                .parse::<toml_edit::Document>()
+                .parse::<toml_edit::DocumentMut>()
                 .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
             // Get version string
@@ -89,7 +89,7 @@ impl VersionSource for CargoSource {
 
         // Parse as document
         let mut doc = toml_str
-            .parse::<toml_edit::Document>()
+            .parse::<toml_edit::DocumentMut>()
             .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
         // If the file does not contain a [package] section, don't try to update version.

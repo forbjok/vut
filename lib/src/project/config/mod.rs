@@ -98,8 +98,7 @@ impl FromStr for VutConfig {
     type Err = VutError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let config: VutConfig =
-            toml_edit::easy::from_str(s).map_err(|err| VutError::ParseConfig(Cow::Owned(err.to_string())))?;
+        let config: VutConfig = toml::from_str(s).map_err(|err| VutError::ParseConfig(Cow::Owned(err.to_string())))?;
 
         Ok(config)
     }

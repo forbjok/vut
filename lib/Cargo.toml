@@ -18,6 +18,7 @@ serde_json = { workspace = true, features = ["preserve_order"] }
 strum = { workspace = true }
 strum_macros = { workspace = true }
 thiserror = { workspace = true }
-toml_edit = { workspace = true, features = ["easy"] }
+toml = { workspace = true }
+toml_edit = { workspace = true }
 tracing = { workspace = true }
 walkdir = { workspace = true }

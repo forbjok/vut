@@ -26,7 +26,7 @@ use update_version_source::*;
 
 pub const VUT_CONFIG_FILENAME: &str = "vut.toml";
 
-#[derive(Debug, EnumString)]
+#[derive(Clone, Debug, EnumString)]
 #[strum(serialize_all = "lowercase")]
 pub enum BumpVersion {
     Major,
@@ -94,7 +94,7 @@ impl Vut {
         // Customize and create initial config
         let config = {
             let mut doc = config_text
-                .parse::<toml_edit::Document>()
+                .parse::<toml_edit::DocumentMut>()
                 .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
             // Set authoritative version source type
