@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use pyproject::PyProjectSource;
 use strum::IntoEnumIterator;
 use strum_macros::{AsRefStr, EnumIter, EnumString};
 
@@ -10,6 +11,7 @@ use crate::version::Version;
 mod cargo;
 mod custom_regex;
 mod npm;
+mod pyproject;
 mod version_file;
 
 pub use cargo::*;
@@ -31,6 +33,7 @@ pub enum VersionSourceType {
     Vut,
     Cargo,
     Npm,
+    PyProject,
 }
 
 impl VersionSourceType {
@@ -39,6 +42,7 @@ impl VersionSourceType {
             Self::Vut => VersionFileSource::from_path(path).map(|vs| Box::new(vs) as Box<dyn VersionSource>),
             Self::Cargo => CargoSource::from_path(path).map(|vs| Box::new(vs) as Box<dyn VersionSource>),
             Self::Npm => NpmSource::from_path(path).map(|vs| Box::new(vs) as Box<dyn VersionSource>),
+            Self::PyProject => PyProjectSource::from_path(path).map(|vs| Box::new(vs) as Box<dyn VersionSource>),
         }
     }
 }
