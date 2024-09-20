@@ -8,7 +8,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-encoding = { workspace = true }
+encoding_rs = { workspace = true }
 globset = { workspace = true }
 once_cell = { workspace = true }
 regex = { workspace = true }

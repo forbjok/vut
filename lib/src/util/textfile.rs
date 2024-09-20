@@ -3,8 +3,7 @@ use std::fmt;
 use std::io::{self, Read, Write};
 use std::path::Path;
 
-use encoding::label::encoding_from_whatwg_label;
-use encoding::{DecoderTrap, EncoderTrap, EncodingRef};
+use encoding_rs::Encoding;
 
 use crate::util::{self, FileError};
 
@@ -47,9 +46,13 @@ pub fn read_text_file(file_path: &Path, encoding: Option<&str>) -> Result<String
         file.read_to_end(&mut buffer).map_err(TextFileError::Read)?;
 
         // Decode the raw data to a string using the specified encoding.
-        encoding
-            .decode(&buffer, DecoderTrap::Strict)
-            .map_err(TextFileError::Decode)?
+        if let Some(s) = encoding.decode_without_bom_handling_and_without_replacement(&buffer) {
+            s.into()
+        } else {
+            return Err(TextFileError::Decode(
+                format!("{}: Couldn't decode without replacement", file_path.display()).into(),
+            ));
+        }
     } else {
         // Create an empty string.
         let mut string: String = String::new();
@@ -86,9 +89,13 @@ pub fn write_text(
     // If an encoding was specified...
     if let Some(encoding) = encoding {
         // Encode the template data using the specified encoding.
-        let enc_bytes = encoding
-            .encode(text, EncoderTrap::Strict)
-            .map_err(TextFileError::Encode)?;
+        let (enc_bytes, _, is_success) = encoding.encode(text);
+
+        if !is_success {
+            return Err(TextFileError::Encode(
+                format!("Text contains unencodable characters: {text}").into(),
+            ));
+        }
 
         // Write bytes
         let bytes_written = writable.write(&enc_bytes).map_err(TextFileError::Write)?;
@@ -102,11 +109,11 @@ pub fn write_text(
     }
 }
 
-fn get_encoding(encoding: Option<&str>) -> Result<Option<EncodingRef>, TextFileError> {
+fn get_encoding(encoding: Option<&str>) -> Result<Option<&'static Encoding>, TextFileError> {
     // If an encoding was specified, try to get an implementation for it.
     Ok(match encoding {
         Some(enc_name) => Some(
-            encoding_from_whatwg_label(enc_name)
+            Encoding::for_label(enc_name.as_bytes())
                 .ok_or_else(|| TextFileError::Encoding("Cannot get encoding!".into()))?,
         ),
         None => None,
