@@ -71,11 +71,12 @@ impl Vut {
         // Construct config file path
         let config_file_path = path.join(VUT_CONFIG_FILENAME);
 
-        let (avs_type, authoritative_version_source) =
-            if let Some((source_type, source)) = version_source::first_version_source_from_path(path) {
+        let (avs_type, authoritative_version_source) = match version_source::first_version_source_from_path(path) {
+            Some((source_type, source)) => {
                 // A version source was found at the current directory. Use it.
                 (source_type, source)
-            } else {
+            }
+            _ => {
                 // No version source was found...
 
                 let version = version
@@ -89,7 +90,8 @@ impl Vut {
                 source.set_version(&version)?;
 
                 (VersionSourceType::Vut, Box::new(source) as Box<dyn VersionSource>)
-            };
+            }
+        };
 
         // Customize and create initial config
         let config = {
@@ -134,31 +136,34 @@ impl Vut {
                 .as_deref()
                 .unwrap_or_else(|| VersionSourceType::Vut.as_ref());
 
-            let auth_vs_path: Cow<Path> = if let Some(auth_vs_path) = &config.authoritative_version_source.path {
-                // Authoritative version source configuration preset...
+            let auth_vs_path: Cow<Path> = match &config.authoritative_version_source.path {
+                Some(auth_vs_path) => {
+                    // Authoritative version source configuration preset...
 
-                // Path must be relative to the root path.
-                if auth_vs_path.is_absolute() {
-                    return Err(VutError::Config(Cow::Borrowed(
-                        "Authoritative version source path must be relative!",
-                    )));
+                    // Path must be relative to the root path.
+                    if auth_vs_path.is_absolute() {
+                        return Err(VutError::Config(Cow::Borrowed(
+                            "Authoritative version source path must be relative!",
+                        )));
+                    }
+
+                    // Construct absolute path.
+                    let auth_vs_path = root_path.join(auth_vs_path);
+                    let auth_vs_path = util::normalize_path(auth_vs_path);
+
+                    // If the specified path is outside the root path, return an error.
+                    if !auth_vs_path.starts_with(&root_path) {
+                        return Err(VutError::Config(Cow::Borrowed(
+                            "Authoritative version source path must be inside the root directory!",
+                        )));
+                    }
+
+                    Cow::Owned(auth_vs_path)
                 }
-
-                // Construct absolute path.
-                let auth_vs_path = root_path.join(auth_vs_path);
-                let auth_vs_path = util::normalize_path(auth_vs_path);
-
-                // If the specified path is outside the root path, return an error.
-                if !auth_vs_path.starts_with(&root_path) {
-                    return Err(VutError::Config(Cow::Borrowed(
-                        "Authoritative version source path must be inside the root directory!",
-                    )));
+                _ => {
+                    // No authoritative version source configuration specified, use root path.
+                    Cow::Borrowed(&root_path)
                 }
-
-                Cow::Owned(auth_vs_path)
-            } else {
-                // No authoritative version source configuration specified, use root path.
-                Cow::Borrowed(&root_path)
             };
 
             let source = {
@@ -266,10 +271,9 @@ impl Vut {
         let version = self.get_version(ui)?;
 
         // Build ignore GlobSet from config
-        let ignore_globset = if let Some(ignore) = &self.config.general.ignore {
-            ignore.build_globset()?
-        } else {
-            globset::GlobSet::empty()
+        let ignore_globset = match &self.config.general.ignore {
+            Some(ignore) => ignore.build_globset()?,
+            _ => globset::GlobSet::empty(),
         };
 
         let dir_entries: Vec<walkdir::DirEntry> = walkdir::WalkDir::new(root_path)

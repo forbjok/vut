@@ -79,10 +79,11 @@ impl VersionSource for CustomRegexSource {
             let text = self.read_file()?;
 
             // Get version string using regex
-            if let Some(caps) = self.regex.captures(&text) {
-                caps[2].to_owned()
-            } else {
-                return Err(VutError::Other(Cow::Borrowed("Error parsing file using custom regex!")));
+            match self.regex.captures(&text) {
+                Some(caps) => caps[2].to_owned(),
+                _ => {
+                    return Err(VutError::Other(Cow::Borrowed("Error parsing file using custom regex!")));
+                }
             }
         };
 

@@ -65,11 +65,11 @@ mod test {
         (
             $test_name:ident : $processor:ident {
                 ok {
-                    $( $template_data:expr => $expected_output:expr )*
+                    $( $template_data:expr_2021 => $expected_output:expr_2021 )*
                 }
 
                 err {
-                    $( $err_template_data:expr => $err_expected_output:expr )*
+                    $( $err_template_data:expr_2021 => $err_expected_output:expr_2021 )*
                 }
             }
         ) => {

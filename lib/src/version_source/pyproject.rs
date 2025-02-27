@@ -69,11 +69,12 @@ impl VersionSource for PyProjectSource {
                 .map_err(|err| VutError::Other(Cow::Owned(err.to_string())))?;
 
             // Get version string
-            if let Some(version_str) = doc["project"]["version"].as_str() {
-                version_str.to_owned()
-            } else {
-                info!("No version number found in '{}'.", self.project_file_path.display());
-                return Err(VutError::VersionNotFound);
+            match doc["project"]["version"].as_str() {
+                Some(version_str) => version_str.to_owned(),
+                _ => {
+                    info!("No version number found in '{}'.", self.project_file_path.display());
+                    return Err(VutError::VersionNotFound);
+                }
             }
         };
 

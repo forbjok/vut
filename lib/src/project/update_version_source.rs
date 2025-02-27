@@ -128,28 +128,29 @@ impl VersionSourceSpec {
             None => None,
         };
 
-        let source_templates = if let Some(vst) = def.types.as_ref() {
-            let type_names = &vst.0;
+        let source_templates = match def.types.as_ref() {
+            Some(vst) => {
+                let type_names = &vst.0;
 
-            let mut source_templates: Vec<VersionSourceTemplate> = Vec::with_capacity(type_names.len());
+                let mut source_templates: Vec<VersionSourceTemplate> = Vec::with_capacity(type_names.len());
 
-            for name in type_names.iter() {
-                // Check for built-in version source type first...
-                if let Ok(vst) = VersionSourceType::from_str(name) {
-                    source_templates.push(VersionSourceTemplate::Builtin(vst));
-                    continue;
+                for name in type_names.iter() {
+                    // Check for built-in version source type first...
+                    if let Ok(vst) = VersionSourceType::from_str(name) {
+                        source_templates.push(VersionSourceTemplate::Builtin(vst));
+                        continue;
+                    }
+
+                    // ... then check for custom source type.
+                    if let Some(custom_source_template) = custom_source_types.get_template(name) {
+                        source_templates.push(VersionSourceTemplate::CustomRegex(custom_source_template.clone()));
+                        continue;
+                    }
                 }
 
-                // ... then check for custom source type.
-                if let Some(custom_source_template) = custom_source_types.get_template(name) {
-                    source_templates.push(VersionSourceTemplate::CustomRegex(custom_source_template.clone()));
-                    continue;
-                }
+                Some(source_templates)
             }
-
-            Some(source_templates)
-        } else {
-            None
+            _ => None,
         };
 
         Ok(Self {
@@ -171,14 +172,15 @@ impl VersionSourceSpec {
             }
 
             // Check for built-in version sources at this path
-            let mut new_sources = if let Some(source_templates) = &self.source_templates {
-                // Find built-in sources
-                source_templates
-                    .iter()
-                    .filter_map(|st| st.version_source_from_path(path))
-                    .collect()
-            } else {
-                version_source::version_sources_from_path(path)
+            let mut new_sources = match &self.source_templates {
+                Some(source_templates) => {
+                    // Find built-in sources
+                    source_templates
+                        .iter()
+                        .filter_map(|st| st.version_source_from_path(path))
+                        .collect()
+                }
+                _ => version_source::version_sources_from_path(path),
             };
 
             // Append all found sources to the main list of sources

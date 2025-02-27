@@ -136,13 +136,14 @@ impl std::fmt::Display for Version {
 
 /// Split a prerelease string with a number at the end into separate string prefix and number components.
 pub fn split_numbered_prerelease(s: &str) -> Option<(&str, u32)> {
-    if let Some(cap) = REGEX_SPLIT_NUMBERED_PRERELEASE.captures(s) {
-        let prefix = cap.get(1).unwrap().as_str();
-        let number = cap.get(2).unwrap().as_str().parse().unwrap();
+    match REGEX_SPLIT_NUMBERED_PRERELEASE.captures(s) {
+        Some(cap) => {
+            let prefix = cap.get(1).unwrap().as_str();
+            let number = cap.get(2).unwrap().as_str().parse().unwrap();
 
-        Some((prefix, number))
-    } else {
-        None
+            Some((prefix, number))
+        }
+        _ => None,
     }
 }
 
