@@ -7,7 +7,7 @@ use std::str::FromStr;
 use crate::version::Version;
 use crate::version_source::{self, VersionSource, VersionSourceType};
 
-use super::{config, VutConfig, VutError};
+use super::{VutConfig, VutError, config};
 
 pub fn update_version_sources(
     config: &VutConfig,
@@ -81,7 +81,7 @@ impl CustomSourceTypes {
                         return Err(VutError::Other(Cow::Owned(format!(
                             "Invalid regex '{}': {err}",
                             &regex_custom_source_type.regex
-                        ))))
+                        ))));
                     }
                 }
             };

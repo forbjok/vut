@@ -9,11 +9,7 @@ pub fn locate_config_file(start_path: impl AsRef<Path>, filename: &str) -> Optio
     find_outwards(start_path, move |path| {
         let config_file = path.join(filename);
 
-        if config_file.exists() {
-            Some(config_file)
-        } else {
-            None
-        }
+        if config_file.exists() { Some(config_file) } else { None }
     })
     .map(|(_, rv)| rv)
 }

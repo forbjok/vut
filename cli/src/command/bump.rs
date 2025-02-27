@@ -1,5 +1,5 @@
-use vut::project::{BumpVersion, Vut};
 use vut::Version;
+use vut::project::{BumpVersion, Vut};
 
 use crate::error::*;
 use crate::ui::StderrUiHandler;

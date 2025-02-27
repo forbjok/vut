@@ -6,7 +6,7 @@ use std::path::Path;
 use crate::file_updater::*;
 use crate::template::TemplateInput;
 
-use super::{config, VutConfig, VutError};
+use super::{VutConfig, VutError, config};
 
 #[derive(Debug)]
 struct UpdateFilesSpec {

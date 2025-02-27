@@ -192,7 +192,9 @@ impl Vut {
                 } else if version_sources.len() > 1 {
                     // Since only one type is allowed to be specified,
                     // it should never be possible for more than one source to be returned.
-                    return Err(VutError::Other(Cow::Borrowed("More than one authoritative version source was returned! This should never happen, and is probably caused by a bug.")));
+                    return Err(VutError::Other(Cow::Borrowed(
+                        "More than one authoritative version source was returned! This should never happen, and is probably caused by a bug.",
+                    )));
                 }
 
                 // Return the first (and only) version source.

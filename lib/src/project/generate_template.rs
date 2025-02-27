@@ -8,7 +8,7 @@ use crate::template::{self, TemplateInput};
 use crate::util;
 use crate::version::{self, Version};
 
-use super::{config, VutConfig, VutError};
+use super::{VutConfig, VutError, config};
 
 #[derive(Debug)]
 struct TemplateSpec<'a> {

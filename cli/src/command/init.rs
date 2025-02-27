@@ -1,7 +1,7 @@
 use std::env;
 
-use vut::project::{config, Vut};
 use vut::Version;
+use vut::project::{Vut, config};
 
 use crate::error::*;
 use crate::ui::StderrUiHandler;

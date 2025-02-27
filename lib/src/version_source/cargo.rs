@@ -72,7 +72,10 @@ impl VersionSource for CargoSource {
             match doc["package"]["version"].as_str() {
                 Some(version_str) => version_str.to_owned(),
                 _ => {
-                    info!("No version number found in '{}'. This Cargo.toml may be a workspace, and cannot be used as a version source.", self.cargo_file_path.display());
+                    info!(
+                        "No version number found in '{}'. This Cargo.toml may be a workspace, and cannot be used as a version source.",
+                        self.cargo_file_path.display()
+                    );
                     return Err(VutError::VersionNotFound);
                 }
             }
