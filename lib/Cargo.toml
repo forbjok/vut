@@ -5,12 +5,9 @@ authors = ["Kjartan F. Kvamme <forbjok@gmail.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2024"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 encoding_rs = { workspace = true }
 globset = { workspace = true }
-once_cell = { workspace = true }
 regex = { workspace = true }
 serde = { workspace = true }
 serde_derive = { workspace = true }

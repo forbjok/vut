@@ -1,12 +1,11 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, sync::LazyLock};
 
-use once_cell::sync::Lazy;
 use regex::Regex;
 
 use crate::template::{TemplateInput, TemplateProcessor};
 
-static REGEX_FIND_TEMPLATE_VARS: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r#"\{\{(?:\|([^\|]*)\|)?([\w\d]*)(?:\|([^\|]*)\|)?\}\}"#).unwrap());
+static REGEX_FIND_TEMPLATE_VARS: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"\{\{(?:\|([^\|]*)\|)?([\w\d]*)(?:\|([^\|]*)\|)?\}\}"#).unwrap());
 
 pub struct VutProcessor;
 
