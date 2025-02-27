@@ -12,15 +12,19 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: stable
-        targets: i686-pc-windows-msvc
+        targets: x86_64-pc-windows-msvc i686-pc-windows-msvc
 
     - name: Build
-      shell: pwsh
-      run: .\build.ps1
+      run: python build.py win64 win32 chocolatey
 
     - name: Publish
       uses: softprops/action-gh-release@v2
