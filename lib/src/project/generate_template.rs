@@ -184,7 +184,7 @@ pub fn generate_template_input(version: &Version) -> Result<TemplateInput, VutEr
     Ok(template_input)
 }
 
-fn build_template_specs(config: &VutConfig) -> Result<Vec<TemplateSpec>, VutError> {
+fn build_template_specs(config: &VutConfig) -> Result<Vec<TemplateSpec<'_>>, VutError> {
     let mut specs: Vec<TemplateSpec> = Vec::new();
 
     for cfg_t in config.templates.iter() {

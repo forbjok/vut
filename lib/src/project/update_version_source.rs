@@ -101,10 +101,10 @@ impl CustomSourceTypes {
     }
 
     pub fn version_source_from_path(&self, path: &Path, source_type: &str) -> Option<Box<dyn VersionSource>> {
-        if let Some(custom_source_type_template) = self.regex_source_types.get(source_type) {
-            if let Some(source) = custom_source_type_template.instance_from_path(path) {
-                return Some(Box::new(source));
-            }
+        if let Some(custom_source_type_template) = self.regex_source_types.get(source_type)
+            && let Some(source) = custom_source_type_template.instance_from_path(path)
+        {
+            return Some(Box::new(source));
         }
 
         None
@@ -163,12 +163,12 @@ impl VersionSourceSpec {
     pub fn find_version_sources(&self, path: &Path, rel_path: &Path) -> Vec<Box<dyn VersionSource>> {
         let mut version_sources = Vec::new();
 
-        if self.include_globset.is_match(rel_path) {
-            if let Some(exclude_globset) = &self.exclude_globset {
-                if exclude_globset.is_match(rel_path) {
-                    // If path is matched by the exclude globset, immediately return the empty list.
-                    return version_sources;
-                }
+        if self.include_globset.is_match(rel_path)
+            && let Some(exclude_globset) = &self.exclude_globset
+        {
+            if exclude_globset.is_match(rel_path) {
+                // If path is matched by the exclude globset, immediately return the empty list.
+                return version_sources;
             }
 
             // Check for built-in version sources at this path
