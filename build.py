@@ -18,7 +18,7 @@ bin_name = "vut"
 def get_version() -> str:
     import json
 
-    with open(os.path.join(root_path, "version.json"), "r") as f:
+    with open(os.path.join(root_path, "version.json"), "r", encoding="utf-8") as f:
         vobj = json.load(f)
 
     return vobj["FullVersion"]
@@ -59,7 +59,7 @@ def cmd(description: str, args: list[str]):
     import subprocess
 
     print(f"--- {description} ---")
-    subprocess.run(args)
+    subprocess.run(args, check=True)
 
 
 def create_tarball(archive_name: str, path: str):
@@ -80,7 +80,7 @@ def create_tarball(archive_name: str, path: str):
     with open(archive_path, "rb") as f:
         checksum = hashlib.file_digest(f, "sha256")
 
-    with open(f"{archive_path}.sha256.txt", "w") as f:
+    with open(f"{archive_path}.sha256.txt", "w", encoding="utf-8") as f:
         f.write(checksum.hexdigest())
 
 
@@ -102,7 +102,7 @@ def create_zip(archive_name: str, path: str):
     with open(archive_path, "rb") as f:
         checksum = hashlib.file_digest(f, "sha256")
 
-    with open(f"{archive_path}.sha256.txt", "w") as f:
+    with open(f"{archive_path}.sha256.txt", "w", encoding="utf-8") as f:
         f.write(checksum.hexdigest())
 
 
@@ -180,7 +180,7 @@ def build_win32():
 def build_chocolatey():
     version_txt_path = os.path.join(dist_path, "VERSION.txt")
 
-    with open(version_txt_path, "w") as f:
+    with open(version_txt_path, "w", encoding="utf-8") as f:
         f.write(version)
 
     cmd(
