@@ -4,6 +4,12 @@ on:
   release:
     types:
       - published
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Run workflow without actually publishing
+        type: boolean
+        default: true
 
 jobs:
   build-windows:
@@ -27,6 +33,7 @@ jobs:
         run: uv run build.py win64 win32 chocolatey
 
       - name: Publish
+        if: ${{ !inputs.dry_run }}
         uses: softprops/action-gh-release@v3
         with:
           files: "dist/*"
