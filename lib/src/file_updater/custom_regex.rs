@@ -58,7 +58,7 @@ impl FileUpdater for CustomRegexFileUpdater {
             for regex in replacer.regexes.iter() {
                 text = regex
                     .replace_all(&text, |caps: &regex::Captures| {
-                        format!("{}{}{}", &caps[1], &replace_with, &caps[3])
+                        format!("{}{}{}", &caps[1], replace_with, &caps[3])
                     })
                     .into_owned();
             }

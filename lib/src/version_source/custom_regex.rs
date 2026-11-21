@@ -101,7 +101,7 @@ impl VersionSource for CustomRegexSource {
 
         // Replace version number
         let text = self.regex.replace(&text, |caps: &regex::Captures| {
-            format!("{}{}{}", &caps[1], &version_str, &caps[3])
+            format!("{}{}{}", &caps[1], version_str, &caps[3])
         });
 
         // Overwrite cargo file

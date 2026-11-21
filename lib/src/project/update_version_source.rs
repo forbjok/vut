@@ -80,7 +80,7 @@ impl CustomSourceTypes {
                     Err(err) => {
                         return Err(VutError::Other(Cow::Owned(format!(
                             "Invalid regex '{}': {err}",
-                            &regex_custom_source_type.regex
+                            regex_custom_source_type.regex
                         ))));
                     }
                 }
